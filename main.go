@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -26,8 +27,9 @@ var data = make(chan metadata)
 var trackfinished = make(chan bool)
 
 type metadata struct {
-	path   string
-	length time.Duration
+	path     string
+	length   time.Duration
+	playtime time.Duration
 }
 
 func main() {
@@ -49,8 +51,9 @@ func main() {
 	infobox.SetCell(1, 0, tview.NewTableCell("directory"))
 	infobox.SetCell(2, 0, tview.NewTableCell("playtime"))
 
+	progresscontainer := tview.NewBox()
+	progresscontainer.SetBorder(false)
 	progressbar := tview.NewTextView()
-	progressbar.SetBorder(true).SetTitle(" Progress ")
 
 	go waitforspeakercommand()
 
@@ -62,7 +65,8 @@ func main() {
 				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 					AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 						AddItem(infobox, 0, 1, false).
-						AddItem(progressbar, 3, 0, false), 0, 1, false).
+						AddItem(progresscontainer, 0, 0, false).
+						AddItem(progressbar, 1, 0, false), 0, 1, false).
 					AddItem(playlist, 0, 2, false), 0, 2, false), 0, 1, false).
 			AddItem(tview.NewBox().SetBorder(true).SetTitle(" Keybinds "), 3, 0, false), 0, 1, false)
 
@@ -119,6 +123,19 @@ func main() {
 		filelist.SetCurrentItem(filelist.GetCurrentItem() + 1)
 	}
 
+	drawprogressbar := func(playtime time.Duration, length time.Duration) {
+		progressbar.Clear()
+		_, _, width, _ := progresscontainer.GetInnerRect()
+		fill := int(float64(width)*playtime.Seconds()/float64(length.Seconds()) - 2)
+		for i := 0; i < fill; i++ {
+			fmt.Fprintf(progressbar, "%s", "█")
+		}
+		for i := 0; i < width-fill; i++ {
+			fmt.Fprintf(progressbar, "%s", "-")
+		}
+
+	}
+
 	changedir = func() {
 		itemText, _ := directorylist.GetItemText(directorylist.GetCurrentItem())
 		root = path.Join(root, itemText)
@@ -145,13 +162,13 @@ func main() {
 	go func() {
 		for {
 			select {
-			case curtime := <-timer:
-				infobox.SetCell(2, 1, tview.NewTableCell(curtime.String()))
 			case data := <-data:
 				dir, name := path.Split(data.path)
 				infobox.SetCell(0, 1, tview.NewTableCell(name))
 				infobox.SetCell(1, 1, tview.NewTableCell(dir))
 				infobox.SetCell(2, 2, tview.NewTableCell(data.length.String()))
+				infobox.SetCell(2, 1, tview.NewTableCell(data.playtime.String()))
+				drawprogressbar(data.playtime, data.length)
 			case <-trackfinished:
 				nextsong()
 			}
@@ -162,6 +179,13 @@ func main() {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyF8 {
 			speakercommand <- "pauze"
+			return nil
+		}
+
+		// debug
+		if event.Key() == tcell.KeyF7 {
+			_, _, w, _ := progresscontainer.GetInnerRect()
+			print(w)
 			return nil
 		}
 
@@ -259,7 +283,7 @@ func initspeaker(file string) {
 	length := format.SampleRate.D(streamer.Len()).Round(time.Second)
 	speaker.Unlock()
 
-	data <- metadata{path: file, length: length}
+	data <- metadata{path: file, length: length, playtime: time.Duration(0)}
 
 	for {
 		select {
@@ -277,7 +301,7 @@ func initspeaker(file string) {
 			}
 		case <-time.After(time.Second):
 			speaker.Lock()
-			timer <- format.SampleRate.D(streamer.Position()).Round(time.Second)
+			data <- metadata{path: file, length: length, playtime: format.SampleRate.D(streamer.Position()).Round(time.Second)}
 			speaker.Unlock()
 		}
 	}
