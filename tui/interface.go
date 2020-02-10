@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"mp3bak2/audioplayer"
 	"mp3bak2/globals"
+	"os"
 	"path"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 )
 
 // global variables
-var root = "/home/mees"
+var root string
 var tracklist = make([]string, 0)
 var songindex = 0
 var formats = []string{".wav", ".mp3", ".ogg", ".weba", ".webm", ".flac"}
@@ -31,6 +32,9 @@ var myTui tui
 
 // Start : start the tui
 func Start() {
+
+	//save working directory
+	root, _ = os.Getwd()
 
 	// build interface
 	app := tview.NewApplication()
