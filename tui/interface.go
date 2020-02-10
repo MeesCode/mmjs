@@ -163,6 +163,7 @@ func Start() {
 
 }
 
+// play the song currently selected on the playlist
 func playsong() {
 	file := tracklist[myTui.playlist.GetCurrentItem()]
 	songindex = myTui.playlist.GetCurrentItem()
@@ -170,6 +171,7 @@ func playsong() {
 	go audioplayer.Play(file)
 }
 
+// draw the playlist
 func drawplaylist() {
 	myTui.playlist.Clear()
 	for index, track := range tracklist {
@@ -184,6 +186,7 @@ func drawplaylist() {
 	myTui.app.Draw()
 }
 
+// go to the next song (if available)
 func nextsong() {
 	if len(tracklist) > songindex+1 {
 		songindex++
@@ -193,6 +196,7 @@ func nextsong() {
 	}
 }
 
+// go to the previous song (if available)
 func previoussong() {
 	if songindex > 0 {
 		songindex--
@@ -201,6 +205,7 @@ func previoussong() {
 	}
 }
 
+// add a song to the playlist
 func addsong() {
 	itemText, _ := myTui.filelist.GetItemText(myTui.filelist.GetCurrentItem())
 	tracklist = append(tracklist, path.Join(root, itemText))
@@ -208,6 +213,7 @@ func addsong() {
 	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
 }
 
+// draw the progressbar
 func drawprogressbar(playtime time.Duration, length time.Duration) {
 	myTui.progressbar.Clear()
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
@@ -221,6 +227,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 }
 
+// navigate the file manager
 func changedir() {
 	itemText, _ := myTui.directorylist.GetItemText(myTui.directorylist.GetCurrentItem())
 	root = path.Join(root, itemText)
@@ -242,6 +249,7 @@ func changedir() {
 	}
 }
 
+// helper function to check if an array cointains a specific string
 func contains(arr []string, str string) bool {
 	for _, a := range arr {
 		if a == str {
