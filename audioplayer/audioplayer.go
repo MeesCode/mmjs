@@ -12,48 +12,54 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
+var speakerevent = make(chan string) //
 const bufferSize = 100 * time.Millisecond
 
+// stopSpeaker : send a stop command to a running adio player and
+// block until it has fully stopped
 func stopPlayer() {
 	globals.Speakercommand <- "stop"
-	event := <-globals.Speakerevent
+	event := <-speakerevent
 	for {
 		if event != "stopped" {
-			event = <-globals.Speakerevent
+			event = <-speakerevent
 		}
 		return
 	}
 }
 
+// dummySpeaker : an empty husk of what could be an audio player
 func dummySpeaker() {
 	command := <-globals.Speakercommand
 	for {
 		if command == "stop" {
-			globals.Speakerevent <- "stopped"
+			speakerevent <- "stopped"
 			return
 		}
 		command = <-globals.Speakercommand
 	}
 }
 
+// Init : initialize the dummy speaker so stopSpeaker() doesn't break
+// when no audioplayer has started yet
 func Init() {
 	go dummySpeaker()
 }
 
-func Player(file string) {
+// Play : stop the previous audio player and replace by a new one
+func Play(file string) {
 
-	// stops the previous player
+	// stops the previous player (or dummy)
 	stopPlayer()
 
 	f, err := os.Open(file)
-
 	if err != nil {
-		println("hier gaat het mis")
+		log.Fatalf("Error opening the file: %s", err)
 	}
 
 	streamer, format, err := mp3.Decode(f)
 	if err != nil {
-		println("nee hier")
+		log.Fatalf("error decoding file: %s", err)
 	}
 	defer streamer.Close()
 
@@ -62,11 +68,14 @@ func Player(file string) {
 		log.Fatalf("failed to initialize audio device: %s", err)
 	}
 
+	// set the length of the track
 	speaker.Lock()
 	length := format.SampleRate.D(streamer.Len()).Round(time.Second)
 	speaker.Unlock()
 
 	ctrl := &beep.Ctrl{Paused: false, Streamer: beep.Seq(streamer, beep.Callback(func() {
+		// when the track ends let the tui know so it can start a new one
+		// keep the current one running so possible commands can still be entered
 		globals.Audiostate <- globals.Metadata{
 			Path:     file,
 			Length:   length,
@@ -76,6 +85,7 @@ func Player(file string) {
 
 	speaker.Play(ctrl)
 
+	// send initial metadata
 	speaker.Lock()
 	globals.Audiostate <- globals.Metadata{
 		Path:     file,
@@ -84,8 +94,11 @@ func Player(file string) {
 		Finished: false}
 	speaker.Unlock()
 
+	// event loop
 	for {
 		select {
+
+		// when a command comes in, handlle it
 		case command := <-globals.Speakercommand:
 			switch command {
 			case "pauze":
@@ -95,9 +108,11 @@ func Player(file string) {
 				break
 			case "stop":
 				speaker.Close()
-				globals.Speakerevent <- "stopped"
+				speakerevent <- "stopped"
 				return
 			}
+
+		// resend metadata every second (for the timer)
 		case <-time.After(time.Second):
 			speaker.Lock()
 			globals.Audiostate <- globals.Metadata{
@@ -106,6 +121,7 @@ func Player(file string) {
 				Playtime: format.SampleRate.D(streamer.Position()).Round(time.Second),
 				Finished: false}
 			speaker.Unlock()
+
 		}
 	}
 }

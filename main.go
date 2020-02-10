@@ -2,26 +2,16 @@ package main
 
 import (
 	"mp3bak2/audioplayer"
+	"mp3bak2/tui"
 )
-
-// "local" global variables
-var root = "/home/mees"
-var tracklist = make([]string, 0)
-var songindex = 0
-var formats = [6]string{".wav", ".mp3", ".ogg", ".weba", ".webm", ".flac"}
 
 func main() {
 
+	// initialize audio player
 	go audioplayer.Init()
-	startInterface()
 
-}
+	// start user interface
+	// (on current thread as to not immediately exit)
+	tui.Start()
 
-func contains(arr [6]string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
 }
