@@ -3,24 +3,26 @@ package main
 import (
 	"flag"
 	"mp3bak2/audioplayer"
+	"mp3bak2/database"
 	"mp3bak2/globals"
 	"mp3bak2/tui"
 	"os"
+	"path"
 	"strings"
 )
 
 var (
-	mode  string
-	path  string
-	help  bool
-	modes = []string{"filesystem", "database", "index"}
+	mode           string
+	root           string
+	help           bool
+	modes          = []string{"filesystem", "database", "index"}
+	defaultPath, _ = os.Getwd()
 )
 
 func init() {
 	var (
-		defaultPath, _ = os.Getwd()
-		defaultMode    = "filesystem"
-		defaultHelp    = false
+		defaultMode = "filesystem"
+		defaultHelp = false
 
 		modeUsage = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		pathUsage = "specifies the root path.(not used in databse mode) (default: current working directory)"
@@ -28,7 +30,7 @@ func init() {
 	)
 
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
-	flag.StringVar(&path, "p", defaultPath, pathUsage)
+	flag.StringVar(&root, "p", defaultPath, pathUsage)
 	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
 
 }
@@ -36,6 +38,8 @@ func init() {
 func main() {
 	// parse command line arguments
 	flag.Parse()
+
+	root = path.Clean(path.Join(defaultPath, root))
 
 	// check for help flag
 	if help {
@@ -51,9 +55,15 @@ func main() {
 	}
 
 	// check if path exists
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(root); os.IsNotExist(err) {
 		println("specified path does not exist\n")
 		flag.PrintDefaults()
+		return
+	}
+
+	// index filesystem at specified path
+	if mode == "index" {
+		database.Index(root)
 		return
 	}
 
@@ -62,6 +72,6 @@ func main() {
 
 	// start user interface
 	// (on current thread as to not immediately exit)
-	tui.Start()
+	tui.Start(root)
 
 }

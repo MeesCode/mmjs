@@ -10,12 +10,12 @@ var (
 	Speakercommand = make(chan string)
 	Speakerevent   = make(chan bool)
 	Playfile       = make(chan string)
-	Audiostate     = make(chan Metadata)
+	Audiostate     = make(chan AudioStats)
 	Formats        = []string{".wav", ".mp3", ".ogg", ".flac"}
 )
 
 // Metadata : data from the audio player that is used by other components
-type Metadata struct {
+type AudioStats struct {
 	Path     string
 	Length   time.Duration
 	Playtime time.Duration

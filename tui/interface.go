@@ -3,7 +3,6 @@ package tui
 import (
 	"fmt"
 	"mp3bak2/globals"
-	"os"
 	"path"
 
 	"github.com/gdamore/tcell"
@@ -27,10 +26,10 @@ type tui struct {
 var myTui tui
 
 // Start : start the tui
-func Start() {
+func Start(p string) {
 
 	//save working directory
-	root, _ = os.Getwd()
+	root = p
 
 	// build interface
 	app := tview.NewApplication()

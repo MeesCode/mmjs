@@ -65,7 +65,7 @@ func playFile(file audioFile) {
 	ctrl = &beep.Ctrl{Paused: false, Streamer: beep.Seq(file.Streamer, beep.Callback(func() {
 		// when the track ends let the tui know so it can start a new one
 		// keep the current one running so possible commands can still be entered
-		globals.Audiostate <- globals.Metadata{
+		globals.Audiostate <- globals.AudioStats{
 			Path:     file.Path,
 			Length:   file.Length,
 			Playtime: file.Format.SampleRate.D(file.Streamer.Position()).Round(time.Second),
@@ -116,7 +116,7 @@ func Controller() {
 				continue
 			}
 			speaker.Lock()
-			globals.Audiostate <- globals.Metadata{
+			globals.Audiostate <- globals.AudioStats{
 				Path:     playingFile.Path,
 				Length:   playingFile.Length,
 				Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()).Round(time.Second),
