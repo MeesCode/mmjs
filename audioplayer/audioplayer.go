@@ -3,6 +3,7 @@ package audioplayer
 import (
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"mp3bak2/globals"
@@ -12,46 +13,23 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
-var speakerevent = make(chan string) //
 const bufferSize = 100 * time.Millisecond
 
-// stopSpeaker : send a stop command to a running adio player and
-// block until it has fully stopped
-func stopPlayer() {
-	globals.Speakercommand <- "stop"
-	event := <-speakerevent
-	for {
-		if event != "stopped" {
-			event = <-speakerevent
-		}
-		return
-	}
+var (
+	ctrl         *beep.Ctrl
+	audioLock    = new(sync.Mutex)
+	speakerevent = make(chan string)
+	playingFile  audioFile
+)
+
+type audioFile struct {
+	Path     string
+	Streamer beep.StreamSeekCloser
+	Format   beep.Format
+	Length   time.Duration
 }
 
-// dummySpeaker : an empty husk of what could be an audio player
-func dummySpeaker() {
-	command := <-globals.Speakercommand
-	for {
-		if command == "stop" {
-			speakerevent <- "stopped"
-			return
-		}
-		command = <-globals.Speakercommand
-	}
-}
-
-// Init : initialize the dummy speaker so stopSpeaker() doesn't break
-// when no audioplayer has started yet
-func Init() {
-	go dummySpeaker()
-}
-
-// Play : stop the previous audio player and replace by a new one
-func Play(file string) {
-
-	// stops the previous player (or dummy)
-	stopPlayer()
-
+func openFile(file string) audioFile {
 	f, err := os.Open(file)
 	if err != nil {
 		log.Fatalf("Error opening the file: %s", err)
@@ -61,64 +39,87 @@ func Play(file string) {
 	if err != nil {
 		log.Fatalf("error decoding file: %s", err)
 	}
-	defer streamer.Close()
+	if ctrl != nil {
+		playingFile.Streamer.Close()
+	}
 
-	err = speaker.Init(format.SampleRate, format.SampleRate.N(bufferSize))
-	if err != nil {
-		log.Fatalf("failed to initialize audio device: %s", err)
+	if ctrl == nil || format.SampleRate != playingFile.Format.SampleRate {
+		err = speaker.Init(format.SampleRate, format.SampleRate.N(bufferSize))
+
+		if err != nil {
+			log.Fatalf("failed to initialize audio device: %s", err)
+		}
 	}
 
 	// set the length of the track
-	speaker.Lock()
 	length := format.SampleRate.D(streamer.Len()).Round(time.Second)
-	speaker.Unlock()
+	return audioFile{file, streamer, format, length}
+}
 
-	ctrl := &beep.Ctrl{Paused: false, Streamer: beep.Seq(streamer, beep.Callback(func() {
+func playFile(file audioFile) {
+
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
+	speaker.Lock()
+	ctrl = &beep.Ctrl{Paused: false, Streamer: beep.Seq(file.Streamer, beep.Callback(func() {
 		// when the track ends let the tui know so it can start a new one
 		// keep the current one running so possible commands can still be entered
 		globals.Audiostate <- globals.Metadata{
-			Path:     file,
-			Length:   length,
-			Playtime: format.SampleRate.D(streamer.Position()).Round(time.Second),
+			Path:     file.Path,
+			Length:   file.Length,
+			Playtime: file.Format.SampleRate.D(file.Streamer.Position()).Round(time.Second),
 			Finished: true}
 	}))}
+	speaker.Unlock()
 
+	speaker.Clear()
 	speaker.Play(ctrl)
 
-	// send initial metadata
+}
+
+func pause() {
+	if ctrl == nil {
+		return
+	}
+
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
 	speaker.Lock()
-	globals.Audiostate <- globals.Metadata{
-		Path:     file,
-		Length:   length,
-		Playtime: time.Duration(0),
-		Finished: false}
+	ctrl.Paused = !ctrl.Paused
 	speaker.Unlock()
+}
+
+// Controller : take control of the speaker
+func Controller() {
 
 	// event loop
 	for {
 		select {
 
+		case file := <-globals.Playfile:
+			playingFile = openFile(file)
+			playFile(playingFile)
+			globals.Speakerevent <- true
+
 		// when a command comes in, handlle it
 		case command := <-globals.Speakercommand:
 			switch command {
 			case "pauze":
-				speaker.Lock()
-				ctrl.Paused = !ctrl.Paused
-				speaker.Unlock()
-				break
-			case "stop":
-				speaker.Close()
-				speakerevent <- "stopped"
-				return
+				pause()
 			}
 
 		// resend metadata every second (for the timer)
 		case <-time.After(time.Second):
+			if ctrl == nil {
+				continue
+			}
 			speaker.Lock()
 			globals.Audiostate <- globals.Metadata{
-				Path:     file,
-				Length:   length,
-				Playtime: format.SampleRate.D(streamer.Position()).Round(time.Second),
+				Path:     playingFile.Path,
+				Length:   playingFile.Length,
+				Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()).Round(time.Second),
 				Finished: false}
 			speaker.Unlock()
 

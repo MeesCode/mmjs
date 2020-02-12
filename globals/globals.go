@@ -6,14 +6,13 @@ package globals
 
 import "time"
 
-// Speakercommand : media controls for the music
-var Speakercommand = make(chan string)
-
-// Audiostate : updates to metadata for showing on the tui
-var Audiostate = make(chan Metadata)
-
-// Formats : file formats supported by the program
-var Formats = []string{".wav", ".mp3", ".ogg", ".weba", ".webm", ".flac"}
+var (
+	Speakercommand = make(chan string)
+	Speakerevent   = make(chan bool)
+	Playfile       = make(chan string)
+	Audiostate     = make(chan Metadata)
+	Formats        = []string{".wav", ".mp3", ".ogg", ".flac"}
+)
 
 // Metadata : data from the audio player that is used by other components
 type Metadata struct {

@@ -34,25 +34,41 @@ func Start() {
 
 	// build interface
 	app := tview.NewApplication()
+	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
+		screen.Clear()
+		return false
+	})
 
 	directorylist := tview.NewList().ShowSecondaryText(false)
-	directorylist.SetBorder(true).SetTitle("[ Directories ]")
+	directorylist.SetBorder(true).SetTitle("[ Directories ]").SetBackgroundColor(-1)
 
 	filelist := tview.NewList().ShowSecondaryText(false)
-	filelist.SetBorder(true).SetTitle("[ Current directory ]")
+	filelist.SetBorder(true).SetTitle("[ Current directory ]").SetBackgroundColor(-1)
 
 	playlist := tview.NewList()
-	playlist.SetBorder(true).SetTitle("[ Playlist ]")
+	playlist.SetBorder(true).SetTitle("[ Playlist ]").SetBackgroundColor(-1)
 	playlist.ShowSecondaryText(false)
 
 	infobox := tview.NewTable()
-	infobox.SetBorder(true).SetTitle("[ Info ]")
+	infobox.SetBorder(true).SetTitle("[ Info ]").SetBackgroundColor(-1)
 	infobox.SetCell(0, 0, tview.NewTableCell("filename"))
 	infobox.SetCell(1, 0, tview.NewTableCell("directory"))
 	infobox.SetCell(2, 0, tview.NewTableCell("playtime"))
 
+	keybinds := tview.NewTable()
+	keybinds.SetBorder(true).SetTitle("[ Keybinds ]").SetBackgroundColor(-1)
+	keybinds.SetCell(0, 0, tview.NewTableCell("Enter: add/play track").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 1, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 2, tview.NewTableCell("F5: shuffle").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 3, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 4, tview.NewTableCell("F8: play/pause").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 5, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 6, tview.NewTableCell("F9: previous track").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 7, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 8, tview.NewTableCell("F12: next track").SetExpansion(1).SetAlign(1))
+
 	progressbar := tview.NewTextView()
-	progressbar.SetBorder(false)
+	progressbar.SetBorder(false).SetBackgroundColor(-1)
 
 	// save interface
 	myTui = tui{
@@ -65,8 +81,9 @@ func Start() {
 	}
 
 	// fill progress bar
+	fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneBlock)
 	for i := 0; i < 200; i++ {
-		fmt.Fprintf(progressbar, "%s", "▒")
+		fmt.Fprintf(progressbar, "%c", tcell.RuneHLine)
 	}
 
 	// define tui locations
@@ -80,7 +97,7 @@ func Start() {
 						AddItem(infobox, 0, 1, false).
 						AddItem(progressbar, 1, 0, false), 0, 1, false).
 					AddItem(playlist, 0, 2, false), 0, 2, false), 0, 1, false).
-			AddItem(tview.NewBox().SetBorder(true).SetTitle("[ Keybinds ]"), 3, 0, false), 0, 1, false)
+			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
 	// set menu to current folser
 	directorylist.AddItem(".", "", 0, changedir)
@@ -110,11 +127,14 @@ func Start() {
 	// global
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
+		case tcell.KeyF5:
+			shuffle()
+			return nil
 		case tcell.KeyF8:
 			globals.Speakercommand <- "pauze"
 			return nil
 		case tcell.KeyF7:
-			//debug
+			globals.Speakercommand <- "change"
 			return nil
 		case tcell.KeyF9:
 			previoussong()

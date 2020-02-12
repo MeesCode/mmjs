@@ -8,7 +8,7 @@ import (
 func main() {
 
 	// initialize audio player
-	go audioplayer.Init()
+	go audioplayer.Controller()
 
 	// start user interface
 	// (on current thread as to not immediately exit)
