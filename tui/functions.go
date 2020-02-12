@@ -17,7 +17,6 @@ func playsong() {
 	songindex = myTui.playlist.GetCurrentItem()
 	drawplaylist()
 	globals.Playfile <- tracklist[myTui.playlist.GetCurrentItem()]
-	<-globals.Speakerevent
 }
 
 // draw the playlist
@@ -41,7 +40,6 @@ func nextsong() {
 		songindex++
 		drawplaylist()
 		globals.Playfile <- tracklist[songindex]
-		<-globals.Speakerevent
 	}
 }
 
@@ -51,7 +49,6 @@ func previoussong() {
 		songindex--
 		drawplaylist()
 		globals.Playfile <- tracklist[songindex]
-		<-globals.Speakerevent
 	}
 }
 
@@ -100,12 +97,15 @@ func changedir() {
 	}
 }
 
-// go to the previous song (if available)
+// shuffle the playlist
 func shuffle() {
+	if len(tracklist) == 0 {
+		return
+	}
+
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(tracklist), func(i, j int) { tracklist[i], tracklist[j] = tracklist[j], tracklist[i] })
 	songindex = 0
 	globals.Playfile <- tracklist[songindex]
-	<-globals.Speakerevent
 	drawplaylist()
 }

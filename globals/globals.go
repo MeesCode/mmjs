@@ -4,11 +4,13 @@
 
 package globals
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 var (
 	Speakercommand = make(chan string)
-	Speakerevent   = make(chan bool)
 	Playfile       = make(chan string)
 	Audiostate     = make(chan AudioStats)
 	Formats        = []string{".wav", ".mp3", ".ogg", ".flac"}
@@ -26,6 +28,23 @@ type DatabaseConnection struct {
 	Username string
 	Password string
 	Database string
+}
+
+type Folder struct {
+	Id       int
+	Path     string
+	ParentID int
+}
+
+type Track struct {
+	Id       int
+	Path     string
+	FolderID int
+	Title    sql.NullString
+	Album    sql.NullString
+	Artist   sql.NullString
+	Genre    sql.NullString
+	Year     sql.NullInt64
 }
 
 // helper function to check if an array cointains a specific string

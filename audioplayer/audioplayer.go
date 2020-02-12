@@ -101,7 +101,6 @@ func Controller() {
 		case file := <-globals.Playfile:
 			playingFile = openFile(file)
 			playFile(playingFile)
-			globals.Speakerevent <- true
 
 		// when a command comes in, handlle it
 		case command := <-globals.Speakercommand:

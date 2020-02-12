@@ -1,12 +1,12 @@
 package database
 
 import (
-	"database/sql"
 	"log"
 	"mp3bak2/globals"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/dhowden/tag"
 	_ "github.com/go-sql-driver/mysql"
@@ -14,23 +14,11 @@ import (
 
 func Index(root string) {
 
-	db, err := sql.Open("mysql",
-		globals.DatabaseCredentials.Username+":"+
-			globals.DatabaseCredentials.Password+"@/"+
-			globals.DatabaseCredentials.Database)
-
-	if err != nil {
-		panic("cannot open database")
-	}
+	db := connect()
 	defer db.Close()
 
-	err = db.Ping()
-	if err != nil {
-		panic(err.Error())
-	}
-
 	// Prepare statement for inserting a folder
-	folderIns, err := db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID, Root) VALUES(?, ?, ?)")
+	folderIns, err := db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -56,41 +44,54 @@ func Index(root string) {
 				return err
 			}
 
-			println(file)
+			// make sure it's a playable file
+			if info.IsDir() || globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
 
-			var isRoot = root == file
+				println(file)
 
-			var parentID = 0
+				var isRoot = root == file
 
-			if !isRoot {
-				println(path.Dir(file))
-				err = parentOut.QueryRow(path.Dir(file)).Scan(&parentID)
-				if err != nil {
-					panic(err.Error())
-				}
-			}
+				var parentID = 0
 
-			// if it's a folder
-			if info.IsDir() {
-				_, err = folderIns.Exec(file, parentID, isRoot)
-				if err != nil {
-					panic(err.Error())
-				}
-			}
-
-			// if it's a file
-			if !info.IsDir() {
-
-				// read metadata
-				f, _ := os.Open(file)
-				m, err := tag.ReadFrom(f)
-				if err != nil {
-					log.Fatal(err)
+				if !isRoot {
+					err = parentOut.QueryRow(path.Dir(file)).Scan(&parentID)
+					if err != nil {
+						panic(err.Error())
+					}
 				}
 
-				_, err = fileIns.Exec(file, parentID, m.Title(), m.Artist(), m.Album(), m.Genre(), m.Year())
-				if err != nil {
-					panic(err.Error())
+				// if it's a folder
+				if info.IsDir() {
+					_, err = folderIns.Exec(file, parentID)
+					if err != nil {
+						panic(err.Error())
+					}
+				}
+
+				// if it's a file
+				if !info.IsDir() {
+
+					// read metadata
+					f, _ := os.Open(file)
+					m, err := tag.ReadFrom(f)
+
+					// if no tags were found default to nil
+					if err != nil {
+						_, err = fileIns.Exec(file, parentID, nil, nil, nil, nil, nil)
+					} else {
+						_, err = fileIns.Exec(
+							file,
+							parentID,
+							m.Title(),
+							m.Artist(),
+							m.Album(),
+							m.Genre(),
+							m.Year())
+					}
+
+					if err != nil {
+						panic(err.Error())
+					}
 				}
 			}
 
