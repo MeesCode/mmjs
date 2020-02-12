@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"mp3bak2/globals"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,7 +14,11 @@ import (
 
 func Index(root string) {
 
-	db, err := sql.Open("mysql" /* connection string here */)
+	db, err := sql.Open("mysql",
+		globals.DatabaseCredentials.Username+":"+
+			globals.DatabaseCredentials.Password+"@/"+
+			globals.DatabaseCredentials.Database)
+
 	if err != nil {
 		panic("cannot open database")
 	}

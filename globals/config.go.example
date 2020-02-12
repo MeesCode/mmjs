@@ -1,0 +1,7 @@
+package globals
+
+var DatabaseCredentials = DatabaseConnection{
+	Username: "",
+	Password: "",
+	Database: "",
+}

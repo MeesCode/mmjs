@@ -22,6 +22,12 @@ type AudioStats struct {
 	Finished bool
 }
 
+type DatabaseConnection struct {
+	Username string
+	Password string
+	Database string
+}
+
 // helper function to check if an array cointains a specific string
 func Contains(arr []string, str string) bool {
 	for _, a := range arr {
