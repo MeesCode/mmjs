@@ -93,21 +93,11 @@ func changedir() {
 		if file.IsDir() {
 			myTui.directorylist.AddItem(file.Name(), "", 0, changedir)
 		} else {
-			if contains(globals.Formats, strings.ToLower(path.Ext(file.Name()))) {
+			if globals.Contains(globals.Formats, strings.ToLower(path.Ext(file.Name()))) {
 				myTui.filelist.AddItem(file.Name(), "", 0, addsong)
 			}
 		}
 	}
-}
-
-// helper function to check if an array cointains a specific string
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
 }
 
 // go to the previous song (if available)

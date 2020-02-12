@@ -21,3 +21,13 @@ type Metadata struct {
 	Playtime time.Duration
 	Finished bool
 }
+
+// helper function to check if an array cointains a specific string
+func Contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}
