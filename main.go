@@ -13,7 +13,6 @@ import (
 
 var (
 	mode  string
-	root  string
 	debug bool
 	help  bool
 	modes = []string{"filesystem", "database", "index"}
@@ -26,13 +25,11 @@ func init() {
 		debugHelp   = false
 
 		modeUsage  = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
-		pathUsage  = "specifies the root path.(not used in databse mode) (default: current working directory)"
 		helpUsage  = "print this help message"
 		debugUsage = "used by the developer to access debug features"
 	)
 
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
-	flag.StringVar(&root, "p", "", pathUsage)
 	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
 	flag.BoolVar(&debug, "d", debugHelp, debugUsage)
 
@@ -42,11 +39,22 @@ func main() {
 	// parse command line arguments
 	flag.Parse()
 
-	defaultPath, _ := os.Getwd()
-	if root == "" {
-		root = defaultPath
+	base, _ := os.Getwd()
+	arg := flag.Arg(0)
+	var root string
+
+	// check that a path has been given
+	if arg == "" && mode != "database" {
+		println("please specify a path\n")
+		flag.PrintDefaults()
+		return
+	}
+
+	// make absolute if not already
+	if path.IsAbs(arg) {
+		root = path.Clean(arg)
 	} else {
-		root = path.Clean(path.Join(defaultPath, root))
+		root = path.Clean(path.Join(base, arg))
 	}
 
 	// check for help flag
@@ -91,6 +99,6 @@ func main() {
 
 	// start user interface
 	// (on current thread as to not immediately exit)
-	tui.Start(root)
+	tui.Start(root, mode)
 
 }

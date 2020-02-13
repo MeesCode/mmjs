@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"mp3bak2/database"
 	"mp3bak2/globals"
 	"path"
 
@@ -10,8 +11,9 @@ import (
 )
 
 // global variables
-var root string
-var tracklist = make([]string, 0)
+var playlistFiles = make([]globals.Track, 0)
+var filelistFiles = make([]globals.Track, 0)
+var directorylistFolders = make([]globals.Folder, 0)
 var songindex = 0
 
 type tui struct {
@@ -24,12 +26,10 @@ type tui struct {
 }
 
 var myTui tui
+var changedir func()
 
 // Start : start the tui
-func Start(p string) {
-
-	//save working directory
-	root = p
+func Start(root string, mode string) {
 
 	// build interface
 	app := tview.NewApplication()
@@ -98,8 +98,21 @@ func Start(p string) {
 					AddItem(playlist, 0, 2, false), 0, 2, false), 0, 1, false).
 			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
-	// set menu to current folser
-	directorylist.AddItem(".", "", 0, changedir)
+	// do some stuff depending on if we are in database or filesystem mode
+	var folder globals.Folder
+	if mode == "filesystem" {
+		changedir = changedirFilesystem
+		// set menu to current folder
+		folder = globals.Folder{
+			Id:       -1,
+			Path:     root,
+			ParentID: -1}
+	} else {
+		changedir = changedirDatabase
+		folder = database.GetFolderByID(1)
+	}
+
+	directorylistFolders = append(directorylistFolders, folder)
 	changedir()
 
 	// update the audio state

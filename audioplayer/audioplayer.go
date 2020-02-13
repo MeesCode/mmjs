@@ -99,7 +99,7 @@ func Controller() {
 		select {
 
 		case file := <-globals.Playfile:
-			playingFile = openFile(file)
+			playingFile = openFile(file.Path)
 			playFile(playingFile)
 
 		// when a command comes in, handlle it

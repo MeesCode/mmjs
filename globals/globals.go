@@ -11,7 +11,7 @@ import (
 
 var (
 	Speakercommand = make(chan string)
-	Playfile       = make(chan string)
+	Playfile       = make(chan Track)
 	Audiostate     = make(chan AudioStats)
 	Formats        = []string{".wav", ".mp3", ".ogg", ".flac"}
 )

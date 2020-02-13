@@ -24,8 +24,8 @@ func Index(root string) {
 	}
 	defer folderIns.Close()
 
-	// Prepare statement for inserting a folder
-	fileIns, err := db.Prepare("INSERT INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)")
+	// Prepare statement for inserting a file
+	fileIns, err := db.Prepare("INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		panic(err.Error())
 	}
