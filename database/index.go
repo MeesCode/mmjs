@@ -66,10 +66,9 @@ func Index(root string) {
 					if err != nil {
 						panic(err.Error())
 					}
-				}
 
-				// if it's a file
-				if !info.IsDir() {
+					// if it's a file
+				} else {
 
 					// read metadata
 					f, _ := os.Open(file)

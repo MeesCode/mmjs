@@ -13,15 +13,18 @@ var (
 	Speakercommand = make(chan string)
 	Playfile       = make(chan Track)
 	Audiostate     = make(chan AudioStats)
+	DurationState  = make(chan DurationStats)
 	Formats        = []string{".wav", ".mp3", ".ogg", ".flac"}
 )
 
-// Metadata : data from the audio player that is used by other components
 type AudioStats struct {
-	Path     string
-	Length   time.Duration
+	Track  Track
+	Length time.Duration
+}
+
+type DurationStats struct {
 	Playtime time.Duration
-	Finished bool
+	Length   time.Duration
 }
 
 type DatabaseConnection struct {

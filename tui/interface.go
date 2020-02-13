@@ -4,17 +4,20 @@ import (
 	"fmt"
 	"mp3bak2/database"
 	"mp3bak2/globals"
-	"path"
+	"sync"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
 // global variables
-var playlistFiles = make([]globals.Track, 0)
-var filelistFiles = make([]globals.Track, 0)
-var directorylistFolders = make([]globals.Folder, 0)
-var songindex = 0
+var (
+	playlistFiles        = make([]globals.Track, 0)
+	filelistFiles        = make([]globals.Track, 0)
+	directorylistFolders = make([]globals.Folder, 0)
+	songindex            = 0
+	interfaceLock        = new(sync.Mutex)
+)
 
 type tui struct {
 	app           *tview.Application
@@ -23,6 +26,8 @@ type tui struct {
 	playlist      *tview.List
 	infobox       *tview.Table
 	progressbar   *tview.TextView
+	playtime      *tview.TextView
+	totaltime     *tview.TextView
 }
 
 var myTui tui
@@ -39,23 +44,38 @@ func Start(root string, mode string) {
 	})
 
 	directorylist := tview.NewList().ShowSecondaryText(false)
-	directorylist.SetBorder(true).SetTitle("[ Directories ]").SetBackgroundColor(-1)
+	directorylist.SetBorder(true).SetTitle(" Directories ").SetBackgroundColor(-1)
 
 	filelist := tview.NewList().ShowSecondaryText(false)
-	filelist.SetBorder(true).SetTitle("[ Current directory ]").SetBackgroundColor(-1)
+	filelist.SetBorder(true).SetTitle(" Current directory ").SetBackgroundColor(-1)
 
 	playlist := tview.NewList()
-	playlist.SetBorder(true).SetTitle("[ Playlist ]").SetBackgroundColor(-1)
+	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
 	playlist.ShowSecondaryText(false)
 
 	infobox := tview.NewTable()
-	infobox.SetBorder(true).SetTitle("[ Info ]").SetBackgroundColor(-1)
-	infobox.SetCell(0, 0, tview.NewTableCell("filename"))
-	infobox.SetCell(1, 0, tview.NewTableCell("directory"))
-	infobox.SetCell(2, 0, tview.NewTableCell("playtime"))
+	infobox.SetBorder(false).SetBackgroundColor(-1)
+	infobox.SetCell(0, 0, tview.NewTableCell("Title"))
+	infobox.SetCell(1, 0, tview.NewTableCell("Artist"))
+	infobox.SetCell(2, 0, tview.NewTableCell("Album"))
+	infobox.SetCell(3, 0, tview.NewTableCell("Genre"))
+	infobox.SetCell(4, 0, tview.NewTableCell("Year"))
+	infobox.SetCell(5, 0, tview.NewTableCell("filename"))
+	infobox.SetCell(6, 0, tview.NewTableCell("directory"))
+
+	infoboxcontainer := tview.NewFlex()
+	infoboxcontainer.SetBorder(true).SetTitle(" Info ").SetBackgroundColor(-1)
+	infoboxcontainer.SetDirection(tview.FlexRow)
+
+	playtime := tview.NewTextView()
+	playtime.SetBorder(false).SetBackgroundColor(-1)
+
+	totaltime := tview.NewTextView()
+	totaltime.SetTextAlign(2)
+	totaltime.SetBorder(false).SetBackgroundColor(-1)
 
 	keybinds := tview.NewTable()
-	keybinds.SetBorder(true).SetTitle("[ Keybinds ]").SetBackgroundColor(-1)
+	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
 	keybinds.SetCell(0, 0, tview.NewTableCell("Enter: add/play track").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 1, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 2, tview.NewTableCell("F5: shuffle").SetExpansion(1).SetAlign(1))
@@ -77,6 +97,8 @@ func Start(root string, mode string) {
 		playlist:      playlist,
 		infobox:       infobox,
 		progressbar:   progressbar,
+		playtime:      playtime,
+		totaltime:     totaltime,
 	}
 
 	// fill progress bar
@@ -84,6 +106,8 @@ func Start(root string, mode string) {
 	for i := 0; i < 200; i++ {
 		fmt.Fprintf(progressbar, "%c", tcell.RuneHLine)
 	}
+	fmt.Fprintf(myTui.playtime, "%s", "00:00:00")
+	fmt.Fprintf(myTui.totaltime, "%s", "00:00:00")
 
 	// define tui locations
 	flex := tview.NewFlex().
@@ -92,9 +116,12 @@ func Start(root string, mode string) {
 				AddItem(directorylist, 0, 1, false).
 				AddItem(filelist, 0, 2, false).
 				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-					AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+					AddItem(infoboxcontainer.
 						AddItem(infobox, 0, 1, false).
-						AddItem(progressbar, 1, 0, false), 0, 1, false).
+						AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+							AddItem(playtime, 9, 0, false).
+							AddItem(progressbar, 0, 1, false).
+							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
 					AddItem(playlist, 0, 2, false), 0, 2, false), 0, 1, false).
 			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
@@ -116,21 +143,7 @@ func Start(root string, mode string) {
 	changedir()
 
 	// update the audio state
-	go func() {
-		for {
-			data := <-globals.Audiostate
-			dir, name := path.Split(data.Path)
-			infobox.SetCell(0, 1, tview.NewTableCell(name))
-			infobox.SetCell(1, 1, tview.NewTableCell(dir))
-			infobox.SetCell(2, 2, tview.NewTableCell(data.Length.String()))
-			infobox.SetCell(2, 1, tview.NewTableCell(data.Playtime.String()))
-			drawprogressbar(data.Playtime, data.Length)
-			if data.Finished {
-				nextsong()
-			}
-			app.Draw()
-		}
-	}()
+	go audioStateUpdater()
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// the functions below are for handling user input that is not defined by tview //
