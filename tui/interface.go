@@ -174,14 +174,15 @@ func Start(root string, mode string) {
 		case tcell.KeyF8:
 			globals.Speakercommand <- "pauze"
 			return nil
-		case tcell.KeyF7:
-			globals.Speakercommand <- "change"
-			return nil
 		case tcell.KeyF9:
 			app.QueueUpdate(previoussong)
 			return nil
 		case tcell.KeyF12:
 			app.QueueUpdate(nextsong)
+			return nil
+		case tcell.KeyCtrlC:
+			globals.Speakercommand <- "stop"
+			app.Stop()
 			return nil
 		}
 		return event

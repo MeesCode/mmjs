@@ -22,11 +22,9 @@ import (
 const bufferSize = 100 * time.Millisecond
 
 var (
-	speakerDone  = make(chan bool)
-	ctrl         *beep.Ctrl
-	audioLock    = new(sync.Mutex)
-	speakerevent = make(chan string)
-	playingFile  audioFile
+	ctrl        *beep.Ctrl
+	audioLock   = new(sync.Mutex)
+	playingFile audioFile
 )
 
 type audioFile struct {
@@ -101,6 +99,7 @@ func playFile(file audioFile) {
 	speaker.Unlock()
 
 	speaker.Clear()
+	var speakerDone = make(chan bool)
 	speaker.Play(ctrl, beep.Callback(func() {
 		speakerDone <- true
 	}))

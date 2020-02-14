@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 	"mp3bak2/globals"
 	"os"
@@ -46,7 +47,7 @@ func Index(root string) {
 			// make sure it's a playable file
 			if info.IsDir() || globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
 
-				println(file)
+				fmt.Println(file)
 
 				var isRoot = root == file
 

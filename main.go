@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
@@ -36,6 +37,7 @@ func init() {
 }
 
 func main() {
+
 	// parse command line arguments
 	flag.Parse()
 
@@ -45,7 +47,7 @@ func main() {
 
 	// check that a path has been given
 	if arg == "" && mode != "database" {
-		println("please specify a path\n")
+		fmt.Println("please specify a path\n")
 		flag.PrintDefaults()
 		return
 	}
@@ -65,15 +67,15 @@ func main() {
 
 	// check if mode is correct
 	if !globals.Contains(modes, mode) {
-		println("please use one of the availble modes\n")
+		fmt.Println("please use one of the availble modes\n")
 		flag.PrintDefaults()
 		return
 	}
 
 	// check if path exists
 	if _, err := os.Stat(root); os.IsNotExist(err) {
-		println("chosen path: " + root)
-		println("specified path does not exist\n")
+		fmt.Println("chosen path: " + root)
+		fmt.Println("specified path does not exist\n")
 		flag.PrintDefaults()
 		return
 	}
@@ -89,11 +91,11 @@ func main() {
 	}
 
 	if debug {
-		println("debug mode")
+		fmt.Println("debug mode")
 		folder := database.GetFolderByID(1)
 		tracks := database.GetTracksByFolderID(folder.Id)
 		for _, track := range tracks {
-			println(" - " + track.Title.String)
+			fmt.Println(" - " + track.Title.String)
 		}
 		return
 	}

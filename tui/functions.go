@@ -121,6 +121,7 @@ func playsong() {
 		return
 	}
 	songindex = myTui.playlist.GetCurrentItem()
+	drawplaylist()
 	globals.Playfile <- playlistFiles[myTui.playlist.GetCurrentItem()]
 }
 
