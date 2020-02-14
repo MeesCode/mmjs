@@ -25,6 +25,7 @@ type tui struct {
 	filelist      *tview.List
 	playlist      *tview.List
 	infobox       *tview.Table
+	browseinfobox *tview.Table
 	progressbar   *tview.TextView
 	playtime      *tview.TextView
 	totaltime     *tview.TextView
@@ -46,13 +47,6 @@ func Start(root string, mode string) {
 	directorylist := tview.NewList().ShowSecondaryText(false)
 	directorylist.SetBorder(true).SetTitle(" Directories ").SetBackgroundColor(-1)
 
-	filelist := tview.NewList().ShowSecondaryText(false)
-	filelist.SetBorder(true).SetTitle(" Current directory ").SetBackgroundColor(-1)
-
-	playlist := tview.NewList()
-	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
-	playlist.ShowSecondaryText(false)
-
 	infobox := tview.NewTable()
 	infobox.SetBorder(false).SetBackgroundColor(-1)
 	infobox.SetCell(0, 0, tview.NewTableCell("Title"))
@@ -63,8 +57,18 @@ func Start(root string, mode string) {
 	infobox.SetCell(5, 0, tview.NewTableCell("filename"))
 	infobox.SetCell(6, 0, tview.NewTableCell("directory"))
 
+	browseinfobox := tview.NewTable()
+	browseinfobox.SetBorder(true).SetTitle(" Selection Info ").SetBackgroundColor(-1)
+	browseinfobox.SetCell(0, 0, tview.NewTableCell("Title"))
+	browseinfobox.SetCell(1, 0, tview.NewTableCell("Artist"))
+	browseinfobox.SetCell(2, 0, tview.NewTableCell("Album"))
+	browseinfobox.SetCell(3, 0, tview.NewTableCell("Genre"))
+	browseinfobox.SetCell(4, 0, tview.NewTableCell("Year"))
+	browseinfobox.SetCell(5, 0, tview.NewTableCell("filename"))
+	browseinfobox.SetCell(6, 0, tview.NewTableCell("directory"))
+
 	infoboxcontainer := tview.NewFlex()
-	infoboxcontainer.SetBorder(true).SetTitle(" Info ").SetBackgroundColor(-1)
+	infoboxcontainer.SetBorder(true).SetTitle(" Play Info ").SetBackgroundColor(-1)
 	infoboxcontainer.SetDirection(tview.FlexRow)
 
 	playtime := tview.NewTextView()
@@ -89,6 +93,23 @@ func Start(root string, mode string) {
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false).SetBackgroundColor(-1)
 
+	filelist := tview.NewList().ShowSecondaryText(false)
+	filelist.SetBorder(true).SetTitle(" Current directory ").SetBackgroundColor(-1)
+	filelist.SetChangedFunc(func(i int, _, _ string, _ rune) {
+		if len(filelistFiles) > 0 {
+			updateInfoBox(filelistFiles[i], browseinfobox)
+		}
+	})
+
+	playlist := tview.NewList()
+	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
+	playlist.ShowSecondaryText(false)
+	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
+		if len(playlistFiles) > 0 {
+			updateInfoBox(playlistFiles[i], browseinfobox)
+		}
+	})
+
 	// save interface
 	myTui = tui{
 		app:           app,
@@ -99,6 +120,7 @@ func Start(root string, mode string) {
 		progressbar:   progressbar,
 		playtime:      playtime,
 		totaltime:     totaltime,
+		browseinfobox: browseinfobox,
 	}
 
 	// fill progress bar
@@ -122,6 +144,7 @@ func Start(root string, mode string) {
 							AddItem(playtime, 9, 0, false).
 							AddItem(progressbar, 0, 1, false).
 							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
+					AddItem(browseinfobox, 9, 0, false).
 					AddItem(playlist, 0, 2, false), 0, 2, false), 0, 1, false).
 			AddItem(keybinds, 3, 0, false), 0, 1, false)
 

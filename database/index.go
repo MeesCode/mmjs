@@ -81,11 +81,11 @@ func Index(root string) {
 						_, err = fileIns.Exec(
 							file,
 							parentID,
-							m.Title(),
-							m.Artist(),
-							m.Album(),
-							m.Genre(),
-							m.Year())
+							globals.StringToSqlNullableString(m.Title()),
+							globals.StringToSqlNullableString(m.Artist()),
+							globals.StringToSqlNullableString(m.Album()),
+							globals.StringToSqlNullableString(m.Genre()),
+							globals.IntToSqlNullableInt(m.Year()))
 					}
 
 					if err != nil {

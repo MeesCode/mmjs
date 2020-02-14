@@ -7,11 +7,13 @@ import (
 	"math/rand"
 	"mp3bak2/database"
 	"mp3bak2/globals"
+	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/dhowden/tag"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -53,18 +55,7 @@ func audioStateUpdater() {
 	for {
 		select {
 		case data := <-globals.Audiostate:
-			dir, name := path.Split(data.Track.Path)
-			myTui.infobox.SetCell(0, 1, tview.NewTableCell(stringOrUnknown(data.Track.Title)))
-			myTui.infobox.SetCell(1, 1, tview.NewTableCell(stringOrUnknown(data.Track.Artist)))
-			myTui.infobox.SetCell(2, 1, tview.NewTableCell(stringOrUnknown(data.Track.Album)))
-			myTui.infobox.SetCell(3, 1, tview.NewTableCell(stringOrUnknown(data.Track.Genre)))
-			if data.Track.Year.Valid && data.Track.Year.Int64 != 0 {
-				myTui.infobox.SetCell(4, 1, tview.NewTableCell(strconv.FormatInt(data.Track.Year.Int64, 10)))
-			} else {
-				myTui.infobox.SetCell(4, 1, tview.NewTableCell("unknown"))
-			}
-			myTui.infobox.SetCell(5, 1, tview.NewTableCell(name))
-			myTui.infobox.SetCell(6, 1, tview.NewTableCell(dir))
+			updateInfoBox(data.Track, myTui.infobox)
 			drawprogressbar(time.Duration(0), data.Length)
 			myTui.app.Draw()
 
@@ -77,6 +68,21 @@ func audioStateUpdater() {
 
 		}
 	}
+}
+
+func updateInfoBox(track globals.Track, box *tview.Table) {
+	dir, name := path.Split(track.Path)
+	box.SetCell(0, 1, tview.NewTableCell(stringOrUnknown(track.Title)))
+	box.SetCell(1, 1, tview.NewTableCell(stringOrUnknown(track.Artist)))
+	box.SetCell(2, 1, tview.NewTableCell(stringOrUnknown(track.Album)))
+	box.SetCell(3, 1, tview.NewTableCell(stringOrUnknown(track.Genre)))
+	if track.Year.Valid {
+		box.SetCell(4, 1, tview.NewTableCell(strconv.FormatInt(track.Year.Int64, 10)))
+	} else {
+		box.SetCell(4, 1, tview.NewTableCell("unknown"))
+	}
+	box.SetCell(5, 1, tview.NewTableCell(name))
+	box.SetCell(6, 1, tview.NewTableCell(dir))
 }
 
 // draw the playlist
@@ -255,8 +261,19 @@ func changedirFilesystem() {
 		} else {
 
 			// if we've encountered a playable file, add it to the file list
-			if globals.Contains(globals.Formats, strings.ToLower(path.Ext(file.Name()))) {
-				var track = globals.Track{
+			if !globals.Contains(globals.Formats, strings.ToLower(path.Ext(file.Name()))) {
+				continue
+			}
+
+			// read metadata
+			f, _ := os.Open(path.Join(root, file.Name()))
+			m, err := tag.ReadFrom(f)
+
+			var track globals.Track
+
+			// if no tags were found default to nil
+			if err != nil {
+				track = globals.Track{
 					Id:       -1,
 					Path:     path.Join(root, file.Name()),
 					FolderID: -1,
@@ -265,9 +282,20 @@ func changedirFilesystem() {
 					Artist:   sql.NullString{String: "", Valid: false},
 					Genre:    sql.NullString{String: "", Valid: false},
 					Year:     sql.NullInt64{Int64: -1, Valid: false}}
-
-				filelistFiles = append(filelistFiles, track)
+			} else {
+				track = globals.Track{
+					Id:       -1,
+					Path:     path.Join(root, file.Name()),
+					FolderID: -1,
+					Title:    globals.StringToSqlNullableString(m.Title()),
+					Artist:   globals.StringToSqlNullableString(m.Artist()),
+					Album:    globals.StringToSqlNullableString(m.Album()),
+					Genre:    globals.StringToSqlNullableString(m.Genre()),
+					Year:     globals.IntToSqlNullableInt(m.Year())}
 			}
+
+			filelistFiles = append(filelistFiles, track)
+
 		}
 	}
 	drawdirectorylist(changedirFilesystem, isRoot)
