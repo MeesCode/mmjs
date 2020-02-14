@@ -140,7 +140,7 @@ func Controller() {
 			}
 
 		// resend metadata every second (for the timer)
-		case <-time.After(time.Second / 5):
+		case <-time.After(time.Second / 2):
 			if ctrl == nil {
 				continue
 			}

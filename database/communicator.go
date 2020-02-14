@@ -9,8 +9,7 @@ import (
 ////////////////////////////////////////////////
 
 func GetFoldersByParentID(parentid int) []globals.Folder {
-	db := connect()
-	defer db.Close()
+	db := getConnection()
 
 	folderOut, err := db.Prepare("SELECT FolderId, Path, ParentId FROM Folders WHERE ParentID = ?")
 	if err != nil {
@@ -41,8 +40,7 @@ func GetFoldersByParentID(parentid int) []globals.Folder {
 }
 
 func GetFolderByID(folderid int) globals.Folder {
-	db := connect()
-	defer db.Close()
+	db := getConnection()
 
 	folderOut, err := db.Prepare("SELECT FolderId, Path, ParentId FROM Folders WHERE FolderID = ?")
 	if err != nil {
@@ -62,8 +60,7 @@ func GetFolderByID(folderid int) globals.Folder {
 }
 
 func GetTracksByFolderID(folderid int) []globals.Track {
-	db := connect()
-	defer db.Close()
+	db := getConnection()
 
 	folderOut, err := db.Prepare("SELECT TrackID, Path, FolderID, Title, Album, Artist, Genre, Year FROM Tracks WHERE FolderID = ?")
 	if err != nil {

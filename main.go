@@ -78,6 +78,10 @@ func main() {
 		return
 	}
 
+	// start the databse connection pool
+	db := database.Warmup()
+	defer db.Close()
+
 	// index filesystem at specified path
 	if mode == "index" {
 		database.Index(root)

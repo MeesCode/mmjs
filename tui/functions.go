@@ -20,9 +20,6 @@ import (
 
 // play the song currently selected on the playlist
 func playsong() {
-	interfaceLock.Lock()
-	defer interfaceLock.Unlock()
-
 	songindex = myTui.playlist.GetCurrentItem()
 	myTui.app.QueueUpdateDraw(drawplaylist)
 	globals.Playfile <- playlistFiles[myTui.playlist.GetCurrentItem()]
@@ -59,7 +56,7 @@ func audioStateUpdater() {
 			myTui.app.QueueUpdateDraw(func() { drawprogressbar(time.Duration(0), data.Length) })
 
 		case data := <-globals.DurationState:
-			drawprogressbar(data.Playtime, data.Length)
+			myTui.app.QueueUpdateDraw(func() { drawprogressbar(data.Playtime, data.Length) })
 			if data.Playtime == data.Length {
 				nextsong()
 			}
@@ -122,9 +119,6 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 
 // go to the next song (if available)
 func nextsong() {
-	interfaceLock.Lock()
-	defer interfaceLock.Unlock()
-
 	if len(playlistFiles) > songindex+1 {
 		songindex++
 		myTui.app.QueueUpdateDraw(drawplaylist)
@@ -134,9 +128,6 @@ func nextsong() {
 
 // go to the previous song (if available)
 func previoussong() {
-	interfaceLock.Lock()
-	defer interfaceLock.Unlock()
-
 	if songindex > 0 {
 		songindex--
 		myTui.app.QueueUpdateDraw(drawplaylist)
@@ -146,9 +137,6 @@ func previoussong() {
 
 // add a song to the playlist
 func addsong() {
-	interfaceLock.Lock()
-	defer interfaceLock.Unlock()
-
 	track := filelistFiles[myTui.filelist.GetCurrentItem()]
 	playlistFiles = append(playlistFiles, track)
 	myTui.app.QueueUpdateDraw(drawplaylist)
@@ -180,9 +168,6 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 // shuffle the playlist
 func shuffle() {
-	interfaceLock.Lock()
-	defer interfaceLock.Unlock()
-
 	if len(playlistFiles) == 0 {
 		return
 	}
@@ -280,11 +265,11 @@ func changedirFilesystem() {
 					Id:       -1,
 					Path:     path.Join(root, file.Name()),
 					FolderID: -1,
-					Title:    globals.StringToSqlNullableString(m.Title()),
-					Artist:   globals.StringToSqlNullableString(m.Artist()),
-					Album:    globals.StringToSqlNullableString(m.Album()),
-					Genre:    globals.StringToSqlNullableString(m.Genre()),
-					Year:     globals.IntToSqlNullableInt(m.Year())}
+					Title:    database.StringToSqlNullableString(m.Title()),
+					Artist:   database.StringToSqlNullableString(m.Artist()),
+					Album:    database.StringToSqlNullableString(m.Album()),
+					Genre:    database.StringToSqlNullableString(m.Genre()),
+					Year:     database.IntToSqlNullableInt(m.Year())}
 			}
 
 			filelistFiles = append(filelistFiles, track)

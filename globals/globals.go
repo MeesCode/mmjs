@@ -59,18 +59,3 @@ func Contains(arr []string, str string) bool {
 	}
 	return false
 }
-
-func StringToSqlNullableString(s string) sql.NullString {
-	if s == "" {
-		return sql.NullString{String: s, Valid: false}
-	}
-	return sql.NullString{String: s, Valid: true}
-}
-
-func IntToSqlNullableInt(s int) sql.NullInt64 {
-	var i = int64(s)
-	if s == 0 {
-		return sql.NullInt64{Int64: i, Valid: false}
-	}
-	return sql.NullInt64{Int64: i, Valid: true}
-}

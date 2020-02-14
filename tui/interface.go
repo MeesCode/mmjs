@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"mp3bak2/database"
 	"mp3bak2/globals"
-	"sync"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -16,7 +15,6 @@ var (
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
 	songindex            = 0
-	interfaceLock        = new(sync.Mutex)
 )
 
 type tui struct {
@@ -80,7 +78,7 @@ func Start(root string, mode string) {
 
 	keybinds := tview.NewTable()
 	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
-	keybinds.SetCell(0, 0, tview.NewTableCell("Enter: add/play track").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 0, tview.NewTableCell("F3: search").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 1, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 2, tview.NewTableCell("F5: shuffle").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 3, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
@@ -144,10 +142,10 @@ func Start(root string, mode string) {
 			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
 	// do some stuff depending on if we are in database or filesystem mode
+	// and set the root folder as the current
 	var folder globals.Folder
 	if mode == "filesystem" {
 		changedir = changedirFilesystem
-		// set menu to current folder
 		folder = globals.Folder{
 			Id:       -1,
 			Path:     root,
@@ -160,18 +158,18 @@ func Start(root string, mode string) {
 	directorylistFolders = append(directorylistFolders, folder)
 	changedir()
 
-	// update the audio state
+	// listen for audio state updates
 	go audioStateUpdater()
 
-	//////////////////////////////////////////////////////////////////////////////////
-	// the functions below are for handling user input that is not defined by tview //
-	//////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+	// the functions below are for handling user input not defined by tview //
+	//////////////////////////////////////////////////////////////////////////
 
 	// global
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyF5:
-			shuffle()
+			app.QueueUpdate(shuffle)
 			return nil
 		case tcell.KeyF8:
 			globals.Speakercommand <- "pauze"
@@ -180,10 +178,10 @@ func Start(root string, mode string) {
 			globals.Speakercommand <- "change"
 			return nil
 		case tcell.KeyF9:
-			previoussong()
+			app.QueueUpdate(previoussong)
 			return nil
 		case tcell.KeyF12:
-			nextsong()
+			app.QueueUpdate(nextsong)
 			return nil
 		}
 		return event

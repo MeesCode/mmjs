@@ -14,8 +14,7 @@ import (
 
 func Index(root string) {
 
-	db := connect()
-	defer db.Close()
+	db := getConnection()
 
 	// Prepare statement for inserting a folder
 	folderIns, err := db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)")
@@ -81,11 +80,11 @@ func Index(root string) {
 						_, err = fileIns.Exec(
 							file,
 							parentID,
-							globals.StringToSqlNullableString(m.Title()),
-							globals.StringToSqlNullableString(m.Artist()),
-							globals.StringToSqlNullableString(m.Album()),
-							globals.StringToSqlNullableString(m.Genre()),
-							globals.IntToSqlNullableInt(m.Year()))
+							StringToSqlNullableString(m.Title()),
+							StringToSqlNullableString(m.Artist()),
+							StringToSqlNullableString(m.Album()),
+							StringToSqlNullableString(m.Genre()),
+							IntToSqlNullableInt(m.Year()))
 					}
 
 					if err != nil {
