@@ -137,6 +137,8 @@ func Controller() {
 			switch command {
 			case "pauze":
 				pause()
+			case "stop":
+				speaker.Clear()
 			}
 
 		// resend metadata every second (for the timer)

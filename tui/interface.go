@@ -193,6 +193,9 @@ func Start(root string, mode string) {
 		case tcell.KeyTab:
 			app.SetFocus(playlist)
 			return nil
+		case tcell.KeyInsert:
+			app.QueueUpdate(insertsong)
+			return nil
 		}
 		return event
 	})
@@ -202,6 +205,9 @@ func Start(root string, mode string) {
 		switch event.Key() {
 		case tcell.KeyTab:
 			app.SetFocus(directorylist)
+			return nil
+		case tcell.KeyDelete:
+			app.QueueUpdate(deletesong)
 			return nil
 		}
 		return event

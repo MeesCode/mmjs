@@ -18,13 +18,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-// play the song currently selected on the playlist
-func playsong() {
-	songindex = myTui.playlist.GetCurrentItem()
-	myTui.app.QueueUpdateDraw(drawplaylist)
-	globals.Playfile <- playlistFiles[myTui.playlist.GetCurrentItem()]
-}
-
 func trackToDisplayText(track globals.Track) string {
 	var display = ""
 
@@ -56,10 +49,12 @@ func audioStateUpdater() {
 			myTui.app.QueueUpdateDraw(func() { drawprogressbar(time.Duration(0), data.Length) })
 
 		case data := <-globals.DurationState:
-			myTui.app.QueueUpdateDraw(func() { drawprogressbar(data.Playtime, data.Length) })
-			if data.Playtime == data.Length {
-				nextsong()
-			}
+			myTui.app.QueueUpdateDraw(func() {
+				drawprogressbar(data.Playtime, data.Length)
+				if data.Playtime == data.Length {
+					nextsong()
+				}
+			})
 
 		}
 	}
@@ -85,20 +80,22 @@ func drawplaylist() {
 	myTui.playlist.Clear()
 	for index, track := range playlistFiles {
 		if songindex == index {
-			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', playsong)
+			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', func() { myTui.app.QueueUpdate(playsong) })
 		} else {
-			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, playsong)
+			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, func() { myTui.app.QueueUpdate(playsong) })
 		}
 	}
 	myTui.playlist.SetCurrentItem(songindex)
+	myTui.app.Draw()
 }
 
 // draw the file list
 func drawfilelist() {
 	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
-		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, addsong)
+		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, func() { myTui.app.QueueUpdate(addsong) })
 	}
+	myTui.app.Draw()
 }
 
 // draw the directory list
@@ -115,13 +112,23 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 		}
 
 	}
+	myTui.app.Draw()
+}
+
+// play the song currently selected on the playlist
+func playsong() {
+	if len(playlistFiles) == 0 || songindex > len(playlistFiles) {
+		return
+	}
+	songindex = myTui.playlist.GetCurrentItem()
+	globals.Playfile <- playlistFiles[myTui.playlist.GetCurrentItem()]
 }
 
 // go to the next song (if available)
 func nextsong() {
 	if len(playlistFiles) > songindex+1 {
 		songindex++
-		myTui.app.QueueUpdateDraw(drawplaylist)
+		drawplaylist()
 		globals.Playfile <- playlistFiles[songindex]
 	}
 }
@@ -130,7 +137,7 @@ func nextsong() {
 func previoussong() {
 	if songindex > 0 {
 		songindex--
-		myTui.app.QueueUpdateDraw(drawplaylist)
+		drawplaylist()
 		globals.Playfile <- playlistFiles[songindex]
 	}
 }
@@ -139,8 +146,47 @@ func previoussong() {
 func addsong() {
 	track := filelistFiles[myTui.filelist.GetCurrentItem()]
 	playlistFiles = append(playlistFiles, track)
-	myTui.app.QueueUpdateDraw(drawplaylist)
+	drawplaylist()
 	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
+}
+
+// insert a song into the playlist
+func insertsong() {
+	track := filelistFiles[myTui.filelist.GetCurrentItem()]
+	playlistFiles = append(playlistFiles[:songindex+1], append([]globals.Track{track}, playlistFiles[songindex+1:]...)...)
+	drawplaylist()
+	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
+}
+
+// insert a song into the playlist
+func deletesong() {
+	if len(playlistFiles) == 0 {
+		drawplaylist()
+		return
+	}
+
+	var i = myTui.playlist.GetCurrentItem()
+	playlistFiles = append(playlistFiles[:i], playlistFiles[i+1:]...)
+
+	// stop the music when last song is deleted
+	if len(playlistFiles) == songindex {
+		globals.Speakercommand <- "stop"
+		songindex--
+		drawplaylist()
+		return
+	}
+
+	if i == songindex {
+		drawplaylist()
+		globals.Playfile <- playlistFiles[songindex]
+	}
+
+	if i < songindex {
+		songindex--
+	}
+
+	drawplaylist()
+	myTui.playlist.SetCurrentItem(i)
 }
 
 // draw the progressbar
@@ -164,6 +210,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	myTui.totaltime.Clear()
 	fmt.Fprintf(myTui.totaltime, "%02d:%02d:%02d", th, tm-th*60, ts-tm*60)
 
+	myTui.app.Draw()
 }
 
 // shuffle the playlist
@@ -176,7 +223,7 @@ func shuffle() {
 	rand.Shuffle(len(playlistFiles), func(i, j int) { playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i] })
 	songindex = 0
 	globals.Playfile <- playlistFiles[songindex]
-	myTui.app.QueueUpdateDraw(drawplaylist)
+	drawplaylist()
 }
 
 func changedirDatabase() {
