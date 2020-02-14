@@ -24,7 +24,7 @@ func playsong() {
 	defer interfaceLock.Unlock()
 
 	songindex = myTui.playlist.GetCurrentItem()
-	drawplaylist()
+	myTui.app.QueueUpdateDraw(drawplaylist)
 	globals.Playfile <- playlistFiles[myTui.playlist.GetCurrentItem()]
 }
 
@@ -56,15 +56,13 @@ func audioStateUpdater() {
 		select {
 		case data := <-globals.Audiostate:
 			updateInfoBox(data.Track, myTui.infobox)
-			drawprogressbar(time.Duration(0), data.Length)
-			myTui.app.Draw()
+			myTui.app.QueueUpdateDraw(func() { drawprogressbar(time.Duration(0), data.Length) })
 
 		case data := <-globals.DurationState:
 			drawprogressbar(data.Playtime, data.Length)
 			if data.Playtime == data.Length {
 				nextsong()
 			}
-			myTui.app.Draw()
 
 		}
 	}
@@ -96,7 +94,6 @@ func drawplaylist() {
 		}
 	}
 	myTui.playlist.SetCurrentItem(songindex)
-	myTui.app.Draw()
 }
 
 // draw the file list
@@ -105,7 +102,6 @@ func drawfilelist() {
 	for _, track := range filelistFiles {
 		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, addsong)
 	}
-	myTui.app.Draw()
 }
 
 // draw the directory list
@@ -122,7 +118,6 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 		}
 
 	}
-	myTui.app.Draw()
 }
 
 // go to the next song (if available)
@@ -132,7 +127,7 @@ func nextsong() {
 
 	if len(playlistFiles) > songindex+1 {
 		songindex++
-		drawplaylist()
+		myTui.app.QueueUpdateDraw(drawplaylist)
 		globals.Playfile <- playlistFiles[songindex]
 	}
 }
@@ -144,7 +139,7 @@ func previoussong() {
 
 	if songindex > 0 {
 		songindex--
-		drawplaylist()
+		myTui.app.QueueUpdateDraw(drawplaylist)
 		globals.Playfile <- playlistFiles[songindex]
 	}
 }
@@ -156,7 +151,7 @@ func addsong() {
 
 	track := filelistFiles[myTui.filelist.GetCurrentItem()]
 	playlistFiles = append(playlistFiles, track)
-	drawplaylist()
+	myTui.app.QueueUpdateDraw(drawplaylist)
 	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
 }
 
@@ -164,7 +159,7 @@ func addsong() {
 func drawprogressbar(playtime time.Duration, length time.Duration) {
 	myTui.progressbar.Clear()
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
-	fill := int(float64(width) * playtime.Seconds() / float64(length.Seconds()))
+	fill := width * int(playtime) / int(length)
 	for i := 0; i < fill-1; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneCkBoard)
 	}
@@ -177,11 +172,9 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	myTui.playtime.Clear()
 	fmt.Fprintf(myTui.playtime, "%02d:%02d:%02d", ph, pm-ph*60, ps-pm*60)
 
-	if length != time.Duration(0) {
-		th, tm, ts := int64(length.Hours()), int64(length.Minutes()), int64(length.Seconds())
-		myTui.totaltime.Clear()
-		fmt.Fprintf(myTui.totaltime, "%02d:%02d:%02d", th, tm-th*60, ts-tm*60)
-	}
+	th, tm, ts := int64(length.Hours()), int64(length.Minutes()), int64(length.Seconds())
+	myTui.totaltime.Clear()
+	fmt.Fprintf(myTui.totaltime, "%02d:%02d:%02d", th, tm-th*60, ts-tm*60)
 
 }
 
@@ -198,7 +191,7 @@ func shuffle() {
 	rand.Shuffle(len(playlistFiles), func(i, j int) { playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i] })
 	songindex = 0
 	globals.Playfile <- playlistFiles[songindex]
-	drawplaylist()
+	myTui.app.QueueUpdateDraw(drawplaylist)
 }
 
 func changedirDatabase() {

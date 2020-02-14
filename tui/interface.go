@@ -104,11 +104,6 @@ func Start(root string, mode string) {
 	playlist := tview.NewList()
 	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
 	playlist.ShowSecondaryText(false)
-	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
-		if len(playlistFiles) > 0 {
-			updateInfoBox(playlistFiles[i], browseinfobox)
-		}
-	})
 
 	// save interface
 	myTui = tui{

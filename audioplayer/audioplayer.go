@@ -38,6 +38,10 @@ type audioFile struct {
 }
 
 func openFile(file globals.Track) audioFile {
+
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
 	f, err := os.Open(file.Path)
 	if err != nil {
 		log.Fatalf("Error opening the file: %s", err)
@@ -77,7 +81,9 @@ func openFile(file globals.Track) audioFile {
 	}
 
 	// set the length of the track
-	length := format.SampleRate.D(streamer.Len()).Round(time.Second)
+	speaker.Lock()
+	length := format.SampleRate.D(streamer.Len())
+	speaker.Unlock()
 	return audioFile{file, streamer, format, length, false}
 }
 
@@ -88,12 +94,11 @@ func playFile(file audioFile) {
 
 	speaker.Lock()
 	ctrl = &beep.Ctrl{Paused: false, Streamer: beep.Seq(file.Streamer)}
-	speaker.Unlock()
-
 	globals.Audiostate <- globals.AudioStats{
 		Track:  file.Track,
 		Length: file.Length,
 	}
+	speaker.Unlock()
 
 	speaker.Clear()
 	speaker.Play(ctrl, beep.Callback(func() {
@@ -135,13 +140,13 @@ func Controller() {
 			}
 
 		// resend metadata every second (for the timer)
-		case <-time.After(time.Second):
+		case <-time.After(time.Second / 5):
 			if ctrl == nil {
 				continue
 			}
 			speaker.Lock()
 			globals.DurationState <- globals.DurationStats{
-				Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()).Round(time.Second),
+				Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()),
 				Length:   playingFile.Length,
 			}
 			speaker.Unlock()
