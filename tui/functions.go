@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
 	"os"
@@ -45,14 +46,16 @@ func audioStateUpdater() {
 	for {
 		select {
 		case data := <-globals.Audiostate:
-			updateInfoBox(data.Track, myTui.infobox)
-			myTui.app.QueueUpdateDraw(func() { drawprogressbar(time.Duration(0), data.Length) })
+			myTui.app.QueueUpdate(func() {
+				updateInfoBox(data.Track, myTui.infobox)
+				drawprogressbar(time.Duration(0), data.Length)
+			})
 
 		case data := <-globals.DurationState:
-			myTui.app.QueueUpdateDraw(func() {
+			myTui.app.QueueUpdate(func() {
 				drawprogressbar(data.Playtime, data.Length)
 				if data.Playtime == data.Length {
-					nextsong()
+					myTui.app.QueueUpdate(nextsong)
 				}
 			})
 
@@ -122,7 +125,7 @@ func playsong() {
 	}
 	songindex = myTui.playlist.GetCurrentItem()
 	drawplaylist()
-	globals.Playfile <- playlistFiles[myTui.playlist.GetCurrentItem()]
+	go audioplayer.Play(playlistFiles[myTui.playlist.GetCurrentItem()])
 }
 
 // go to the next song (if available)
@@ -130,7 +133,7 @@ func nextsong() {
 	if len(playlistFiles) > songindex+1 {
 		songindex++
 		drawplaylist()
-		globals.Playfile <- playlistFiles[songindex]
+		go audioplayer.Play(playlistFiles[songindex])
 	}
 }
 
@@ -139,7 +142,7 @@ func previoussong() {
 	if songindex > 0 {
 		songindex--
 		drawplaylist()
-		globals.Playfile <- playlistFiles[songindex]
+		go audioplayer.Play(playlistFiles[songindex])
 	}
 }
 
@@ -162,6 +165,7 @@ func insertsong() {
 // insert a song into the playlist
 func deletesong() {
 	if len(playlistFiles) == 0 {
+		songindex = 0
 		drawplaylist()
 		return
 	}
@@ -169,9 +173,15 @@ func deletesong() {
 	var i = myTui.playlist.GetCurrentItem()
 	playlistFiles = append(playlistFiles[:i], playlistFiles[i+1:]...)
 
+	if len(playlistFiles) == 0 {
+		songindex = 0
+		drawplaylist()
+		return
+	}
+
 	// stop the music when last song is deleted
-	if len(playlistFiles) == songindex {
-		globals.Speakercommand <- "stop"
+	if len(playlistFiles) == songindex && i == songindex {
+		go audioplayer.Stop()
 		songindex--
 		drawplaylist()
 		return
@@ -179,7 +189,7 @@ func deletesong() {
 
 	if i == songindex {
 		drawplaylist()
-		globals.Playfile <- playlistFiles[songindex]
+		go audioplayer.Play(playlistFiles[songindex])
 	}
 
 	if i < songindex {
@@ -223,7 +233,7 @@ func shuffle() {
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(playlistFiles), func(i, j int) { playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i] })
 	songindex = 0
-	globals.Playfile <- playlistFiles[songindex]
+	go audioplayer.Play(playlistFiles[songindex])
 	drawplaylist()
 }
 

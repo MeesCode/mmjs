@@ -10,11 +10,9 @@ import (
 )
 
 var (
-	Speakercommand = make(chan string)
-	Playfile       = make(chan Track)
-	Audiostate     = make(chan AudioStats)
-	DurationState  = make(chan DurationStats)
-	Formats        = []string{".wav", ".mp3", ".ogg", ".flac"}
+	Audiostate    = make(chan AudioStats)
+	DurationState = make(chan DurationStats)
+	Formats       = []string{".wav", ".mp3", ".ogg", ".flac"}
 )
 
 type AudioStats struct {

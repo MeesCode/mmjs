@@ -101,7 +101,7 @@ func main() {
 	}
 
 	// initialize audio player
-	go audioplayer.Controller()
+	go audioplayer.Init()
 
 	// start user interface
 	// (on current thread as to not immediately exit)

@@ -36,10 +36,6 @@ type audioFile struct {
 }
 
 func openFile(file globals.Track) audioFile {
-
-	audioLock.Lock()
-	defer audioLock.Unlock()
-
 	f, err := os.Open(file.Path)
 	if err != nil {
 		log.Fatalf("Error opening the file: %s", err)
@@ -86,19 +82,17 @@ func openFile(file globals.Track) audioFile {
 }
 
 func playFile(file audioFile) {
-
-	audioLock.Lock()
-	defer audioLock.Unlock()
-
 	speaker.Lock()
 	ctrl = &beep.Ctrl{Paused: false, Streamer: beep.Seq(file.Streamer)}
+	speaker.Unlock()
+
 	globals.Audiostate <- globals.AudioStats{
 		Track:  file.Track,
 		Length: file.Length,
 	}
-	speaker.Unlock()
 
 	speaker.Clear()
+
 	var speakerDone = make(chan bool)
 	speaker.Play(ctrl, beep.Callback(func() {
 		speakerDone <- true
@@ -107,51 +101,56 @@ func playFile(file audioFile) {
 
 }
 
-func pause() {
+func Stop() {
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
+	speaker.Clear()
+}
+
+func Pause() {
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
 	if ctrl == nil {
 		return
 	}
-
-	audioLock.Lock()
-	defer audioLock.Unlock()
 
 	speaker.Lock()
 	ctrl.Paused = !ctrl.Paused
 	speaker.Unlock()
 }
 
-// Controller : take control of the speaker
-func Controller() {
+func Play(file globals.Track) {
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
+	playingFile = openFile(file)
+	playFile(playingFile)
+}
+
+func sendDuration() {
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
+	if ctrl == nil {
+		return
+	}
+
+	speaker.Lock()
+	globals.DurationState <- globals.DurationStats{
+		Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()),
+		Length:   playingFile.Length,
+	}
+	speaker.Unlock()
+}
+
+// Initializes the duration timer
+func Init() {
 
 	// event loop
 	for {
-		select {
-
-		case file := <-globals.Playfile:
-			playingFile = openFile(file)
-			playFile(playingFile)
-
-		// when a command comes in, handlle it
-		case command := <-globals.Speakercommand:
-			switch command {
-			case "pauze":
-				pause()
-			case "stop":
-				speaker.Clear()
-			}
-
-		// resend metadata every second (for the timer)
-		case <-time.After(time.Second / 2):
-			if ctrl == nil {
-				continue
-			}
-			speaker.Lock()
-			globals.DurationState <- globals.DurationStats{
-				Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()),
-				Length:   playingFile.Length,
-			}
-			speaker.Unlock()
-
-		}
+		<-time.After(time.Second / 2)
+		sendDuration()
 	}
 }

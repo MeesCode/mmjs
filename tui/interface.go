@@ -2,8 +2,10 @@ package tui
 
 import (
 	"fmt"
+	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
+	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -15,6 +17,7 @@ var (
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
 	songindex            = 0
+	durationstats        = globals.DurationStats{time.Duration(0), time.Duration(0)}
 )
 
 type tui struct {
@@ -172,7 +175,7 @@ func Start(root string, mode string) {
 			app.QueueUpdate(shuffle)
 			return nil
 		case tcell.KeyF8:
-			globals.Speakercommand <- "pauze"
+			audioplayer.Pause()
 			return nil
 		case tcell.KeyF9:
 			app.QueueUpdate(previoussong)
@@ -181,7 +184,7 @@ func Start(root string, mode string) {
 			app.QueueUpdate(nextsong)
 			return nil
 		case tcell.KeyCtrlC:
-			globals.Speakercommand <- "stop"
+			audioplayer.Stop()
 			app.Stop()
 			return nil
 		}
