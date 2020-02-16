@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/dhowden/tag"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Index the specified root folder

@@ -15,7 +15,7 @@ func Warmup() *sql.DB {
 			globals.DatabaseCredentials.Database)
 
 	if err != nil {
-		panic("cannot open database")
+		panic(err)
 	}
 
 	err = db.Ping()

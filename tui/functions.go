@@ -416,3 +416,9 @@ func closeSearch() {
 	myTui.app.SetFocus(myTui.filelist)
 	drawfilelist()
 }
+
+func clear() {
+	go audioplayer.Stop()
+	playlistFiles = nil
+	drawplaylist()
+}

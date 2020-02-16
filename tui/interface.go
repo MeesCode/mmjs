@@ -87,15 +87,17 @@ func Start(base string, mode string) {
 
 	keybinds := tview.NewTable()
 	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
-	keybinds.SetCell(0, 0, tview.NewTableCell("F3: search").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 0, tview.NewTableCell("F2: clear").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 1, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 2, tview.NewTableCell("F5: shuffle").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 2, tview.NewTableCell("F3: search").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 3, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 4, tview.NewTableCell("F8: play/pause").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 4, tview.NewTableCell("F5: shuffle").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 5, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 6, tview.NewTableCell("F9: previous track").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 6, tview.NewTableCell("F8: play/pause").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 7, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 8, tview.NewTableCell("F12: next track").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 8, tview.NewTableCell("F9: previous track").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 9, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
+	keybinds.SetCell(0, 10, tview.NewTableCell("F12: next track").SetExpansion(1).SetAlign(1))
 
 	searchbar := tview.NewBox()
 	searchbar.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
@@ -202,6 +204,9 @@ func Start(base string, mode string) {
 	// global
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
+		case tcell.KeyF2:
+			app.QueueUpdate(clear)
+			return nil
 		case tcell.KeyF3:
 			openSearch()
 			return nil
