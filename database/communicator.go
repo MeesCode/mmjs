@@ -11,7 +11,7 @@ import (
 func GetFoldersByParentID(parentid int) []globals.Folder {
 	db := getConnection()
 
-	folderOut, err := db.Prepare("SELECT FolderId, Path, ParentId FROM Folders WHERE ParentID = ?")
+	folderOut, err := db.Prepare("SELECT FolderId, Path, ParentId FROM Folders WHERE ParentID = ? ORDER BY Path")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -71,6 +71,45 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 	tracks := make([]globals.Track, 0)
 
 	rows, err := folderOut.Query(folderid)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for rows.Next() {
+		var track globals.Track
+		err = rows.Scan(
+			&track.Id,
+			&track.Path,
+			&track.FolderID,
+			&track.Title,
+			&track.Album,
+			&track.Artist,
+			&track.Genre,
+			&track.Year)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		tracks = append(tracks, track)
+
+	}
+
+	return tracks
+
+}
+
+func GetSearchResults(term string) []globals.Track {
+	db := getConnection()
+
+	trackOut, err := db.Prepare("SELECT TrackID, Path, FolderID, Title, Album, Artist, Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Album LIKE ? ORDER BY Album")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer trackOut.Close()
+
+	tracks := make([]globals.Track, 0)
+
+	rows, err := trackOut.Query(term+"%", term+"%", term+"%")
 	if err != nil {
 		panic(err.Error())
 	}

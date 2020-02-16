@@ -13,11 +13,15 @@ import (
 
 // global variables
 var (
+	root                 string
 	playlistFiles        = make([]globals.Track, 0)
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
 	songindex            = 0
-	durationstats        = globals.DurationStats{time.Duration(0), time.Duration(0)}
+	durationstats        = globals.DurationStats{Playtime: time.Duration(0), Length: time.Duration(0)}
+	myTui                tui
+	changedir            func()
+	search               func(string)
 )
 
 type tui struct {
@@ -32,11 +36,10 @@ type tui struct {
 	totaltime     *tview.TextView
 }
 
-var myTui tui
-var changedir func()
-
 // Start : start the tui
-func Start(root string, mode string) {
+func Start(base string, mode string) {
+
+	root = base
 
 	// build interface
 	app := tview.NewApplication()
@@ -149,12 +152,14 @@ func Start(root string, mode string) {
 	var folder globals.Folder
 	if mode == "filesystem" {
 		changedir = changedirFilesystem
+		search = searchFilesystem
 		folder = globals.Folder{
 			Id:       -1,
 			Path:     root,
 			ParentID: -1}
 	} else {
 		changedir = changedirDatabase
+		search = searchDatabase
 		folder = database.GetFolderByID(1)
 	}
 
@@ -173,6 +178,9 @@ func Start(root string, mode string) {
 		switch event.Key() {
 		case tcell.KeyF5:
 			app.QueueUpdate(shuffle)
+			return nil
+		case tcell.KeyF7: // debug button
+			search("Test")
 			return nil
 		case tcell.KeyF8:
 			audioplayer.Pause()

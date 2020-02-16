@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -164,15 +166,18 @@ func insertsong() {
 
 // insert a song into the playlist
 func deletesong() {
+
+	// if list is empty do nothing
 	if len(playlistFiles) == 0 {
-		songindex = 0
-		drawplaylist()
 		return
 	}
 
+	// remove selected song from the list
 	var i = myTui.playlist.GetCurrentItem()
 	playlistFiles = append(playlistFiles[:i], playlistFiles[i+1:]...)
 
+	// if after deleting an item the list is empty make sure the
+	// songindex is set to 0 and redraw
 	if len(playlistFiles) == 0 {
 		songindex = 0
 		drawplaylist()
@@ -187,11 +192,14 @@ func deletesong() {
 		return
 	}
 
+	// play the next song when the current song is deleted
+	// but there is a next song on the list
 	if i == songindex {
-		drawplaylist()
 		go audioplayer.Play(playlistFiles[songindex])
 	}
 
+	// if we delete a song that is before the current one
+	// match the songindex to the new list
 	if i < songindex {
 		songindex--
 	}
@@ -238,21 +246,21 @@ func shuffle() {
 }
 
 func changedirDatabase() {
-	var root = directorylistFolders[myTui.directorylist.GetCurrentItem()]
+	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
 
 	// add files
-	filelistFiles = database.GetTracksByFolderID(root.Id)
+	filelistFiles = database.GetTracksByFolderID(base.Id)
 
 	// only add parent folder when we are not in the root directory
-	var isRoot = root.Id == 1
+	var isRoot = base.Id == 1
 	if !isRoot {
-		directorylistFolders = []globals.Folder{database.GetFolderByID(root.ParentID)}
+		directorylistFolders = []globals.Folder{database.GetFolderByID(base.ParentID)}
 	} else {
 		directorylistFolders = nil
 	}
 
 	//add the rest of the folders
-	directorylistFolders = append(directorylistFolders, database.GetFoldersByParentID(root.Id)...)
+	directorylistFolders = append(directorylistFolders, database.GetFoldersByParentID(base.Id)...)
 
 	drawdirectorylist(changedirDatabase, isRoot)
 	drawfilelist()
@@ -260,10 +268,10 @@ func changedirDatabase() {
 
 // navigate the file manager
 func changedirFilesystem() {
-	var root = directorylistFolders[myTui.directorylist.GetCurrentItem()].Path
-	var isRoot = root == "/"
+	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
+	var isRoot = base.Path == "/"
 
-	files, _ := ioutil.ReadDir(root)
+	files, _ := ioutil.ReadDir(base.Path)
 
 	directorylistFolders = nil
 	filelistFiles = nil
@@ -272,7 +280,7 @@ func changedirFilesystem() {
 		// add parent folder
 		var folder = globals.Folder{
 			Id:       -1,
-			Path:     path.Clean(path.Join(root, "..")),
+			Path:     path.Clean(path.Join(base.Path, "..")),
 			ParentID: -1}
 
 		directorylistFolders = append(directorylistFolders, folder)
@@ -290,7 +298,7 @@ func changedirFilesystem() {
 		if file.IsDir() {
 			var folder = globals.Folder{
 				Id:       -1,
-				Path:     path.Join(root, file.Name()),
+				Path:     path.Join(base.Path, file.Name()),
 				ParentID: -1}
 
 			directorylistFolders = append(directorylistFolders, folder)
@@ -302,7 +310,7 @@ func changedirFilesystem() {
 			}
 
 			// read metadata
-			f, _ := os.Open(path.Join(root, file.Name()))
+			f, _ := os.Open(path.Join(base.Path, file.Name()))
 			m, err := tag.ReadFrom(f)
 
 			var track globals.Track
@@ -311,7 +319,7 @@ func changedirFilesystem() {
 			if err != nil {
 				track = globals.Track{
 					Id:       -1,
-					Path:     path.Join(root, file.Name()),
+					Path:     path.Join(base.Path, file.Name()),
 					FolderID: -1,
 					Title:    sql.NullString{String: file.Name(), Valid: true},
 					Album:    sql.NullString{String: "", Valid: false},
@@ -321,7 +329,7 @@ func changedirFilesystem() {
 			} else {
 				track = globals.Track{
 					Id:       -1,
-					Path:     path.Join(root, file.Name()),
+					Path:     path.Join(base.Path, file.Name()),
 					FolderID: -1,
 					Title:    database.StringToSqlNullableString(m.Title()),
 					Artist:   database.StringToSqlNullableString(m.Artist()),
@@ -335,5 +343,56 @@ func changedirFilesystem() {
 		}
 	}
 	drawdirectorylist(changedirFilesystem, isRoot)
+	drawfilelist()
+}
+
+func searchDatabase(term string) {
+	filelistFiles = database.GetSearchResults(term)
+	drawfilelist()
+}
+
+func searchFilesystem(term string) {
+	filelistFiles = nil
+
+	err := filepath.Walk(root,
+		func(file string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if !info.IsDir() && globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
+
+				// read metadata
+				f, _ := os.Open(file)
+				m, err := tag.ReadFrom(f)
+
+				if err == nil {
+					if strings.HasPrefix(m.Artist(), term) || strings.HasPrefix(m.Album(), term) || strings.HasPrefix(m.Title(), term) {
+						var track globals.Track
+
+						track = globals.Track{
+							Id:       -1,
+							Path:     file,
+							FolderID: -1,
+							Title:    database.StringToSqlNullableString(m.Title()),
+							Artist:   database.StringToSqlNullableString(m.Artist()),
+							Album:    database.StringToSqlNullableString(m.Album()),
+							Genre:    database.StringToSqlNullableString(m.Genre()),
+							Year:     database.IntToSqlNullableInt(m.Year())}
+
+						filelistFiles = append(filelistFiles, track)
+					}
+
+					if err != nil {
+						panic(err.Error())
+					}
+				}
+			}
+
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
 	drawfilelist()
 }
