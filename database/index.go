@@ -10,6 +10,9 @@ import (
 	"strings"
 
 	"github.com/dhowden/tag"
+
+	// this is needed but i don't know why it is blank
+	// probz just does some stuff in the background
 	_ "github.com/go-sql-driver/mysql"
 )
 

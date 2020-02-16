@@ -47,7 +47,7 @@ func main() {
 
 	// check that a path has been given
 	if arg == "" && mode != "database" {
-		fmt.Println("please specify a path\n")
+		fmt.Println("please specify a path")
 		flag.PrintDefaults()
 		return
 	}
@@ -67,7 +67,7 @@ func main() {
 
 	// check if mode is correct
 	if !globals.Contains(modes, mode) {
-		fmt.Println("please use one of the availble modes\n")
+		fmt.Println("please use one of the availble modes")
 		flag.PrintDefaults()
 		return
 	}
@@ -75,14 +75,16 @@ func main() {
 	// check if path exists
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		fmt.Println("chosen path: " + root)
-		fmt.Println("specified path does not exist\n")
+		fmt.Println("specified path does not exist")
 		flag.PrintDefaults()
 		return
 	}
 
 	// start the databse connection pool
-	db := database.Warmup()
-	defer db.Close()
+	if mode != "filesystem" {
+		db := database.Warmup()
+		defer db.Close()
+	}
 
 	// index filesystem at specified path
 	if mode == "index" {

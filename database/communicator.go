@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"mp3bak2/globals"
 )
 
@@ -54,6 +55,7 @@ func GetFolderByID(folderid int) globals.Folder {
 
 	err = folderOut.QueryRow(folderid).Scan(&folder.Id, &folder.Path, &folder.ParentID)
 	if err != nil {
+		fmt.Println("did you forget to run index mode first?")
 		panic(err.Error())
 	}
 
