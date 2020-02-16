@@ -239,7 +239,9 @@ func shuffle() {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(playlistFiles), func(i, j int) { playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i] })
+	rand.Shuffle(len(playlistFiles), func(i, j int) {
+		playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i]
+	})
 	songindex = 0
 	go audioplayer.Play(playlistFiles[songindex])
 	drawplaylist()
@@ -331,11 +333,11 @@ func changedirFilesystem() {
 					Id:       -1,
 					Path:     path.Join(base.Path, file.Name()),
 					FolderID: -1,
-					Title:    database.StringToSqlNullableString(m.Title()),
-					Artist:   database.StringToSqlNullableString(m.Artist()),
-					Album:    database.StringToSqlNullableString(m.Album()),
-					Genre:    database.StringToSqlNullableString(m.Genre()),
-					Year:     database.IntToSqlNullableInt(m.Year())}
+					Title:    database.StringToSQLNullableString(m.Title()),
+					Artist:   database.StringToSQLNullableString(m.Artist()),
+					Album:    database.StringToSQLNullableString(m.Album()),
+					Genre:    database.StringToSQLNullableString(m.Genre()),
+					Year:     database.IntToSQLNullableInt(m.Year())}
 			}
 
 			filelistFiles = append(filelistFiles, track)
@@ -346,45 +348,44 @@ func changedirFilesystem() {
 	drawfilelist()
 }
 
-func searchDatabase(term string) {
+func searchDatabase() {
+	var term = myTui.searchinput.GetText()
 	filelistFiles = database.GetSearchResults(term)
-	drawfilelist()
+	closeSearch()
 }
 
-func searchFilesystem(term string) {
+func searchFilesystem() {
+	var term = myTui.searchinput.GetText()
 	filelistFiles = nil
-
 	err := filepath.Walk(root,
 		func(file string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 
-			if !info.IsDir() && globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
-
+			if !info.IsDir() ||
+				!globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
 				// read metadata
 				f, _ := os.Open(file)
 				m, err := tag.ReadFrom(f)
 
 				if err == nil {
-					if strings.HasPrefix(m.Artist(), term) || strings.HasPrefix(m.Album(), term) || strings.HasPrefix(m.Title(), term) {
+					if strings.HasPrefix(strings.ToLower(m.Artist()), strings.ToLower(term)) ||
+						strings.HasPrefix(strings.ToLower(m.Album()), strings.ToLower(term)) ||
+						strings.HasPrefix(strings.ToLower(m.Title()), strings.ToLower(term)) {
 						var track globals.Track
 
 						track = globals.Track{
 							Id:       -1,
 							Path:     file,
 							FolderID: -1,
-							Title:    database.StringToSqlNullableString(m.Title()),
-							Artist:   database.StringToSqlNullableString(m.Artist()),
-							Album:    database.StringToSqlNullableString(m.Album()),
-							Genre:    database.StringToSqlNullableString(m.Genre()),
-							Year:     database.IntToSqlNullableInt(m.Year())}
+							Title:    database.StringToSQLNullableString(m.Title()),
+							Artist:   database.StringToSQLNullableString(m.Artist()),
+							Album:    database.StringToSQLNullableString(m.Album()),
+							Genre:    database.StringToSQLNullableString(m.Genre()),
+							Year:     database.IntToSQLNullableInt(m.Year())}
 
 						filelistFiles = append(filelistFiles, track)
-					}
-
-					if err != nil {
-						panic(err.Error())
 					}
 				}
 			}
@@ -394,5 +395,24 @@ func searchFilesystem(term string) {
 	if err != nil {
 		log.Println(err)
 	}
+	closeSearch()
+}
+
+func openSearch() {
+	// don't open a new seach window when one is already open
+	if myTui.searchinput.HasFocus() {
+		return
+	}
+	myTui.mainFlex.RemoveItem(myTui.keybinds)
+	myTui.mainFlex.AddItem(myTui.searchinput, 3, 0, false)
+	myTui.searchinput.SetText("")
+	myTui.app.SetFocus(myTui.searchinput)
+	drawfilelist()
+}
+
+func closeSearch() {
+	myTui.mainFlex.RemoveItem(myTui.searchinput)
+	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
+	myTui.app.SetFocus(myTui.filelist)
 	drawfilelist()
 }

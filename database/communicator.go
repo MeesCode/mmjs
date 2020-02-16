@@ -8,6 +8,7 @@ import (
 // root folder always has id 1 and parentid 0 //
 ////////////////////////////////////////////////
 
+// GetFoldersByParentID : get the folders inside the given parent
 func GetFoldersByParentID(parentid int) []globals.Folder {
 	db := getConnection()
 
@@ -39,6 +40,7 @@ func GetFoldersByParentID(parentid int) []globals.Folder {
 
 }
 
+// GetFolderByID : do as the name implies
 func GetFolderByID(folderid int) globals.Folder {
 	db := getConnection()
 
@@ -59,6 +61,7 @@ func GetFolderByID(folderid int) globals.Folder {
 
 }
 
+// GetTracksByFolderID : get the tracks inside a given folder
 func GetTracksByFolderID(folderid int) []globals.Track {
 	db := getConnection()
 
@@ -98,6 +101,8 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 
 }
 
+// GetSearchResults : search the database for a specific term and
+// return the results
 func GetSearchResults(term string) []globals.Track {
 	db := getConnection()
 

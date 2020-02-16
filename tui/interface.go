@@ -21,7 +21,7 @@ var (
 	durationstats        = globals.DurationStats{Playtime: time.Duration(0), Length: time.Duration(0)}
 	myTui                tui
 	changedir            func()
-	search               func(string)
+	search               func()
 )
 
 type tui struct {
@@ -34,6 +34,9 @@ type tui struct {
 	progressbar   *tview.TextView
 	playtime      *tview.TextView
 	totaltime     *tview.TextView
+	keybinds      *tview.Table
+	mainFlex      *tview.Flex
+	searchinput   *tview.InputField
 }
 
 // Start : start the tui
@@ -94,6 +97,24 @@ func Start(base string, mode string) {
 	keybinds.SetCell(0, 7, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
 	keybinds.SetCell(0, 8, tview.NewTableCell("F12: next track").SetExpansion(1).SetAlign(1))
 
+	searchbar := tview.NewBox()
+	searchbar.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
+
+	searchinput := tview.NewInputField().
+		SetLabel("Enter a search term: ").
+		SetFieldTextColor(-1).
+		SetFieldBackgroundColor(-1).
+		SetLabelColor(-1).
+		SetDoneFunc(func(key tcell.Key) {
+			if key == tcell.KeyEnter {
+				search()
+			}
+			if key == tcell.KeyEsc {
+				closeSearch()
+			}
+		})
+	searchinput.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
+
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false).SetBackgroundColor(-1)
 
@@ -109,6 +130,8 @@ func Start(base string, mode string) {
 	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
 	playlist.ShowSecondaryText(false)
 
+	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+
 	// save interface
 	myTui = tui{
 		app:           app,
@@ -120,6 +143,9 @@ func Start(base string, mode string) {
 		playtime:      playtime,
 		totaltime:     totaltime,
 		browseinfobox: browseinfobox,
+		keybinds:      keybinds,
+		mainFlex:      mainFlex,
+		searchinput:   searchinput,
 	}
 
 	// fill progress bar
@@ -132,7 +158,7 @@ func Start(base string, mode string) {
 
 	// define tui locations
 	flex := tview.NewFlex().
-		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(mainFlex.
 			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 				AddItem(directorylist, 0, 1, false).
 				AddItem(filelist, 0, 2, false).
@@ -176,11 +202,11 @@ func Start(base string, mode string) {
 	// global
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
+		case tcell.KeyF3:
+			openSearch()
+			return nil
 		case tcell.KeyF5:
 			app.QueueUpdate(shuffle)
-			return nil
-		case tcell.KeyF7: // debug button
-			search("Test")
 			return nil
 		case tcell.KeyF8:
 			audioplayer.Pause()
@@ -191,7 +217,7 @@ func Start(base string, mode string) {
 		case tcell.KeyF12:
 			app.QueueUpdate(nextsong)
 			return nil
-		case tcell.KeyCtrlC:
+		case tcell.KeyCtrlC: // gracefull shutdown
 			audioplayer.Stop()
 			app.Stop()
 			return nil

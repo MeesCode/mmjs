@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/dhowden/tag"
-	_ "github.com/go-sql-driver/mysql"
 )
 
+// Index the specified root folder
 func Index(root string) {
 
 	db := getConnection()
@@ -81,11 +81,11 @@ func Index(root string) {
 						_, err = fileIns.Exec(
 							file,
 							parentID,
-							StringToSqlNullableString(m.Title()),
-							StringToSqlNullableString(m.Artist()),
-							StringToSqlNullableString(m.Album()),
-							StringToSqlNullableString(m.Genre()),
-							IntToSqlNullableInt(m.Year()))
+							StringToSQLNullableString(m.Title()),
+							StringToSQLNullableString(m.Album()),
+							StringToSQLNullableString(m.Artist()),
+							StringToSQLNullableString(m.Genre()),
+							IntToSQLNullableInt(m.Year()))
 					}
 
 					if err != nil {
