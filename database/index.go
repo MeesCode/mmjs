@@ -51,6 +51,11 @@ func Index(root string) {
 			// make sure it's a playable file
 			if info.IsDir() || globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
 
+				// skip hidden folders
+				if strings.Contains(file, "/.") {
+					return filepath.SkipDir
+				}
+
 				fmt.Println(file)
 
 				var isRoot = root == file

@@ -239,6 +239,12 @@ func Start(base string, mode string) {
 		case tcell.KeyInsert:
 			app.QueueUpdate(insertsong)
 			return nil
+		case tcell.KeyRight:
+			app.SetFocus(playlist)
+			return nil
+		case tcell.KeyLeft:
+			app.SetFocus(directorylist)
+			return nil
 		}
 		return event
 	})
@@ -252,6 +258,12 @@ func Start(base string, mode string) {
 		case tcell.KeyDelete:
 			app.QueueUpdate(deletesong)
 			return nil
+		case tcell.KeyRight:
+			app.SetFocus(directorylist)
+			return nil
+		case tcell.KeyLeft:
+			app.SetFocus(filelist)
+			return nil
 		}
 		return event
 	})
@@ -261,6 +273,18 @@ func Start(base string, mode string) {
 		switch event.Key() {
 		case tcell.KeyTab:
 			app.SetFocus(filelist)
+			return nil
+		case tcell.KeyRune:
+			jump(event.Rune())
+			return nil
+		case tcell.KeyRight:
+			app.SetFocus(filelist)
+			return nil
+		case tcell.KeyLeft:
+			app.SetFocus(playlist)
+			return nil
+		case tcell.KeyBackspace2:
+			goback()
 			return nil
 		}
 		return event

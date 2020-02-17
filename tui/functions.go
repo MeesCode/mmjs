@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/dhowden/tag"
 	"github.com/gdamore/tcell"
@@ -421,4 +422,18 @@ func clear() {
 	go audioplayer.Stop()
 	playlistFiles = nil
 	drawplaylist()
+}
+
+func jump(r rune) {
+	for index, folder := range directorylistFolders {
+		if unicode.ToLower(rune(path.Base(folder.Path)[0])) == unicode.ToLower(r) {
+			myTui.directorylist.SetCurrentItem(index)
+			return
+		}
+	}
+}
+
+func goback() {
+	myTui.directorylist.SetCurrentItem(0)
+	changedir()
 }

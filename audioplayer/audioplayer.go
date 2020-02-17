@@ -19,7 +19,7 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
-const bufferSize = 100 * time.Millisecond
+const bufferSize = 200 * time.Millisecond
 
 var (
 	ctrl        *beep.Ctrl
