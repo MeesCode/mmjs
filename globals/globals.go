@@ -6,24 +6,11 @@ package globals
 
 import (
 	"database/sql"
-	"time"
 )
 
 var (
-	Audiostate    = make(chan AudioStats)
-	DurationState = make(chan DurationStats)
-	Formats       = []string{".wav", ".mp3", ".ogg", ".flac"}
+	Formats = []string{".wav", ".mp3", ".ogg", ".flac"}
 )
-
-type AudioStats struct {
-	Track  Track
-	Length time.Duration
-}
-
-type DurationStats struct {
-	Playtime time.Duration
-	Length   time.Duration
-}
 
 type DatabaseConnection struct {
 	Username string

@@ -18,13 +18,15 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
-const bufferSize = 200 * time.Millisecond
+const (
+	bufferSize time.Duration   = 200 * time.Millisecond
+	gsr        beep.SampleRate = 48000 // the global sample rate
+)
 
 var (
 	ctrl        *beep.Ctrl
 	audioLock   = new(sync.Mutex)
 	playingFile audioFile
-	gsr         beep.SampleRate = 48000 // the global sample rate
 )
 
 type audioFile struct {
@@ -35,7 +37,7 @@ type audioFile struct {
 	finished bool
 }
 
-func Play(file globals.Track) {
+func Play(file globals.Track) (globals.Track, time.Duration) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
@@ -71,7 +73,7 @@ func Play(file globals.Track) {
 	speaker.Clear()
 	speaker.Play(ctrl)
 
-	go sendState()
+	return file, length
 }
 
 func Stop() {
@@ -97,27 +99,21 @@ func Pause() {
 	speaker.Unlock()
 }
 
-func sendState() {
-	globals.Audiostate <- globals.AudioStats{
-		Track:  playingFile.Track,
-		Length: playingFile.Length,
-	}
-}
-
-func sendDuration() {
+func GetPlaytime() (time.Duration, time.Duration, bool) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
 	if ctrl == nil {
-		return
+		return time.Duration(0), time.Duration(0), false
 	}
 
 	speaker.Lock()
-	globals.DurationState <- globals.DurationStats{
-		Playtime: playingFile.Format.SampleRate.D(playingFile.Streamer.Position()),
-		Length:   playingFile.Length,
-	}
+	var playtime = playingFile.Format.SampleRate.D(playingFile.Streamer.Position())
+	var totaltime = playingFile.Length
 	speaker.Unlock()
+
+	return playtime, totaltime, true
+
 }
 
 // Initializes the speaker
@@ -128,9 +124,4 @@ func Init() {
 		log.Fatalf("failed to initialize audio device")
 	}
 
-	// event loop
-	for {
-		<-time.After(time.Second / 2)
-		sendDuration()
-	}
 }

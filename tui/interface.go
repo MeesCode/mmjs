@@ -5,7 +5,6 @@ import (
 	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
-	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -18,7 +17,6 @@ var (
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
 	songindex            = 0
-	durationstats        = globals.DurationStats{Playtime: time.Duration(0), Length: time.Duration(0)}
 	myTui                tui
 	changedir            func()
 	search               func()
@@ -216,7 +214,12 @@ func Start(base string, mode string) {
 			app.QueueUpdate(shuffle)
 			return nil
 		case tcell.KeyF8:
-			audioplayer.Pause()
+			_, _, playing := audioplayer.GetPlaytime()
+			if !playing {
+				app.QueueUpdate(playsong)
+			} else {
+				audioplayer.Pause()
+			}
 			return nil
 		case tcell.KeyF9:
 			app.QueueUpdate(previoussong)
@@ -284,6 +287,9 @@ func Start(base string, mode string) {
 			return nil
 		case tcell.KeyLeft:
 			app.SetFocus(playlist)
+			return nil
+		case tcell.KeyBackspace:
+			goback()
 			return nil
 		case tcell.KeyBackspace2:
 			goback()

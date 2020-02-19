@@ -47,22 +47,19 @@ func stringOrUnknown(s sql.NullString) string {
 
 func audioStateUpdater() {
 	for {
-		select {
-		case data := <-globals.Audiostate:
-			myTui.app.QueueUpdate(func() {
-				updateInfoBox(data.Track, myTui.infobox)
-				drawprogressbar(time.Duration(0), data.Length)
-			})
 
-		case data := <-globals.DurationState:
-			myTui.app.QueueUpdate(func() {
-				drawprogressbar(data.Playtime, data.Length)
-				if data.Playtime == data.Length {
-					myTui.app.QueueUpdate(nextsong)
+		// update the play timer every half second
+		<-time.After(time.Second / 2)
+		myTui.app.QueueUpdate(func() {
+			playtime, totaltime, playing := audioplayer.GetPlaytime()
+			if playing {
+				drawprogressbar(playtime, totaltime)
+				if playtime == totaltime {
+					nextsong()
 				}
-			})
+			}
+		})
 
-		}
 	}
 }
 
@@ -121,6 +118,13 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 	myTui.app.Draw()
 }
 
+func startTrack(t globals.Track) {
+	_, length := audioplayer.Play(t)
+	drawplaylist()
+	updateInfoBox(t, myTui.infobox)
+	drawprogressbar(time.Duration(0), length)
+}
+
 // play the song currently selected on the playlist
 func playsong() {
 	if len(playlistFiles) == 0 || songindex > len(playlistFiles) {
@@ -128,7 +132,7 @@ func playsong() {
 	}
 	songindex = myTui.playlist.GetCurrentItem()
 	drawplaylist()
-	audioplayer.Play(playlistFiles[myTui.playlist.GetCurrentItem()])
+	startTrack(playlistFiles[myTui.playlist.GetCurrentItem()])
 }
 
 // go to the next song (if available)
@@ -136,7 +140,7 @@ func nextsong() {
 	if len(playlistFiles) > songindex+1 {
 		songindex++
 		drawplaylist()
-		audioplayer.Play(playlistFiles[songindex])
+		startTrack(playlistFiles[songindex])
 	}
 }
 
@@ -145,7 +149,7 @@ func previoussong() {
 	if songindex > 0 {
 		songindex--
 		drawplaylist()
-		audioplayer.Play(playlistFiles[songindex])
+		startTrack(playlistFiles[songindex])
 	}
 }
 
@@ -187,7 +191,7 @@ func deletesong() {
 
 	// stop the music when last song is deleted
 	if len(playlistFiles) == songindex && i == songindex {
-		go audioplayer.Stop()
+		audioplayer.Stop()
 		songindex--
 		drawplaylist()
 		return
@@ -196,7 +200,7 @@ func deletesong() {
 	// play the next song when the current song is deleted
 	// but there is a next song on the list
 	if i == songindex {
-		audioplayer.Play(playlistFiles[songindex])
+		startTrack(playlistFiles[songindex])
 	}
 
 	// if we delete a song that is before the current one
@@ -211,6 +215,10 @@ func deletesong() {
 
 // draw the progressbar
 func drawprogressbar(playtime time.Duration, length time.Duration) {
+	if length == 0 {
+		return
+	}
+
 	myTui.progressbar.Clear()
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
 	fill := width * int(playtime) / int(length)
@@ -427,7 +435,7 @@ func closeSearch() {
 }
 
 func clear() {
-	go audioplayer.Stop()
+	audioplayer.Stop()
 	songindex = 0
 	playlistFiles = nil
 	drawplaylist()
