@@ -68,8 +68,7 @@ func Play(file globals.Track) {
 	playingFile = audioFile{file, streamer, format, length, false}
 	speaker.Unlock()
 
-	beep.
-		speaker.Clear()
+	speaker.Clear()
 	speaker.Play(ctrl)
 
 	go sendState()
