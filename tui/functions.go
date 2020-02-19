@@ -128,7 +128,7 @@ func playsong() {
 	}
 	songindex = myTui.playlist.GetCurrentItem()
 	drawplaylist()
-	go audioplayer.Play(playlistFiles[myTui.playlist.GetCurrentItem()])
+	audioplayer.Play(playlistFiles[myTui.playlist.GetCurrentItem()])
 }
 
 // go to the next song (if available)
@@ -136,7 +136,7 @@ func nextsong() {
 	if len(playlistFiles) > songindex+1 {
 		songindex++
 		drawplaylist()
-		go audioplayer.Play(playlistFiles[songindex])
+		audioplayer.Play(playlistFiles[songindex])
 	}
 }
 
@@ -145,7 +145,7 @@ func previoussong() {
 	if songindex > 0 {
 		songindex--
 		drawplaylist()
-		go audioplayer.Play(playlistFiles[songindex])
+		audioplayer.Play(playlistFiles[songindex])
 	}
 }
 
@@ -196,7 +196,7 @@ func deletesong() {
 	// play the next song when the current song is deleted
 	// but there is a next song on the list
 	if i == songindex {
-		go audioplayer.Play(playlistFiles[songindex])
+		audioplayer.Play(playlistFiles[songindex])
 	}
 
 	// if we delete a song that is before the current one

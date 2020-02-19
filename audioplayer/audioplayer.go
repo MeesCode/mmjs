@@ -1,7 +1,6 @@
 package audioplayer
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path"
@@ -25,6 +24,7 @@ var (
 	ctrl        *beep.Ctrl
 	audioLock   = new(sync.Mutex)
 	playingFile audioFile
+	gsr         beep.SampleRate = 48000 // the global sample rate
 )
 
 type audioFile struct {
@@ -35,16 +35,17 @@ type audioFile struct {
 	finished bool
 }
 
-func openFile(file globals.Track) audioFile {
+func Play(file globals.Track) {
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
 	f, err := os.Open(file.Path)
 	if err != nil {
 		log.Fatalf("Error opening the file: %s", err)
 	}
 
-	var (
-		streamer beep.StreamSeekCloser
-		format   beep.Format
-	)
+	var streamer beep.StreamSeekCloser
+	var format beep.Format
 
 	switch strings.ToLower(path.Ext(file.Path)) {
 	case ".wav":
@@ -56,55 +57,31 @@ func openFile(file globals.Track) audioFile {
 	case ".flac":
 		streamer, format, err = flac.Decode(f)
 	default:
-		err = fmt.Errorf("unsupported file format")
+		log.Fatalf("error decoding file")
 	}
 
-	if err != nil {
-		log.Fatalf("error decoding file: %s", err)
-	}
-	if ctrl != nil {
-		playingFile.Streamer.Close()
-	}
+	st := beep.Seq(beep.Resample(4, format.SampleRate, gsr, streamer))
 
-	if ctrl == nil || format.SampleRate != playingFile.Format.SampleRate {
-		err = speaker.Init(format.SampleRate, format.SampleRate.N(bufferSize))
-
-		if err != nil {
-			log.Fatalf("failed to initialize audio device: %s", err)
-		}
-	}
-
-	// set the length of the track
 	speaker.Lock()
 	length := format.SampleRate.D(streamer.Len())
-	speaker.Unlock()
-	return audioFile{file, streamer, format, length, false}
-}
-
-func playFile(file audioFile) {
-	speaker.Lock()
-	ctrl = &beep.Ctrl{Paused: false, Streamer: beep.Seq(file.Streamer)}
+	ctrl = &beep.Ctrl{Paused: false, Streamer: st}
+	playingFile = audioFile{file, streamer, format, length, false}
 	speaker.Unlock()
 
-	globals.Audiostate <- globals.AudioStats{
-		Track:  file.Track,
-		Length: file.Length,
-	}
+	beep.
+		speaker.Clear()
+	speaker.Play(ctrl)
 
-	speaker.Clear()
-
-	var speakerDone = make(chan bool)
-	speaker.Play(ctrl, beep.Callback(func() {
-		speakerDone <- true
-	}))
-	<-speakerDone
-
+	go sendState()
 }
 
 func Stop() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
+	if ctrl != nil {
+		playingFile.Streamer.Close()
+	}
 	speaker.Clear()
 }
 
@@ -121,12 +98,11 @@ func Pause() {
 	speaker.Unlock()
 }
 
-func Play(file globals.Track) {
-	audioLock.Lock()
-	defer audioLock.Unlock()
-
-	playingFile = openFile(file)
-	playFile(playingFile)
+func sendState() {
+	globals.Audiostate <- globals.AudioStats{
+		Track:  playingFile.Track,
+		Length: playingFile.Length,
+	}
 }
 
 func sendDuration() {
@@ -145,8 +121,13 @@ func sendDuration() {
 	speaker.Unlock()
 }
 
-// Initializes the duration timer
+// Initializes the speaker
 func Init() {
+
+	err := speaker.Init(gsr, gsr.N(bufferSize))
+	if err != nil {
+		log.Fatalf("failed to initialize audio device")
+	}
 
 	// event loop
 	for {
