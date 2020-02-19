@@ -328,34 +328,7 @@ func changedirFilesystem() {
 				continue
 			}
 
-			// read metadata
-			f, _ := os.Open(path.Join(base.Path, file.Name()))
-			m, err := tag.ReadFrom(f)
-
-			var track globals.Track
-
-			// if no tags were found default to nil
-			if err != nil {
-				track = globals.Track{
-					Id:       -1,
-					Path:     path.Join(base.Path, file.Name()),
-					FolderID: -1,
-					Title:    sql.NullString{String: file.Name(), Valid: true},
-					Album:    sql.NullString{String: "", Valid: false},
-					Artist:   sql.NullString{String: "", Valid: false},
-					Genre:    sql.NullString{String: "", Valid: false},
-					Year:     sql.NullInt64{Int64: -1, Valid: false}}
-			} else {
-				track = globals.Track{
-					Id:       -1,
-					Path:     path.Join(base.Path, file.Name()),
-					FolderID: -1,
-					Title:    database.StringToSQLNullableString(m.Title()),
-					Artist:   database.StringToSQLNullableString(m.Artist()),
-					Album:    database.StringToSQLNullableString(m.Album()),
-					Genre:    database.StringToSQLNullableString(m.Genre()),
-					Year:     database.IntToSQLNullableInt(m.Year())}
-			}
+			var track = parseTrack(path.Join(base.Path, file.Name()))
 
 			filelistFiles = append(filelistFiles, track)
 
@@ -380,30 +353,21 @@ func searchFilesystem() {
 				return err
 			}
 
+			// skip hidden folders
+			if strings.Contains(file, "/.") {
+				return filepath.SkipDir
+			}
+
 			if !info.IsDir() ||
 				!globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
 				// read metadata
-				f, _ := os.Open(file)
-				m, err := tag.ReadFrom(f)
+				track := parseTrack(file)
 
-				if err == nil {
-					if strings.HasPrefix(strings.ToLower(m.Artist()), strings.ToLower(term)) ||
-						strings.HasPrefix(strings.ToLower(m.Album()), strings.ToLower(term)) ||
-						strings.HasPrefix(strings.ToLower(m.Title()), strings.ToLower(term)) {
-						var track globals.Track
+				if strings.HasPrefix(strings.ToLower(track.Artist.String), strings.ToLower(term)) ||
+					strings.HasPrefix(strings.ToLower(track.Album.String), strings.ToLower(term)) ||
+					strings.HasPrefix(strings.ToLower(track.Title.String), strings.ToLower(term)) {
 
-						track = globals.Track{
-							Id:       -1,
-							Path:     file,
-							FolderID: -1,
-							Title:    database.StringToSQLNullableString(m.Title()),
-							Artist:   database.StringToSQLNullableString(m.Artist()),
-							Album:    database.StringToSQLNullableString(m.Album()),
-							Genre:    database.StringToSQLNullableString(m.Genre()),
-							Year:     database.IntToSQLNullableInt(m.Year())}
-
-						filelistFiles = append(filelistFiles, track)
-					}
+					filelistFiles = append(filelistFiles, track)
 				}
 			}
 
@@ -454,4 +418,82 @@ func jump(r rune) {
 func goback() {
 	myTui.directorylist.SetCurrentItem(0)
 	changedir()
+}
+
+func addFolderDatabaseRec(folder globals.Folder) {
+	// add tracks from current folder
+	tracks := database.GetTracksByFolderID(folder.Id)
+	playlistFiles = append(playlistFiles, tracks...)
+
+	// add children recusively
+	folders := database.GetFoldersByParentID(folder.Id)
+	for _, folder := range folders {
+		addFolderDatabaseRec(folder)
+	}
+}
+
+func addFolderDatabase() {
+	addFolderDatabaseRec(directorylistFolders[myTui.directorylist.GetCurrentItem()])
+	drawplaylist()
+}
+
+func parseTrack(file string) globals.Track {
+	f, _ := os.Open(file)
+	m, err := tag.ReadFrom(f)
+
+	var track globals.Track
+
+	_, filename := path.Split(file)
+
+	// if no tags were found default to nil
+	if err != nil {
+		track = globals.Track{
+			Id:       -1,
+			Path:     file,
+			FolderID: -1,
+			Title:    sql.NullString{String: filename, Valid: true},
+			Album:    sql.NullString{String: "", Valid: false},
+			Artist:   sql.NullString{String: "", Valid: false},
+			Genre:    sql.NullString{String: "", Valid: false},
+			Year:     sql.NullInt64{Int64: -1, Valid: false}}
+	} else {
+		track = globals.Track{
+			Id:       -1,
+			Path:     file,
+			FolderID: -1,
+			Title:    database.StringToSQLNullableString(m.Title()),
+			Artist:   database.StringToSQLNullableString(m.Artist()),
+			Album:    database.StringToSQLNullableString(m.Album()),
+			Genre:    database.StringToSQLNullableString(m.Genre()),
+			Year:     database.IntToSQLNullableInt(m.Year())}
+	}
+
+	return track
+}
+
+func addFolderFilesystem() {
+
+	folder := directorylistFolders[myTui.directorylist.GetCurrentItem()]
+
+	err := filepath.Walk(folder.Path,
+		func(file string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			// skip hidden folders
+			if strings.Contains(file, "/.") {
+				return filepath.SkipDir
+			}
+
+			if !info.IsDir() && globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
+				playlistFiles = append(playlistFiles, parseTrack(file))
+			}
+
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+	drawplaylist()
 }

@@ -20,6 +20,7 @@ var (
 	myTui                tui
 	changedir            func()
 	search               func()
+	addFolder            func()
 )
 
 type tui struct {
@@ -179,6 +180,7 @@ func Start(base string, mode string) {
 	// and set the root folder as the current
 	var folder globals.Folder
 	if mode == "filesystem" {
+		addFolder = addFolderFilesystem
 		changedir = changedirFilesystem
 		search = searchFilesystem
 		folder = globals.Folder{
@@ -186,6 +188,7 @@ func Start(base string, mode string) {
 			Path:     root,
 			ParentID: -1}
 	} else {
+		addFolder = addFolderDatabase
 		changedir = changedirDatabase
 		search = searchDatabase
 		folder = database.GetFolderByID(1)
@@ -275,6 +278,14 @@ func Start(base string, mode string) {
 
 	// directory list
 	directorylist.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		// alt-enter is the onlty key combination in this system
+		// it's only here for legacy reasons
+		if event.Key() == tcell.KeyEnter && event.Modifiers() == tcell.ModAlt {
+			app.QueueUpdate(addFolder)
+			return nil
+		}
+
 		switch event.Key() {
 		case tcell.KeyTab:
 			app.SetFocus(filelist)
