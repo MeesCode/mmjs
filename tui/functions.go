@@ -497,3 +497,39 @@ func addFolderFilesystem() {
 	}
 	drawplaylist()
 }
+
+func moveUp() {
+	selected := myTui.playlist.GetCurrentItem()
+
+	if selected == 0 {
+		return
+	}
+
+	if selected == songindex {
+		songindex--
+	} else if selected == songindex+1 {
+		songindex++
+	}
+
+	playlistFiles[selected], playlistFiles[selected-1] = playlistFiles[selected-1], playlistFiles[selected]
+	drawplaylist()
+	myTui.playlist.SetCurrentItem(selected - 1)
+}
+
+func moveDown() {
+	selected := myTui.playlist.GetCurrentItem()
+
+	if selected+1 == len(playlistFiles) {
+		return
+	}
+
+	if selected == songindex {
+		songindex++
+	} else if selected == songindex-1 {
+		songindex--
+	}
+
+	playlistFiles[selected], playlistFiles[selected+1] = playlistFiles[selected+1], playlistFiles[selected]
+	drawplaylist()
+	myTui.playlist.SetCurrentItem(selected + 1)
+}

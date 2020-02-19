@@ -272,6 +272,15 @@ func Start(base string, mode string) {
 		case tcell.KeyLeft:
 			app.SetFocus(filelist)
 			return nil
+		case tcell.KeyRune:
+			if event.Rune() == '-' {
+				app.QueueUpdate(moveUp)
+				return nil
+			}
+			if event.Rune() == '+' {
+				app.QueueUpdate(moveDown)
+				return nil
+			}
 		}
 		return event
 	})
