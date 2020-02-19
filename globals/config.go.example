@@ -4,4 +4,6 @@ var DatabaseCredentials = DatabaseConnection{
 	Username: "",
 	Password: "",
 	Database: "",
+	Host:     "localhost",
+	Port:     "3306",
 }

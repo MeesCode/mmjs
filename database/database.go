@@ -11,7 +11,9 @@ var dbc *sql.DB
 func Warmup() *sql.DB {
 	db, err := sql.Open("mysql",
 		globals.DatabaseCredentials.Username+":"+
-			globals.DatabaseCredentials.Password+"@/"+
+			globals.DatabaseCredentials.Password+"@("+
+			globals.DatabaseCredentials.Host+":"+
+			globals.DatabaseCredentials.Port+")/"+
 			globals.DatabaseCredentials.Database)
 
 	if err != nil {
