@@ -239,12 +239,20 @@ func shuffle() {
 		return
 	}
 
+	// remove current song from list
+	var cursong = playlistFiles[songindex]
+	playlistFiles = append(playlistFiles[:songindex], playlistFiles[songindex+1:]...)
+
+	// shuffle the list
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(playlistFiles), func(i, j int) {
 		playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i]
 	})
+
+	// prepend current song to the list
+	playlistFiles = append([]globals.Track{cursong}, playlistFiles...)
 	songindex = 0
-	go audioplayer.Play(playlistFiles[songindex])
+
 	drawplaylist()
 }
 
@@ -420,10 +428,12 @@ func closeSearch() {
 
 func clear() {
 	go audioplayer.Stop()
+	songindex = 0
 	playlistFiles = nil
 	drawplaylist()
 }
 
+// jump to a new element in the list depending on the key pressed
 func jump(r rune) {
 	for index, folder := range directorylistFolders {
 		if unicode.ToLower(rune(path.Base(folder.Path)[0])) == unicode.ToLower(r) {

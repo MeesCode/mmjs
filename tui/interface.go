@@ -53,6 +53,7 @@ func Start(base string, mode string) {
 
 	directorylist := tview.NewList().ShowSecondaryText(false)
 	directorylist.SetBorder(true).SetTitle(" Directories ").SetBackgroundColor(-1)
+	directorylist.SetWrapAround(false)
 
 	infobox := tview.NewTable()
 	infobox.SetBorder(false).SetBackgroundColor(-1)
@@ -122,6 +123,7 @@ func Start(base string, mode string) {
 
 	filelist := tview.NewList().ShowSecondaryText(false)
 	filelist.SetBorder(true).SetTitle(" Current directory ").SetBackgroundColor(-1)
+	filelist.SetWrapAround(false)
 	filelist.SetChangedFunc(func(i int, _, _ string, _ rune) {
 		if len(filelistFiles) > 0 {
 			updateInfoBox(filelistFiles[i], browseinfobox)
@@ -130,7 +132,7 @@ func Start(base string, mode string) {
 
 	playlist := tview.NewList()
 	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
-	playlist.ShowSecondaryText(false)
+	playlist.ShowSecondaryText(false).SetWrapAround(false)
 
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 
@@ -163,7 +165,7 @@ func Start(base string, mode string) {
 		AddItem(mainFlex.
 			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 				AddItem(directorylist, 0, 1, false).
-				AddItem(filelist, 0, 2, false).
+				AddItem(filelist, 0, 1, false).
 				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 					AddItem(infoboxcontainer.
 						AddItem(infobox, 0, 1, false).
@@ -172,7 +174,7 @@ func Start(base string, mode string) {
 							AddItem(progressbar, 0, 1, false).
 							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
 					AddItem(browseinfobox, 9, 0, false).
-					AddItem(playlist, 0, 2, false), 0, 2, false), 0, 1, false).
+					AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
 			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
 	// do some stuff depending on if we are in database or filesystem mode
