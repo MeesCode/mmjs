@@ -55,7 +55,8 @@ func audioStateUpdater() {
 
 		// update the play timer every half second
 		<-time.After(time.Second / 2)
-		myTui.app.QueueUpdate(func() {
+		// QueueUpdateDraw since this is performed outside the main thread
+		myTui.app.QueueUpdateDraw(func() {
 			playtime, totaltime, playing := audioplayer.GetPlaytime()
 			if playing {
 				drawprogressbar(playtime, totaltime)
@@ -87,11 +88,12 @@ func updateInfoBox(track globals.Track, box *tview.Table) {
 // drawplaylist draws the playlist. This function should be called after every
 // function that alters this list.
 func drawplaylist() {
+	myTui.playlist.Clear()
 	for index, track := range playlistFiles {
 		if songindex == index {
-			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', func() { myTui.app.QueueUpdate(playsong) })
+			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', playsong)
 		} else {
-			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, func() { myTui.app.QueueUpdate(playsong) })
+			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, playsong)
 		}
 	}
 	myTui.playlist.SetCurrentItem(songindex)
@@ -100,14 +102,16 @@ func drawplaylist() {
 // drawfilelist draws the file list. This function should be called after every
 // function that alters this list.
 func drawfilelist() {
+	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
-		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, func() { myTui.app.QueueUpdate(addsong) })
+		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, addsong)
 	}
 }
 
 // drawdirectorylist draws the directory list. This function should be called after every
 // function that alters this list.
 func drawdirectorylist(parentFunc func(), isRoot bool) {
+	myTui.directorylist.Clear()
 	for index, folder := range directorylistFolders {
 
 		// first folder shows .. instead of the folder name
@@ -226,6 +230,10 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 		return
 	}
 
+	myTui.progressbar.Clear()
+	myTui.playtime.Clear()
+	myTui.totaltime.Clear()
+
 	// update the timestamps
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
 	fill := width * int(playtime) / int(length)
@@ -280,7 +288,6 @@ func openSearch() {
 	myTui.mainFlex.AddItem(myTui.searchinput, 3, 0, false)
 	myTui.searchinput.SetText("")
 	myTui.app.SetFocus(myTui.searchinput)
-	drawfilelist()
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
