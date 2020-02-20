@@ -190,10 +190,9 @@ func deletesong() {
 	var i = myTui.playlist.GetCurrentItem()
 	playlistFiles = append(playlistFiles[:i], playlistFiles[i+1:]...)
 
-	// if after deleting an item the list is empty make sure the
-	// songindex is set to 0 and redraw
+	// if after deleting an item the list is empty stop playback
 	if len(playlistFiles) == 0 {
-		songindex = 0
+		audioplayer.Stop()
 		drawplaylist()
 		return
 	}
