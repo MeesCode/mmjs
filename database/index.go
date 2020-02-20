@@ -26,7 +26,7 @@ func Index(root string) {
 	// Prepare statement for inserting a folder
 	folderIns, err := db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)")
 	if err != nil {
-		panic(err.Error())
+		log.Fatalln("could not prepare statement", err)
 	}
 	defer folderIns.Close()
 
@@ -34,14 +34,14 @@ func Index(root string) {
 	fileIns, err := db.Prepare(`INSERT IGNORE INTO Tracks(Path, FolderID, Title, 
 		Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
-		panic(err.Error())
+		log.Fatalln("could not prepare statement", err)
 	}
 	defer fileIns.Close()
 
 	// Prepare statement for finding parent folder
 	parentOut, err := db.Prepare("SELECT FolderID FROM Folders WHERE Path = ?")
 	if err != nil {
-		panic(err.Error())
+		log.Fatalln("could not prepare statement", err)
 	}
 	defer parentOut.Close()
 
@@ -69,7 +69,7 @@ func Index(root string) {
 				if !isRoot {
 					err = parentOut.QueryRow(path.Dir(file)).Scan(&parentID)
 					if err != nil {
-						panic(err.Error())
+						log.Println("Could not perform query, or query returned empty", err)
 					}
 				}
 
@@ -77,7 +77,7 @@ func Index(root string) {
 				if info.IsDir() {
 					_, err = folderIns.Exec(file, parentID)
 					if err != nil {
-						panic(err.Error())
+						log.Println("Could not add folder to the dataqbse", err)
 					}
 
 					// if it's a file
@@ -101,16 +101,13 @@ func Index(root string) {
 							IntToSQLNullableInt(m.Year()))
 					}
 
-					if err != nil {
-						panic(err.Error())
-					}
 				}
 			}
 
 			return nil
 		})
 	if err != nil {
-		log.Println(err)
+		log.Fatalln("Could not walk the filesystem at the given location", err)
 	}
 
 	return

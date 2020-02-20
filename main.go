@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
@@ -43,7 +44,12 @@ func main() {
 	// parse command line arguments
 	flag.Parse()
 
-	base, _ := os.Getwd()
+	base, err := os.Getwd()
+
+	if err != nil {
+		log.Fatalln("could not get working directory", err)
+	}
+
 	arg := flag.Arg(0)
 	var root string
 

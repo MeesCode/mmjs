@@ -4,17 +4,13 @@ package tui
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/rand"
 	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
 	"os"
 	"path"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 	"unicode"
 
@@ -284,127 +280,6 @@ func shuffle() {
 	drawplaylist()
 }
 
-// changedirDatabase changes the current directory (when in database mode) to
-// the one that is selected.
-func changedirDatabase() {
-	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
-
-	// add files
-	filelistFiles = database.GetTracksByFolderID(base.ID)
-
-	// only add parent folder when we are not in the root directory
-	var isRoot = base.ID == 1
-	if !isRoot {
-		directorylistFolders = []globals.Folder{database.GetFolderByID(base.ParentID)}
-	} else {
-		directorylistFolders = nil
-	}
-
-	//add the rest of the folders
-	directorylistFolders = append(directorylistFolders, database.GetFoldersByParentID(base.ID)...)
-
-	drawdirectorylist(changedirDatabase, isRoot)
-	drawfilelist()
-}
-
-// changedirFilesystem changes the current directory (when in filesystem mode) to
-// the one that is selected.
-func changedirFilesystem() {
-	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
-	var isRoot = base.Path == "/"
-
-	files, _ := ioutil.ReadDir(base.Path)
-
-	directorylistFolders = nil
-	filelistFiles = nil
-
-	if !isRoot {
-		// add parent folder
-		var folder = globals.Folder{
-			ID:       -1,
-			Path:     path.Clean(path.Join(base.Path, "..")),
-			ParentID: -1}
-
-		directorylistFolders = append(directorylistFolders, folder)
-	}
-
-	// loop over files
-	for _, file := range files {
-
-		//ignore hidden files
-		if file.Name()[0] == '.' {
-			continue
-		}
-
-		// if we've encountered a directory, add it to the directorylist
-		if file.IsDir() {
-			var folder = globals.Folder{
-				ID:       -1,
-				Path:     path.Join(base.Path, file.Name()),
-				ParentID: -1}
-
-			directorylistFolders = append(directorylistFolders, folder)
-		} else {
-
-			// if we've encountered a playable file, add it to the file list
-			if !globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file.Name()))) {
-				continue
-			}
-
-			var track = parseTrack(path.Join(base.Path, file.Name()))
-			filelistFiles = append(filelistFiles, track)
-
-		}
-	}
-	drawdirectorylist(changedirFilesystem, isRoot)
-	drawfilelist()
-}
-
-// searchDatabase searches (while in database mode) for the tracks that match on
-// either the title, album or artist. It uses the text that is currently entered in the searchbox.
-func searchDatabase() {
-	var term = myTui.searchinput.GetText()
-	filelistFiles = database.GetSearchResults(term)
-	closeSearch()
-}
-
-// searchFilesystem searches (while in filesystem mode) for the tracks that match on
-// either the title, album or artist. It uses the text that is currently entered in the searchbox.
-func searchFilesystem() {
-	var term = myTui.searchinput.GetText()
-	filelistFiles = nil
-	err := filepath.Walk(root,
-		func(file string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			// skip hidden folders
-			if strings.Contains(file, "/.") {
-				return filepath.SkipDir
-			}
-
-			if !info.IsDir() ||
-				!globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
-				// read metadata
-				track := parseTrack(file)
-
-				if strings.HasPrefix(strings.ToLower(track.Artist.String), strings.ToLower(term)) ||
-					strings.HasPrefix(strings.ToLower(track.Album.String), strings.ToLower(term)) ||
-					strings.HasPrefix(strings.ToLower(track.Title.String), strings.ToLower(term)) {
-
-					filelistFiles = append(filelistFiles, track)
-				}
-			}
-
-			return nil
-		})
-	if err != nil {
-		log.Println(err)
-	}
-	closeSearch()
-}
-
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
 	// don't open a new seach window when one is already open
@@ -452,28 +327,6 @@ func goback() {
 	changedir()
 }
 
-// addFolderDatabaseRec is a recursive function that takes a folder and add all
-// containing tracks to the playlist, after which it will call itself for every
-// child folder. This function should be called when in database mode.
-func addFolderDatabaseRec(folder globals.Folder) {
-	// add tracks from current folder
-	tracks := database.GetTracksByFolderID(folder.ID)
-	playlistFiles = append(playlistFiles, tracks...)
-
-	// add children recusively
-	folders := database.GetFoldersByParentID(folder.ID)
-	for _, folder := range folders {
-		addFolderDatabaseRec(folder)
-	}
-}
-
-// addFolderDatabase adds all tracks inside the currently selected folder to the playlist.
-// This includes all tracks inside child folders.
-func addFolderDatabase() {
-	addFolderDatabaseRec(directorylistFolders[myTui.directorylist.GetCurrentItem()])
-	drawplaylist()
-}
-
 // parseTrack takes a path to a playable file, extracts the metadata and returns a file
 // object containing this metadata. The metadata might not be found and defaulted to nil.
 func parseTrack(file string) globals.Track {
@@ -508,36 +361,6 @@ func parseTrack(file string) globals.Track {
 	}
 
 	return track
-}
-
-// addFolderFilesystem is a recursive function that takes a folder and add all
-// containing tracks to the playlist, after which it will call itself for every
-// child folder. This function should be called when in filesystem mode.
-func addFolderFilesystem() {
-
-	folder := directorylistFolders[myTui.directorylist.GetCurrentItem()]
-
-	err := filepath.Walk(folder.Path,
-		func(file string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			// skip hidden folders
-			if strings.Contains(file, "/.") {
-				return filepath.SkipDir
-			}
-
-			if !info.IsDir() && globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
-				playlistFiles = append(playlistFiles, parseTrack(file))
-			}
-
-			return nil
-		})
-	if err != nil {
-		log.Println(err)
-	}
-	drawplaylist()
 }
 
 // moveUp swaps the currently selected track in the playlist with the one above it.

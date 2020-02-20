@@ -2,7 +2,7 @@
 package database
 
 import (
-	"fmt"
+	"log"
 	"mp3bak2/globals"
 )
 
@@ -17,7 +17,7 @@ func GetFoldersByParentID(parentid int) []globals.Folder {
 	folderOut, err := db.Prepare(`SELECT FolderId, Path, ParentId FROM 
 	Folders WHERE ParentID = ? ORDER BY Path`)
 	if err != nil {
-		panic(err.Error())
+		log.Fatalln("could not prepare statement", err)
 	}
 	defer folderOut.Close()
 
@@ -25,17 +25,19 @@ func GetFoldersByParentID(parentid int) []globals.Folder {
 
 	rows, err := folderOut.Query(parentid)
 	if err != nil {
-		panic(err.Error())
+		log.Println("could not find folder", err)
+		return nil
 	}
 
 	for rows.Next() {
 		var folder globals.Folder
 		err = rows.Scan(&folder.ID, &folder.Path, &folder.ParentID)
-		if err != nil {
-			panic(err.Error())
-		}
 
-		folders = append(folders, folder)
+		if err != nil {
+			log.Println("Could not find folder", err)
+		} else {
+			folders = append(folders, folder)
+		}
 
 	}
 
@@ -50,7 +52,7 @@ func GetFolderByID(folderid int) globals.Folder {
 	folderOut, err := db.Prepare(`SELECT FolderId, Path, ParentId FROM 
 	Folders WHERE FolderID = ?`)
 	if err != nil {
-		panic(err.Error())
+		log.Fatalln("could not prepare statement", err)
 	}
 	defer folderOut.Close()
 
@@ -58,8 +60,7 @@ func GetFolderByID(folderid int) globals.Folder {
 
 	err = folderOut.QueryRow(folderid).Scan(&folder.ID, &folder.Path, &folder.ParentID)
 	if err != nil {
-		fmt.Println("did you forget to run index mode first?")
-		panic(err.Error())
+		log.Fatalln("could not prepare statement. Did you forget to run index mode first?", err)
 	}
 
 	return folder
@@ -73,7 +74,7 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 	folderOut, err := db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
 	Genre, Year FROM Tracks WHERE FolderID = ?`)
 	if err != nil {
-		panic(err.Error())
+		log.Println("could not prepare statement. Did you forget to run index mode first?", err)
 	}
 	defer folderOut.Close()
 
@@ -81,7 +82,8 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 
 	rows, err := folderOut.Query(folderid)
 	if err != nil {
-		panic(err.Error())
+		log.Println("Could not find folder", err)
+		return nil
 	}
 
 	for rows.Next() {
@@ -95,11 +97,12 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 			&track.Artist,
 			&track.Genre,
 			&track.Year)
-		if err != nil {
-			panic(err.Error())
-		}
 
-		tracks = append(tracks, track)
+		if err != nil {
+			log.Println("Could not find metadata, file corrupt?", err)
+		} else {
+			tracks = append(tracks, track)
+		}
 
 	}
 
@@ -116,7 +119,7 @@ func GetSearchResults(term string) []globals.Track {
 	trackOut, err := db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
 	Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Album LIKE ? ORDER BY Album`)
 	if err != nil {
-		panic(err.Error())
+		log.Println("could not prepare statement. Did you forget to run index mode first?", err)
 	}
 	defer trackOut.Close()
 
@@ -124,7 +127,8 @@ func GetSearchResults(term string) []globals.Track {
 
 	rows, err := trackOut.Query(term+"%", term+"%", term+"%")
 	if err != nil {
-		panic(err.Error())
+		log.Println("Could not perform search query", err)
+		return nil
 	}
 
 	for rows.Next() {
@@ -138,11 +142,12 @@ func GetSearchResults(term string) []globals.Track {
 			&track.Artist,
 			&track.Genre,
 			&track.Year)
-		if err != nil {
-			panic(err.Error())
-		}
 
-		tracks = append(tracks, track)
+		if err != nil {
+			log.Println("Could not find metadata, file corrupt?", err)
+		} else {
+			tracks = append(tracks, track)
+		}
 
 	}
 

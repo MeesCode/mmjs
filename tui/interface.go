@@ -3,6 +3,7 @@ package tui
 
 import (
 	"fmt"
+	"log"
 	"mp3bak2/audioplayer"
 	"mp3bak2/database"
 	"mp3bak2/globals"
@@ -325,7 +326,7 @@ func Start(base string, mode string) {
 
 	// finished, draw to screen
 	if err := app.SetRoot(flex, true).SetFocus(directorylist).Run(); err != nil {
-		panic(err)
+		log.Fatalln("Could not start the user interface", err)
 	}
 
 }

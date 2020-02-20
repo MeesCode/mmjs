@@ -1,7 +1,9 @@
+// Package database manages everything that has to do with communicating with the database.
 package database
 
 import (
 	"database/sql"
+	"log"
 	"mp3bak2/globals"
 )
 
@@ -17,12 +19,12 @@ func Warmup() *sql.DB {
 			globals.DatabaseCredentials.Database)
 
 	if err != nil {
-		panic(err)
+		log.Fatalln("connection with database could not be established", err)
 	}
 
 	err = db.Ping()
 	if err != nil {
-		panic("connection with database could not be established")
+		log.Fatalln("connection with database could not be pinged", err)
 	}
 
 	dbc = db

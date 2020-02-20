@@ -51,7 +51,9 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 
 	f, err := os.Open(file.Path)
 	if err != nil {
-		log.Fatalf("Error opening the file: %s", err)
+		log.Println("Error opening the file", err)
+		speaker.Clear()
+		return file, time.Duration(0)
 	}
 
 	var streamer beep.StreamSeekCloser
@@ -67,7 +69,9 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 	case ".flac":
 		streamer, format, err = flac.Decode(f)
 	default:
-		log.Fatalf("error decoding file")
+		log.Println("error decoding file", err)
+		speaker.Clear()
+		return file, time.Duration(0)
 	}
 
 	st := beep.Seq(beep.Resample(quality, format.SampleRate, gsr, streamer))
@@ -134,7 +138,7 @@ func Initialize() {
 
 	err := speaker.Init(gsr, gsr.N(bufferSize))
 	if err != nil {
-		log.Fatalf("failed to initialize audio device")
+		log.Fatalln("failed to initialize audio device", err)
 	}
 
 }
