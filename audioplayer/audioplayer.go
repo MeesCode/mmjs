@@ -135,10 +135,8 @@ func GetPlaytime() (time.Duration, time.Duration, bool) {
 
 // Initialize the speaker with the specification defined at the top.
 func Initialize() {
-
 	err := speaker.Init(gsr, gsr.N(bufferSize))
 	if err != nil {
 		log.Fatalln("failed to initialize audio device", err)
 	}
-
 }

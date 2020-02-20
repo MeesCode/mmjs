@@ -214,27 +214,27 @@ func Start(base string, mode string) {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyF2:
-			app.QueueUpdate(clear)
+			clear()
 			return nil
 		case tcell.KeyF3:
 			openSearch()
 			return nil
 		case tcell.KeyF5:
-			app.QueueUpdate(shuffle)
+			shuffle()
 			return nil
 		case tcell.KeyF8:
 			_, _, playing := audioplayer.GetPlaytime()
 			if !playing {
-				app.QueueUpdate(playsong)
+				playsong()
 			} else {
 				audioplayer.Pause()
 			}
 			return nil
 		case tcell.KeyF9:
-			app.QueueUpdate(previoussong)
+			previoussong()
 			return nil
 		case tcell.KeyF12:
-			app.QueueUpdate(nextsong)
+			nextsong()
 			return nil
 		case tcell.KeyCtrlC: // gracefull shutdown
 			audioplayer.Stop()
@@ -251,7 +251,7 @@ func Start(base string, mode string) {
 			app.SetFocus(playlist)
 			return nil
 		case tcell.KeyInsert:
-			app.QueueUpdate(insertsong)
+			insertsong()
 			return nil
 		case tcell.KeyRight:
 			app.SetFocus(playlist)
@@ -270,7 +270,7 @@ func Start(base string, mode string) {
 			app.SetFocus(directorylist)
 			return nil
 		case tcell.KeyDelete:
-			app.QueueUpdate(deletesong)
+			deletesong()
 			return nil
 		case tcell.KeyRight:
 			app.SetFocus(directorylist)
@@ -280,11 +280,11 @@ func Start(base string, mode string) {
 			return nil
 		case tcell.KeyRune:
 			if event.Rune() == '-' {
-				app.QueueUpdate(moveUp)
+				moveUp()
 				return nil
 			}
 			if event.Rune() == '+' {
-				app.QueueUpdate(moveDown)
+				moveDown()
 				return nil
 			}
 		}
@@ -297,7 +297,7 @@ func Start(base string, mode string) {
 		// alt-enter is the onlty key combination in this system
 		// it's only here for legacy reasons
 		if event.Key() == tcell.KeyEnter && event.Modifiers() == tcell.ModAlt {
-			app.QueueUpdate(addFolder)
+			addFolder()
 			return nil
 		}
 
