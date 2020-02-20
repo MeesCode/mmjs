@@ -1,3 +1,4 @@
+// Package tui provides all means to draw and interact with the user interface.
 package tui
 
 import (
@@ -12,17 +13,19 @@ import (
 
 // global variables
 var (
-	root                 string
+	root                 string // the root folder in which the interface is started
 	playlistFiles        = make([]globals.Track, 0)
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
-	songindex            = 0
+	songindex            = 0 // the index of the currently playing track
 	myTui                tui
 	changedir            func()
 	search               func()
 	addFolder            func()
 )
 
+// a big struct that hold all interface elements as to not occupy too much
+// from the global namespace.
 type tui struct {
 	app           *tview.Application
 	directorylist *tview.List
@@ -38,7 +41,9 @@ type tui struct {
 	searchinput   *tview.InputField
 }
 
-// Start : start the tui
+// Start builds the user interface, defines the keybinds and sets initial values.
+// This function will not stop until Ctrl-C is pressed, after which it will shut
+// down gracefully.
 func Start(base string, mode string) {
 
 	root = base
@@ -184,7 +189,7 @@ func Start(base string, mode string) {
 		changedir = changedirFilesystem
 		search = searchFilesystem
 		folder = globals.Folder{
-			Id:       -1,
+			ID:       -1,
 			Path:     root,
 			ParentID: -1}
 	} else {

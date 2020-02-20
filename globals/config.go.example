@@ -1,5 +1,8 @@
+// Package globals exists because go does not suppot circular dependencies,
+// therefore this is it's own package.
 package globals
 
+// DatabaseCredentials is a struct that holds all database connection info.
 var DatabaseCredentials = DatabaseConnection{
 	Username: "",
 	Password: "",

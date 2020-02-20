@@ -1,3 +1,4 @@
+// Package tui provides all means to draw and interact with the user interface.
 package tui
 
 import (
@@ -22,6 +23,9 @@ import (
 	"github.com/rivo/tview"
 )
 
+// trackToDisplayText takes a Track object and returns a string in thee
+// Artist - Title format if available. If no artists is found it will
+// omit this and if no track is found the filename will be used as title.
 func trackToDisplayText(track globals.Track) string {
 	var display = ""
 
@@ -38,6 +42,8 @@ func trackToDisplayText(track globals.Track) string {
 	return display
 }
 
+// stringOrUnknown takes a sql.NullString and return the sring if it is
+// valid. Otherwise it will return "unknown"
 func stringOrUnknown(s sql.NullString) string {
 	if s.Valid {
 		return s.String
@@ -45,6 +51,9 @@ func stringOrUnknown(s sql.NullString) string {
 	return "unknown"
 }
 
+// audioStateUpdater is a function that should be ran as a goroutine.
+// It will ask the audioplayer for the playing time of the current track.
+// It will also start the next sond if the current song is finished.
 func audioStateUpdater() {
 	for {
 
@@ -63,6 +72,7 @@ func audioStateUpdater() {
 	}
 }
 
+// updateInfoBox updates one of the two information boxes with track information
 func updateInfoBox(track globals.Track, box *tview.Table) {
 	dir, name := path.Split(track.Path)
 	box.SetCell(0, 1, tview.NewTableCell(stringOrUnknown(track.Title)))
@@ -78,7 +88,8 @@ func updateInfoBox(track globals.Track, box *tview.Table) {
 	box.SetCell(6, 1, tview.NewTableCell(dir))
 }
 
-// draw the playlist
+// drawplaylist draws the playlist. This function should be called after every
+// function that alters this list.
 func drawplaylist() {
 	myTui.playlist.Clear()
 	for index, track := range playlistFiles {
@@ -92,7 +103,8 @@ func drawplaylist() {
 	myTui.app.Draw()
 }
 
-// draw the file list
+// drawfilelist draws the file list. This function should be called after every
+// function that alters this list.
 func drawfilelist() {
 	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
@@ -101,7 +113,8 @@ func drawfilelist() {
 	myTui.app.Draw()
 }
 
-// draw the directory list
+// drawdirectorylist draws the directory list. This function should be called after every
+// function that alters this list.
 func drawdirectorylist(parentFunc func(), isRoot bool) {
 	myTui.directorylist.Clear()
 	for index, folder := range directorylistFolders {
@@ -118,6 +131,7 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 	myTui.app.Draw()
 }
 
+// startTrack starts a given track and updates the ui accordingly
 func startTrack(t globals.Track) {
 	_, length := audioplayer.Play(t)
 	drawplaylist()
@@ -125,7 +139,7 @@ func startTrack(t globals.Track) {
 	drawprogressbar(time.Duration(0), length)
 }
 
-// play the song currently selected on the playlist
+// playsong plays the song currently selected track on the playlist
 func playsong() {
 	if len(playlistFiles) == 0 || songindex > len(playlistFiles) {
 		return
@@ -135,7 +149,7 @@ func playsong() {
 	startTrack(playlistFiles[myTui.playlist.GetCurrentItem()])
 }
 
-// go to the next song (if available)
+// nextsong plays the next song (if available)
 func nextsong() {
 	if len(playlistFiles) > songindex+1 {
 		songindex++
@@ -144,7 +158,7 @@ func nextsong() {
 	}
 }
 
-// go to the previous song (if available)
+// previoussong plays the previous song (if available)
 func previoussong() {
 	if songindex > 0 {
 		songindex--
@@ -153,7 +167,7 @@ func previoussong() {
 	}
 }
 
-// add a song to the playlist
+// addsong adds a song to the playlist
 func addsong() {
 	track := filelistFiles[myTui.filelist.GetCurrentItem()]
 	playlistFiles = append(playlistFiles, track)
@@ -161,7 +175,8 @@ func addsong() {
 	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
 }
 
-// insert a song into the playlist
+// insertsong inserts a song into the playlist directly after the song that
+// is currently playing.
 func insertsong() {
 	track := filelistFiles[myTui.filelist.GetCurrentItem()]
 	playlistFiles = append(playlistFiles[:songindex+1], append([]globals.Track{track}, playlistFiles[songindex+1:]...)...)
@@ -169,7 +184,7 @@ func insertsong() {
 	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
 }
 
-// insert a song into the playlist
+// deletesong removes the currently selected song from the playlist.
 func deletesong() {
 
 	// if list is empty do nothing
@@ -213,12 +228,15 @@ func deletesong() {
 	myTui.playlist.SetCurrentItem(i)
 }
 
-// draw the progressbar
+// drawprogressbar draws the progressbar and timestamps.
+// It will simply return whitout drawing if the total time of the track
+// has a length of 0
 func drawprogressbar(playtime time.Duration, length time.Duration) {
 	if length == 0 {
 		return
 	}
 
+	// update the timestamps
 	myTui.progressbar.Clear()
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
 	fill := width * int(playtime) / int(length)
@@ -230,6 +248,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
 	}
 
+	// update the progress bar
 	ph, pm, ps := int64(playtime.Hours()), int64(playtime.Minutes()), int64(playtime.Seconds())
 	myTui.playtime.Clear()
 	fmt.Fprintf(myTui.playtime, "%02d:%02d:%02d", ph, pm-ph*60, ps-pm*60)
@@ -241,7 +260,8 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	myTui.app.Draw()
 }
 
-// shuffle the playlist
+// shuffle shuffles the playlist and places the currently playing track as the first
+// track in the playlist. It will not halt playback.
 func shuffle() {
 	if len(playlistFiles) == 0 {
 		return
@@ -264,14 +284,16 @@ func shuffle() {
 	drawplaylist()
 }
 
+// changedirDatabase changes the current directory (when in database mode) to
+// the one that is selected.
 func changedirDatabase() {
 	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
 
 	// add files
-	filelistFiles = database.GetTracksByFolderID(base.Id)
+	filelistFiles = database.GetTracksByFolderID(base.ID)
 
 	// only add parent folder when we are not in the root directory
-	var isRoot = base.Id == 1
+	var isRoot = base.ID == 1
 	if !isRoot {
 		directorylistFolders = []globals.Folder{database.GetFolderByID(base.ParentID)}
 	} else {
@@ -279,13 +301,14 @@ func changedirDatabase() {
 	}
 
 	//add the rest of the folders
-	directorylistFolders = append(directorylistFolders, database.GetFoldersByParentID(base.Id)...)
+	directorylistFolders = append(directorylistFolders, database.GetFoldersByParentID(base.ID)...)
 
 	drawdirectorylist(changedirDatabase, isRoot)
 	drawfilelist()
 }
 
-// navigate the file manager
+// changedirFilesystem changes the current directory (when in filesystem mode) to
+// the one that is selected.
 func changedirFilesystem() {
 	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
 	var isRoot = base.Path == "/"
@@ -298,7 +321,7 @@ func changedirFilesystem() {
 	if !isRoot {
 		// add parent folder
 		var folder = globals.Folder{
-			Id:       -1,
+			ID:       -1,
 			Path:     path.Clean(path.Join(base.Path, "..")),
 			ParentID: -1}
 
@@ -316,7 +339,7 @@ func changedirFilesystem() {
 		// if we've encountered a directory, add it to the directorylist
 		if file.IsDir() {
 			var folder = globals.Folder{
-				Id:       -1,
+				ID:       -1,
 				Path:     path.Join(base.Path, file.Name()),
 				ParentID: -1}
 
@@ -324,12 +347,11 @@ func changedirFilesystem() {
 		} else {
 
 			// if we've encountered a playable file, add it to the file list
-			if !globals.Contains(globals.Formats, strings.ToLower(path.Ext(file.Name()))) {
+			if !globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file.Name()))) {
 				continue
 			}
 
 			var track = parseTrack(path.Join(base.Path, file.Name()))
-
 			filelistFiles = append(filelistFiles, track)
 
 		}
@@ -338,12 +360,16 @@ func changedirFilesystem() {
 	drawfilelist()
 }
 
+// searchDatabase searches (while in database mode) for the tracks that match on
+// either the title, album or artist. It uses the text that is currently entered in the searchbox.
 func searchDatabase() {
 	var term = myTui.searchinput.GetText()
 	filelistFiles = database.GetSearchResults(term)
 	closeSearch()
 }
 
+// searchFilesystem searches (while in filesystem mode) for the tracks that match on
+// either the title, album or artist. It uses the text that is currently entered in the searchbox.
 func searchFilesystem() {
 	var term = myTui.searchinput.GetText()
 	filelistFiles = nil
@@ -359,7 +385,7 @@ func searchFilesystem() {
 			}
 
 			if !info.IsDir() ||
-				!globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
+				!globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
 				// read metadata
 				track := parseTrack(file)
 
@@ -379,6 +405,7 @@ func searchFilesystem() {
 	closeSearch()
 }
 
+// openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
 	// don't open a new seach window when one is already open
 	if myTui.searchinput.HasFocus() {
@@ -391,6 +418,7 @@ func openSearch() {
 	drawfilelist()
 }
 
+// closeSearch removes the search box and replaces it with the keybinds box.
 func closeSearch() {
 	myTui.mainFlex.RemoveItem(myTui.searchinput)
 	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
@@ -398,6 +426,7 @@ func closeSearch() {
 	drawfilelist()
 }
 
+// clear removes all entries from the playlist and stops playback.
 func clear() {
 	audioplayer.Stop()
 	songindex = 0
@@ -405,7 +434,7 @@ func clear() {
 	drawplaylist()
 }
 
-// jump to a new element in the list depending on the key pressed
+// jump to a new element in the list depending on the key pressed.
 func jump(r rune) {
 	for index, folder := range directorylistFolders {
 		if unicode.ToLower(rune(path.Base(folder.Path)[0])) == unicode.ToLower(r) {
@@ -415,28 +444,38 @@ func jump(r rune) {
 	}
 }
 
+// goback selects the top item in the directory list and enters it.
 func goback() {
+	// BUG(mees): when in the root folder we enter the top folder instead of going to
+	// the parent folder.
 	myTui.directorylist.SetCurrentItem(0)
 	changedir()
 }
 
+// addFolderDatabaseRec is a recursive function that takes a folder and add all
+// containing tracks to the playlist, after which it will call itself for every
+// child folder. This function should be called when in database mode.
 func addFolderDatabaseRec(folder globals.Folder) {
 	// add tracks from current folder
-	tracks := database.GetTracksByFolderID(folder.Id)
+	tracks := database.GetTracksByFolderID(folder.ID)
 	playlistFiles = append(playlistFiles, tracks...)
 
 	// add children recusively
-	folders := database.GetFoldersByParentID(folder.Id)
+	folders := database.GetFoldersByParentID(folder.ID)
 	for _, folder := range folders {
 		addFolderDatabaseRec(folder)
 	}
 }
 
+// addFolderDatabase adds all tracks inside the currently selected folder to the playlist.
+// This includes all tracks inside child folders.
 func addFolderDatabase() {
 	addFolderDatabaseRec(directorylistFolders[myTui.directorylist.GetCurrentItem()])
 	drawplaylist()
 }
 
+// parseTrack takes a path to a playable file, extracts the metadata and returns a file
+// object containing this metadata. The metadata might not be found and defaulted to nil.
 func parseTrack(file string) globals.Track {
 	f, _ := os.Open(file)
 	m, err := tag.ReadFrom(f)
@@ -448,7 +487,7 @@ func parseTrack(file string) globals.Track {
 	// if no tags were found default to nil
 	if err != nil {
 		track = globals.Track{
-			Id:       -1,
+			ID:       -1,
 			Path:     file,
 			FolderID: -1,
 			Title:    sql.NullString{String: filename, Valid: true},
@@ -458,7 +497,7 @@ func parseTrack(file string) globals.Track {
 			Year:     sql.NullInt64{Int64: -1, Valid: false}}
 	} else {
 		track = globals.Track{
-			Id:       -1,
+			ID:       -1,
 			Path:     file,
 			FolderID: -1,
 			Title:    database.StringToSQLNullableString(m.Title()),
@@ -471,6 +510,9 @@ func parseTrack(file string) globals.Track {
 	return track
 }
 
+// addFolderFilesystem is a recursive function that takes a folder and add all
+// containing tracks to the playlist, after which it will call itself for every
+// child folder. This function should be called when in filesystem mode.
 func addFolderFilesystem() {
 
 	folder := directorylistFolders[myTui.directorylist.GetCurrentItem()]
@@ -486,7 +528,7 @@ func addFolderFilesystem() {
 				return filepath.SkipDir
 			}
 
-			if !info.IsDir() && globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
+			if !info.IsDir() && globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
 				playlistFiles = append(playlistFiles, parseTrack(file))
 			}
 
@@ -498,6 +540,7 @@ func addFolderFilesystem() {
 	drawplaylist()
 }
 
+// moveUp swaps the currently selected track in the playlist with the one above it.
 func moveUp() {
 	selected := myTui.playlist.GetCurrentItem()
 
@@ -516,6 +559,7 @@ func moveUp() {
 	myTui.playlist.SetCurrentItem(selected - 1)
 }
 
+// moveDown swaps the currently selected track in the playlist with the one below it.
 func moveDown() {
 	selected := myTui.playlist.GetCurrentItem()
 

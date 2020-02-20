@@ -1,17 +1,12 @@
-//////////////////////////////////////////////////////////////////////////////////
-// go does not suppot circular dependencies, therefore this is it's own package //
-//////////////////////////////////////////////////////////////////////////////////
-
+// Package globals exists because go does not suppot circular dependencies,
+// therefore this is it's own package.
 package globals
 
 import (
 	"database/sql"
 )
 
-var (
-	Formats = []string{".wav", ".mp3", ".ogg", ".flac"}
-)
-
+// DatabaseConnection is a struct that holds all database connection info.
 type DatabaseConnection struct {
 	Username string
 	Password string
@@ -20,14 +15,20 @@ type DatabaseConnection struct {
 	Port     string
 }
 
+// Folder is a struct that holds all folder info, this correlates directly
+// to what is in the database. It is also used in filesystem mode but only to
+// hold the path.
 type Folder struct {
-	Id       int
+	ID       int
 	Path     string
 	ParentID int
 }
 
+// Track is a struct that holds all folder info, this correlates directly
+// to what is in the database. It is also used in filesystem mode but only to
+// hold the meta tags.
 type Track struct {
-	Id       int
+	ID       int
 	Path     string
 	FolderID int
 	Title    sql.NullString
@@ -37,7 +38,14 @@ type Track struct {
 	Year     sql.NullInt64
 }
 
-// helper function to check if an array cointains a specific string
+// GetSupportedFormats returns an array of strings with the file extentions
+// that are supported by the program.
+func GetSupportedFormats() []string {
+	return []string{".wav", ".mp3", ".ogg", ".flac"}
+}
+
+// Contains is helper function to check if an array cointains a specific string.
+// Often used in correlation with GetSupportedFormats().
 func Contains(arr []string, str string) bool {
 	for _, a := range arr {
 		if a == str {

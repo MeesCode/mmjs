@@ -1,3 +1,4 @@
+// Package audioplayer controls the audio.
 package audioplayer
 
 import (
@@ -18,9 +19,13 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
+// these values can be ajusted to improve playback.
+// For a more detailed explanation check the documentation of
+// the beep package.
 const (
 	bufferSize time.Duration   = 200 * time.Millisecond
 	gsr        beep.SampleRate = 48000 // the global sample rate
+	quality    int             = 4
 )
 
 var (
@@ -29,6 +34,7 @@ var (
 	playingFile audioFile
 )
 
+// a struct that holds information about the currently playing track.
 type audioFile struct {
 	Track    globals.Track
 	Streamer beep.StreamSeekCloser
@@ -37,6 +43,8 @@ type audioFile struct {
 	finished bool
 }
 
+// Play stops playback of the currently playing song (if any) and start the playback
+// of the provided song. It will open, decode resample and play the file in that order.
 func Play(file globals.Track) (globals.Track, time.Duration) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
@@ -62,7 +70,7 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 		log.Fatalf("error decoding file")
 	}
 
-	st := beep.Seq(beep.Resample(4, format.SampleRate, gsr, streamer))
+	st := beep.Seq(beep.Resample(quality, format.SampleRate, gsr, streamer))
 
 	speaker.Lock()
 	length := format.SampleRate.D(streamer.Len())
@@ -76,6 +84,7 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 	return file, length
 }
 
+// Stop stops the playback of the currently playing track (if any).
 func Stop() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
@@ -86,6 +95,7 @@ func Stop() {
 	speaker.Clear()
 }
 
+// Pause the currently playing track (if any).
 func Pause() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
@@ -99,6 +109,9 @@ func Pause() {
 	speaker.Unlock()
 }
 
+// GetPlaytime returns the play time, and the total time of the track.
+// If no track is playing the returned boolean will be false and the
+// timings will be zero.
 func GetPlaytime() (time.Duration, time.Duration, bool) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
@@ -116,8 +129,8 @@ func GetPlaytime() (time.Duration, time.Duration, bool) {
 
 }
 
-// Initializes the speaker
-func Init() {
+// Initialize the speaker with the specification defined at the top.
+func Initialize() {
 
 	err := speaker.Init(gsr, gsr.N(bufferSize))
 	if err != nil {

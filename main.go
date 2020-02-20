@@ -1,3 +1,5 @@
+// Package main is the main starting point of the program. It parses
+// the command line arguments and initializes the mysql connection pool.
 package main
 
 import (
@@ -95,7 +97,7 @@ func main() {
 	if debug {
 		fmt.Println("debug mode")
 		folder := database.GetFolderByID(1)
-		tracks := database.GetTracksByFolderID(folder.Id)
+		tracks := database.GetTracksByFolderID(folder.ID)
 		for _, track := range tracks {
 			fmt.Println(" - " + track.Title.String)
 		}
@@ -103,7 +105,7 @@ func main() {
 	}
 
 	// initialize audio player
-	go audioplayer.Init()
+	go audioplayer.Initialize()
 
 	// start user interface
 	// (on current thread as to not immediately exit)

@@ -1,3 +1,4 @@
+// Package database manages everything that has to do with communicating with the database.
 package database
 
 import (
@@ -12,11 +13,12 @@ import (
 	"github.com/dhowden/tag"
 
 	// this is needed but i don't know why it is blank
-	// probz just does some stuff in the background
+	// probably just does some stuff in the background
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Index the specified root folder
+// Index indexes every folder and playable file that is contained within the
+// specified root folder. It ignores hidden folders entirely.
 func Index(root string) {
 
 	db := getConnection()
@@ -29,7 +31,8 @@ func Index(root string) {
 	defer folderIns.Close()
 
 	// Prepare statement for inserting a file
-	fileIns, err := db.Prepare("INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)")
+	fileIns, err := db.Prepare(`INSERT IGNORE INTO Tracks(Path, FolderID, Title, 
+		Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -49,7 +52,8 @@ func Index(root string) {
 			}
 
 			// make sure it's a playable file
-			if info.IsDir() || globals.Contains(globals.Formats, strings.ToLower(path.Ext(file))) {
+			if info.IsDir() ||
+				globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
 
 				// skip hidden folders
 				if strings.Contains(file, "/.") {

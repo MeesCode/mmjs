@@ -29,11 +29,12 @@ func Warmup() *sql.DB {
 	return dbc
 }
 
+// getConnection returns the connection pool. Must be initialized by Warmup() first.
 func getConnection() *sql.DB {
 	return dbc
 }
 
-// StringToSQLNullableString : Convert a string into a nullable string
+// StringToSQLNullableString converts a string into a nullable string.
 func StringToSQLNullableString(s string) sql.NullString {
 	if s == "" {
 		return sql.NullString{String: s, Valid: false}
@@ -41,7 +42,7 @@ func StringToSQLNullableString(s string) sql.NullString {
 	return sql.NullString{String: s, Valid: true}
 }
 
-// IntToSQLNullableInt : Convert a int into a nullable int
+// IntToSQLNullableInt converts an int into a nullable int.
 func IntToSQLNullableInt(s int) sql.NullInt64 {
 	var i = int64(s)
 	if s == 0 {
