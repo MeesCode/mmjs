@@ -87,7 +87,6 @@ func updateInfoBox(track globals.Track, box *tview.Table) {
 // drawplaylist draws the playlist. This function should be called after every
 // function that alters this list.
 func drawplaylist() {
-	myTui.playlist.Clear()
 	for index, track := range playlistFiles {
 		if songindex == index {
 			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', func() { myTui.app.QueueUpdate(playsong) })
@@ -96,23 +95,19 @@ func drawplaylist() {
 		}
 	}
 	myTui.playlist.SetCurrentItem(songindex)
-	myTui.app.Draw()
 }
 
 // drawfilelist draws the file list. This function should be called after every
 // function that alters this list.
 func drawfilelist() {
-	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
 		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, func() { myTui.app.QueueUpdate(addsong) })
 	}
-	myTui.app.Draw()
 }
 
 // drawdirectorylist draws the directory list. This function should be called after every
 // function that alters this list.
 func drawdirectorylist(parentFunc func(), isRoot bool) {
-	myTui.directorylist.Clear()
 	for index, folder := range directorylistFolders {
 
 		// first folder shows .. instead of the folder name
@@ -124,7 +119,6 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 		}
 
 	}
-	myTui.app.Draw()
 }
 
 // startTrack starts a given track and updates the ui accordingly
@@ -233,7 +227,6 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	}
 
 	// update the timestamps
-	myTui.progressbar.Clear()
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
 	fill := width * int(playtime) / int(length)
 	for i := 0; i < fill-1; i++ {
@@ -246,14 +239,11 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 	// update the progress bar
 	ph, pm, ps := int64(playtime.Hours()), int64(playtime.Minutes()), int64(playtime.Seconds())
-	myTui.playtime.Clear()
 	fmt.Fprintf(myTui.playtime, "%02d:%02d:%02d", ph, pm-ph*60, ps-pm*60)
 
 	th, tm, ts := int64(length.Hours()), int64(length.Minutes()), int64(length.Seconds())
-	myTui.totaltime.Clear()
 	fmt.Fprintf(myTui.totaltime, "%02d:%02d:%02d", th, tm-th*60, ts-tm*60)
 
-	myTui.app.Draw()
 }
 
 // shuffle shuffles the playlist and places the currently playing track as the first
