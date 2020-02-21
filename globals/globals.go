@@ -6,6 +6,9 @@ import (
 	"database/sql"
 )
 
+// Root is the root folder where the player is initialized
+var Root string
+
 // DatabaseConnection is a struct that holds all database connection info.
 type DatabaseConnection struct {
 	Username string

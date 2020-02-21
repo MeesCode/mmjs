@@ -49,7 +49,7 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
-	f, err := os.Open(file.Path)
+	f, err := os.Open(path.Join(globals.Root, file.Path))
 	if err != nil {
 		log.Println("Error opening the file", err)
 		speaker.Clear()

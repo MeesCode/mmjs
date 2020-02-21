@@ -19,7 +19,7 @@ import (
 
 // Index indexes every folder and playable file that is contained within the
 // specified root folder. It ignores hidden folders entirely.
-func Index(root string) {
+func Index() {
 
 	db := getConnection()
 
@@ -45,7 +45,7 @@ func Index(root string) {
 	}
 	defer parentOut.Close()
 
-	err = filepath.Walk(root,
+	err = filepath.Walk(globals.Root,
 		func(file string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -60,24 +60,35 @@ func Index(root string) {
 					return filepath.SkipDir
 				}
 
+				// relative path
+				rpath := path.Clean(file[len(globals.Root):])
+
 				fmt.Println(file)
 
-				var isRoot = root == file
+				var isRoot = globals.Root == file
 
 				var parentID = 0
 
 				if !isRoot {
-					err = parentOut.QueryRow(path.Dir(file)).Scan(&parentID)
+					err = parentOut.QueryRow(path.Dir(rpath)).Scan(&parentID)
 					if err != nil {
-						log.Println("Could not perform query, or query returned empty", err)
+						log.Println("Could not perform query, or query returned empty. query: ", path.Dir(rpath), err)
 					}
 				}
 
 				// if it's a folder
 				if info.IsDir() {
-					_, err = folderIns.Exec(file, parentID)
-					if err != nil {
-						log.Println("Could not add folder to the dataqbse", err)
+					if isRoot {
+						// special case for when it's the root folder
+						_, err = folderIns.Exec("/", parentID)
+						if err != nil {
+							log.Println("Could not add root to the database", err)
+						}
+					} else {
+						_, err = folderIns.Exec(rpath, parentID)
+						if err != nil {
+							log.Println("Could not add folder to the database", err)
+						}
 					}
 
 					// if it's a file
@@ -89,10 +100,10 @@ func Index(root string) {
 
 					// if no tags were found default to nil
 					if err != nil {
-						_, err = fileIns.Exec(file, parentID, nil, nil, nil, nil, nil)
+						_, err = fileIns.Exec(rpath, parentID, nil, nil, nil, nil, nil)
 					} else {
 						_, err = fileIns.Exec(
-							file,
+							rpath,
 							parentID,
 							StringToSQLNullableString(m.Title()),
 							StringToSQLNullableString(m.Album()),

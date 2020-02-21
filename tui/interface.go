@@ -14,7 +14,6 @@ import (
 
 // global variables
 var (
-	root                 string // the root folder in which the interface is started
 	playlistFiles        = make([]globals.Track, 0)
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
@@ -45,9 +44,7 @@ type tui struct {
 // Start builds the user interface, defines the keybinds and sets initial values.
 // This function will not stop until Ctrl-C is pressed, after which it will shut
 // down gracefully.
-func Start(base string, mode string) {
-
-	root = base
+func Start(mode string) {
 
 	// build interface
 	app := tview.NewApplication()
@@ -191,7 +188,7 @@ func Start(base string, mode string) {
 		search = searchFilesystem
 		folder = globals.Folder{
 			ID:       -1,
-			Path:     root,
+			Path:     globals.Root,
 			ParentID: -1}
 	} else {
 		addFolder = addFolderDatabase

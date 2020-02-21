@@ -326,10 +326,13 @@ func goback() {
 // parseTrack takes a path to a playable file, extracts the metadata and returns a file
 // object containing this metadata. The metadata might not be found and defaulted to nil.
 func parseTrack(file string) globals.Track {
-	f, _ := os.Open(file)
+	f, _ := os.Open(path.Join(globals.Root, file))
 	m, err := tag.ReadFrom(f)
 
 	var track globals.Track
+
+	// relative path
+	rpath := path.Clean(file[len(globals.Root):])
 
 	_, filename := path.Split(file)
 
@@ -337,7 +340,7 @@ func parseTrack(file string) globals.Track {
 	if err != nil {
 		track = globals.Track{
 			ID:       -1,
-			Path:     file,
+			Path:     rpath,
 			FolderID: -1,
 			Title:    sql.NullString{String: filename, Valid: true},
 			Album:    sql.NullString{String: "", Valid: false},
@@ -347,7 +350,7 @@ func parseTrack(file string) globals.Track {
 	} else {
 		track = globals.Track{
 			ID:       -1,
-			Path:     file,
+			Path:     rpath,
 			FolderID: -1,
 			Title:    database.StringToSQLNullableString(m.Title()),
 			Artist:   database.StringToSQLNullableString(m.Artist()),

@@ -15,7 +15,7 @@ import (
 // the one that is selected.
 func changedirFilesystem() {
 	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
-	var isRoot = base.Path == "/"
+	var isRoot = base.Path == globals.Root
 
 	files, err := ioutil.ReadDir(base.Path)
 
@@ -74,7 +74,7 @@ func changedirFilesystem() {
 func searchFilesystem() {
 	var term = myTui.searchinput.GetText()
 	filelistFiles = nil
-	err := filepath.Walk(root,
+	err := filepath.Walk(globals.Root,
 		func(file string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err

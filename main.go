@@ -26,17 +26,13 @@ func init() {
 	var (
 		defaultMode = "filesystem"
 		defaultHelp = false
-		debugHelp   = false
 
-		modeUsage  = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
-		helpUsage  = "print this help message"
-		debugUsage = "used by the developer to access debug features"
+		modeUsage = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
+		helpUsage = "print this help message"
 	)
 
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
 	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
-	flag.BoolVar(&debug, "d", debugHelp, debugUsage)
-
 }
 
 func main() {
@@ -51,10 +47,9 @@ func main() {
 	}
 
 	arg := flag.Arg(0)
-	var root string
 
 	// check that a path has been given
-	if arg == "" && mode != "database" {
+	if arg == "" {
 		fmt.Println("please specify a path")
 		flag.PrintDefaults()
 		return
@@ -62,9 +57,9 @@ func main() {
 
 	// make absolute if not already
 	if path.IsAbs(arg) {
-		root = path.Clean(arg)
+		globals.Root = path.Clean(arg)
 	} else {
-		root = path.Clean(path.Join(base, arg))
+		globals.Root = path.Clean(path.Join(base, arg))
 	}
 
 	// check for help flag
@@ -81,8 +76,8 @@ func main() {
 	}
 
 	// check if path exists
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		fmt.Println("chosen path: " + root)
+	if _, err := os.Stat(globals.Root); os.IsNotExist(err) {
+		fmt.Println("chosen path: " + globals.Root)
 		fmt.Println("specified path does not exist")
 		flag.PrintDefaults()
 		return
@@ -96,17 +91,7 @@ func main() {
 
 	// index filesystem at specified path
 	if mode == "index" {
-		database.Index(root)
-		return
-	}
-
-	if debug {
-		fmt.Println("debug mode")
-		folder := database.GetFolderByID(1)
-		tracks := database.GetTracksByFolderID(folder.ID)
-		for _, track := range tracks {
-			fmt.Println(" - " + track.Title.String)
-		}
+		database.Index()
 		return
 	}
 
@@ -115,6 +100,6 @@ func main() {
 
 	// start user interface
 	// (on current thread as to not immediately exit)
-	tui.Start(root, mode)
+	tui.Start(mode)
 
 }
