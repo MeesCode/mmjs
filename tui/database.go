@@ -2,8 +2,8 @@
 package tui
 
 import (
-	"mp3bak2/database"
-	"mp3bak2/globals"
+	"mmjs/database"
+	"mmjs/globals"
 )
 
 // changedirDatabase changes the current directory (when in database mode) to

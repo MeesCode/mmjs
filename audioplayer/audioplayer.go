@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"mp3bak2/globals"
+	"mmjs/globals"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/flac"

@@ -3,7 +3,7 @@ package database
 
 import (
 	"log"
-	"mp3bak2/globals"
+	"mmjs/globals"
 )
 
 ////////////////////////////////////////////////

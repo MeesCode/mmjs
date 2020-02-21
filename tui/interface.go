@@ -4,9 +4,9 @@ package tui
 import (
 	"fmt"
 	"log"
-	"mp3bak2/audioplayer"
-	"mp3bak2/database"
-	"mp3bak2/globals"
+	"mmjs/audioplayer"
+	"mmjs/database"
+	"mmjs/globals"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"

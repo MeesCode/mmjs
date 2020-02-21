@@ -4,7 +4,7 @@ package tui
 import (
 	"io/ioutil"
 	"log"
-	"mp3bak2/globals"
+	"mmjs/globals"
 	"os"
 	"path"
 	"path/filepath"

@@ -4,7 +4,7 @@ package database
 import (
 	"fmt"
 	"log"
-	"mp3bak2/globals"
+	"mmjs/globals"
 	"os"
 	"path"
 	"path/filepath"

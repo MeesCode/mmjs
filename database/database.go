@@ -4,7 +4,7 @@ package database
 import (
 	"database/sql"
 	"log"
-	"mp3bak2/globals"
+	"mmjs/globals"
 )
 
 var dbc *sql.DB
