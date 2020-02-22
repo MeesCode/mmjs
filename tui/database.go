@@ -73,6 +73,9 @@ func savePlaylist() {
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openPlaylistInput() {
+	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
+		return
+	}
 	myTui.mainFlex.RemoveItem(myTui.keybinds)
 	myTui.mainFlex.AddItem(myTui.playlistinput, 3, 0, false)
 	myTui.playlistinput.SetText("")
@@ -102,5 +105,4 @@ func showPlaylists() {
 	for _, track := range filelistFiles {
 		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, insertPlaylist)
 	}
-	focusWithColor(myTui.filelist)
 }

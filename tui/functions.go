@@ -239,7 +239,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	for i := 0; i < fill-1; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneCkBoard)
 	}
-	fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneBlock)
+	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[crimson]", tcell.RuneBlock, "[white]")
 	for i := 0; i < width-fill; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
 	}
@@ -279,6 +279,9 @@ func shuffle() {
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
+	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
+		return
+	}
 	myTui.mainFlex.RemoveItem(myTui.keybinds)
 	myTui.mainFlex.AddItem(myTui.searchinput, 3, 0, false)
 	myTui.searchinput.SetText("")

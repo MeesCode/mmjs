@@ -7,7 +7,6 @@ import (
 	"mmjs/audioplayer"
 	"mmjs/database"
 	"mmjs/globals"
-	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -26,7 +25,7 @@ var (
 )
 
 const (
-	colorFocus   = tcell.ColorRoyalBlue
+	colorFocus   = tcell.ColorCrimson
 	colorUnfocus = tcell.ColorWhite
 )
 
@@ -98,7 +97,7 @@ func Start(mode string) {
 
 	keybinds := tview.NewTextView()
 	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
-	keybinds.SetTextAlign(2)
+	keybinds.SetTextAlign(1)
 	if mode == "database" {
 		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
 			"| F7: open playlist | F8: play/pause | F9: previous | F12: next ")
@@ -123,7 +122,7 @@ func Start(mode string) {
 	searchinput.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
 
 	playlistinput := tview.NewInputField().
-		SetLabel("Enter name of new playlist ").
+		SetLabel("Enter name of new playlist: ").
 		SetFieldTextColor(-1).
 		SetFieldBackgroundColor(-1).
 		SetLabelColor(-1).
@@ -139,6 +138,7 @@ func Start(mode string) {
 
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false).SetBackgroundColor(-1)
+	progressbar.SetDynamicColors(true)
 
 	filelist := tview.NewList().ShowSecondaryText(false)
 	filelist.SetBorder(true).SetTitle(" Current directory ").SetBackgroundColor(-1)
@@ -152,6 +152,11 @@ func Start(mode string) {
 	playlist := tview.NewList()
 	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
 	playlist.ShowSecondaryText(false).SetWrapAround(false)
+	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
+		if len(playlistFiles) > 0 {
+			updateInfoBox(playlistFiles[i], browseinfobox)
+		}
+	})
 
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 
@@ -173,15 +178,21 @@ func Start(mode string) {
 	}
 
 	// fill progress bar
-	// time.Duration(1) is far below 1 second so it will render as 0
-	drawprogressbar(time.Duration(0), time.Duration(1))
+	fmt.Fprintf(myTui.playtime, "00:00:00")
+	fmt.Fprintf(myTui.totaltime, "00:00:00")
+	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[crimson]", tcell.RuneBlock, "[white]")
+	for i := 0; i < 200; i++ {
+		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
+	}
 
 	// define tui locations
 	flex := tview.NewFlex().
 		AddItem(mainFlex.
 			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 				AddItem(directorylist, 0, 1, false).
-				AddItem(filelist, 0, 1, false).
+				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+					AddItem(filelist, 0, 1, false).
+					AddItem(browseinfobox, 9, 0, false), 0, 1, false).
 				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 					AddItem(infoboxcontainer.
 						AddItem(infobox, 0, 1, false).
@@ -189,7 +200,6 @@ func Start(mode string) {
 							AddItem(playtime, 9, 0, false).
 							AddItem(progressbar, 0, 1, false).
 							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
-					AddItem(browseinfobox, 9, 0, false).
 					AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
 			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
