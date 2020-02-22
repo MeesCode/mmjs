@@ -25,6 +25,11 @@ var (
 	addFolder            func()
 )
 
+const (
+	colorFocus   = tcell.ColorRoyalBlue
+	colorUnfocus = tcell.ColorWhite
+)
+
 // a big struct that hold all interface elements as to not occupy too much
 // from the global namespace.
 type tui struct {
@@ -58,6 +63,7 @@ func Start(mode string) {
 	directorylist := tview.NewList().ShowSecondaryText(false)
 	directorylist.SetBorder(true).SetTitle(" Directories ").SetBackgroundColor(-1)
 	directorylist.SetWrapAround(false)
+	directorylist.SetBorderColor(colorFocus)
 
 	infobox := tview.NewTable()
 	infobox.SetBorder(false).SetBackgroundColor(-1)
@@ -91,7 +97,7 @@ func Start(mode string) {
 	totaltime.SetBorder(false).SetBackgroundColor(-1)
 
 	keybinds := tview.NewTextView()
-	keybinds.SetBorder(false).SetTitle(" Keybinds ").SetBackgroundColor(-1)
+	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
 	keybinds.SetTextAlign(2)
 	if mode == "database" {
 		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
@@ -114,7 +120,7 @@ func Start(mode string) {
 				closeSearch()
 			}
 		})
-	searchinput.SetBorder(false).SetTitle(" Search ").SetBackgroundColor(-1)
+	searchinput.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
 
 	playlistinput := tview.NewInputField().
 		SetLabel("Enter name of new playlist ").
@@ -129,7 +135,7 @@ func Start(mode string) {
 				closePlaylist()
 			}
 		})
-	searchinput.SetBorder(false).SetTitle(" Playlist name ").SetBackgroundColor(-1)
+	playlistinput.SetBorder(true).SetTitle(" Playlist name ").SetBackgroundColor(-1)
 
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false).SetBackgroundColor(-1)
@@ -185,7 +191,7 @@ func Start(mode string) {
 							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
 					AddItem(browseinfobox, 9, 0, false).
 					AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
-			AddItem(keybinds, 1, 0, false), 0, 1, false)
+			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
 	// do some stuff depending on if we are in database or filesystem mode
 	// and set the root folder as the current
@@ -264,16 +270,16 @@ func Start(mode string) {
 	filelist.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
-			app.SetFocus(playlist)
+			focusWithColor(playlist)
 			return nil
 		case tcell.KeyInsert:
 			insertsong()
 			return nil
 		case tcell.KeyRight:
-			app.SetFocus(playlist)
+			focusWithColor(playlist)
 			return nil
 		case tcell.KeyLeft:
-			app.SetFocus(directorylist)
+			focusWithColor(directorylist)
 			return nil
 		}
 		return event
@@ -283,16 +289,16 @@ func Start(mode string) {
 	playlist.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
-			app.SetFocus(directorylist)
+			focusWithColor(directorylist)
 			return nil
 		case tcell.KeyDelete:
 			deletesong()
 			return nil
 		case tcell.KeyRight:
-			app.SetFocus(directorylist)
+			focusWithColor(directorylist)
 			return nil
 		case tcell.KeyLeft:
-			app.SetFocus(filelist)
+			focusWithColor(filelist)
 			return nil
 		case tcell.KeyRune:
 			if event.Rune() == '-' {
@@ -319,16 +325,16 @@ func Start(mode string) {
 
 		switch event.Key() {
 		case tcell.KeyTab:
-			app.SetFocus(filelist)
+			focusWithColor(filelist)
 			return nil
 		case tcell.KeyRune:
 			jump(event.Rune())
 			return nil
 		case tcell.KeyRight:
-			app.SetFocus(filelist)
+			focusWithColor(filelist)
 			return nil
 		case tcell.KeyLeft:
-			app.SetFocus(playlist)
+			focusWithColor(playlist)
 			return nil
 		case tcell.KeyBackspace:
 			goback()

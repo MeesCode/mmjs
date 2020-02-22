@@ -258,9 +258,9 @@ func GetPlaylists() []globals.Track {
 			&playlist.Title)
 
 		playlist.Album = sql.NullString{String: "playlist", Valid: true}
-		playlist.Artist = sql.NullString{String: "various", Valid: false}
+		playlist.Artist = sql.NullString{String: "playlist", Valid: true}
 		playlist.FolderID = -1
-		playlist.Genre = sql.NullString{String: "various", Valid: true}
+		playlist.Genre = sql.NullString{String: "playlist", Valid: true}
 		playlist.Path = "not applicable"
 		playlist.Year = sql.NullInt64{Int64: 0, Valid: false}
 

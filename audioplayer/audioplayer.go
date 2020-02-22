@@ -96,6 +96,8 @@ func Stop() {
 	if ctrl != nil {
 		playingFile.Streamer.Close()
 	}
+
+	ctrl = nil
 	speaker.Clear()
 }
 

@@ -280,17 +280,17 @@ func shuffle() {
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
 	myTui.mainFlex.RemoveItem(myTui.keybinds)
-	myTui.mainFlex.AddItem(myTui.searchinput, 1, 0, false)
+	myTui.mainFlex.AddItem(myTui.searchinput, 3, 0, false)
 	myTui.searchinput.SetText("")
-	myTui.app.SetFocus(myTui.searchinput)
+	focusWithColor(myTui.searchinput)
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
 func closeSearch() {
 	myTui.filelist.SetTitle(" Search results ")
 	myTui.mainFlex.RemoveItem(myTui.searchinput)
-	myTui.mainFlex.AddItem(myTui.keybinds, 1, 0, false)
-	myTui.app.SetFocus(myTui.filelist)
+	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
+	focusWithColor(myTui.filelist)
 	drawfilelist()
 }
 
@@ -395,4 +395,24 @@ func moveDown() {
 	playlistFiles[selected], playlistFiles[selected+1] = playlistFiles[selected+1], playlistFiles[selected]
 	drawplaylist()
 	myTui.playlist.SetCurrentItem(selected + 1)
+}
+
+func focusWithColor(primitive tview.Primitive) {
+	myTui.directorylist.SetBorderColor(colorUnfocus)
+	myTui.filelist.SetBorderColor(colorUnfocus)
+	myTui.playlist.SetBorderColor(colorUnfocus)
+	myTui.searchinput.SetBorderColor(colorUnfocus)
+	myTui.playlistinput.SetBorderColor(colorUnfocus)
+
+	list, ok := primitive.(*tview.List)
+	if ok {
+		list.SetBorderColor(colorFocus)
+	}
+
+	inputfield, ok := primitive.(*tview.InputField)
+	if ok {
+		inputfield.SetBorderColor(colorFocus)
+	}
+
+	myTui.app.SetFocus(primitive)
 }

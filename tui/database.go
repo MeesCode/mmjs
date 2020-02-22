@@ -63,6 +63,10 @@ func addFolderDatabase() {
 
 func savePlaylist() {
 	var name = myTui.playlistinput.GetText()
+	if name == "" {
+		closePlaylist()
+		return
+	}
 	database.SavePlaylist(name, playlistFiles)
 	closePlaylist()
 }
@@ -70,16 +74,16 @@ func savePlaylist() {
 // openSearch removes the keybinds box and replaces it with the search box.
 func openPlaylistInput() {
 	myTui.mainFlex.RemoveItem(myTui.keybinds)
-	myTui.mainFlex.AddItem(myTui.playlistinput, 1, 0, false)
+	myTui.mainFlex.AddItem(myTui.playlistinput, 3, 0, false)
 	myTui.playlistinput.SetText("")
-	myTui.app.SetFocus(myTui.playlistinput)
+	focusWithColor(myTui.playlistinput)
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
 func closePlaylist() {
 	myTui.mainFlex.RemoveItem(myTui.playlistinput)
-	myTui.mainFlex.AddItem(myTui.keybinds, 1, 0, false)
-	myTui.app.SetFocus(myTui.filelist)
+	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
+	focusWithColor(myTui.filelist)
 	drawfilelist()
 }
 
@@ -98,5 +102,5 @@ func showPlaylists() {
 	for _, track := range filelistFiles {
 		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, insertPlaylist)
 	}
-	myTui.app.SetFocus(myTui.filelist)
+	focusWithColor(myTui.filelist)
 }
