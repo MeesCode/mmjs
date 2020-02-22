@@ -279,20 +279,17 @@ func shuffle() {
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
-	// don't open a new seach window when one is already open
-	if myTui.searchinput.HasFocus() {
-		return
-	}
 	myTui.mainFlex.RemoveItem(myTui.keybinds)
-	myTui.mainFlex.AddItem(myTui.searchinput, 3, 0, false)
+	myTui.mainFlex.AddItem(myTui.searchinput, 1, 0, false)
 	myTui.searchinput.SetText("")
 	myTui.app.SetFocus(myTui.searchinput)
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
 func closeSearch() {
+	myTui.filelist.SetTitle(" Search results ")
 	myTui.mainFlex.RemoveItem(myTui.searchinput)
-	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
+	myTui.mainFlex.AddItem(myTui.keybinds, 1, 0, false)
 	myTui.app.SetFocus(myTui.filelist)
 	drawfilelist()
 }

@@ -14,6 +14,7 @@ import (
 // changedirFilesystem changes the current directory (when in filesystem mode) to
 // the one that is selected.
 func changedirFilesystem() {
+	myTui.filelist.SetTitle(" Current directory ")
 	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
 	var isRoot = base.Path == globals.Root
 

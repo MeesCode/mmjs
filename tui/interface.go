@@ -7,6 +7,7 @@ import (
 	"mmjs/audioplayer"
 	"mmjs/database"
 	"mmjs/globals"
+	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -36,9 +37,10 @@ type tui struct {
 	progressbar   *tview.TextView
 	playtime      *tview.TextView
 	totaltime     *tview.TextView
-	keybinds      *tview.Table
+	keybinds      *tview.TextView
 	mainFlex      *tview.Flex
 	searchinput   *tview.InputField
+	playlistinput *tview.InputField
 }
 
 // Start builds the user interface, defines the keybinds and sets initial values.
@@ -88,22 +90,16 @@ func Start(mode string) {
 	totaltime.SetTextAlign(2)
 	totaltime.SetBorder(false).SetBackgroundColor(-1)
 
-	keybinds := tview.NewTable()
-	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
-	keybinds.SetCell(0, 0, tview.NewTableCell("F2: clear").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 1, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 2, tview.NewTableCell("F3: search").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 3, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 4, tview.NewTableCell("F5: shuffle").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 5, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 6, tview.NewTableCell("F8: play/pause").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 7, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 8, tview.NewTableCell("F9: previous track").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 9, tview.NewTableCell("|").SetExpansion(1).SetAlign(1))
-	keybinds.SetCell(0, 10, tview.NewTableCell("F12: next track").SetExpansion(1).SetAlign(1))
-
-	searchbar := tview.NewBox()
-	searchbar.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
+	keybinds := tview.NewTextView()
+	keybinds.SetBorder(false).SetTitle(" Keybinds ").SetBackgroundColor(-1)
+	keybinds.SetTextAlign(2)
+	if mode == "database" {
+		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
+			"| F7: open playlist | F8: play/pause | F9: previous | F12: next ")
+	} else {
+		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle "+
+			" | F8: play/pause | F9: previous | F12: next ")
+	}
 
 	searchinput := tview.NewInputField().
 		SetLabel("Enter a search term: ").
@@ -118,7 +114,22 @@ func Start(mode string) {
 				closeSearch()
 			}
 		})
-	searchinput.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
+	searchinput.SetBorder(false).SetTitle(" Search ").SetBackgroundColor(-1)
+
+	playlistinput := tview.NewInputField().
+		SetLabel("Enter name of new playlist ").
+		SetFieldTextColor(-1).
+		SetFieldBackgroundColor(-1).
+		SetLabelColor(-1).
+		SetDoneFunc(func(key tcell.Key) {
+			if key == tcell.KeyEnter {
+				savePlaylist()
+			}
+			if key == tcell.KeyEsc {
+				closePlaylist()
+			}
+		})
+	searchinput.SetBorder(false).SetTitle(" Playlist name ").SetBackgroundColor(-1)
 
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false).SetBackgroundColor(-1)
@@ -152,15 +163,12 @@ func Start(mode string) {
 		keybinds:      keybinds,
 		mainFlex:      mainFlex,
 		searchinput:   searchinput,
+		playlistinput: playlistinput,
 	}
 
 	// fill progress bar
-	fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneBlock)
-	for i := 0; i < 200; i++ {
-		fmt.Fprintf(progressbar, "%c", tcell.RuneHLine)
-	}
-	fmt.Fprintf(myTui.playtime, "%s", "00:00:00")
-	fmt.Fprintf(myTui.totaltime, "%s", "00:00:00")
+	// time.Duration(1) is far below 1 second so it will render as 0
+	drawprogressbar(time.Duration(0), time.Duration(1))
 
 	// define tui locations
 	flex := tview.NewFlex().
@@ -177,7 +185,7 @@ func Start(mode string) {
 							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
 					AddItem(browseinfobox, 9, 0, false).
 					AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
-			AddItem(keybinds, 3, 0, false), 0, 1, false)
+			AddItem(keybinds, 1, 0, false), 0, 1, false)
 
 	// do some stuff depending on if we are in database or filesystem mode
 	// and set the root folder as the current
@@ -207,8 +215,19 @@ func Start(mode string) {
 	// the functions below are for handling user input not defined by tview //
 	//////////////////////////////////////////////////////////////////////////
 
-	// global
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		if mode == "database" {
+			switch event.Key() {
+			case tcell.KeyF6:
+				openPlaylistInput()
+				return nil
+			case tcell.KeyF7:
+				showPlaylists()
+				return nil
+			}
+		}
+
 		switch event.Key() {
 		case tcell.KeyF2:
 			clear()

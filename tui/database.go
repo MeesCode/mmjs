@@ -2,6 +2,7 @@
 package tui
 
 import (
+	"mmjs/audioplayer"
 	"mmjs/database"
 	"mmjs/globals"
 )
@@ -9,6 +10,7 @@ import (
 // changedirDatabase changes the current directory (when in database mode) to
 // the one that is selected.
 func changedirDatabase() {
+	myTui.filelist.SetTitle(" Current directory ")
 	var base = directorylistFolders[myTui.directorylist.GetCurrentItem()]
 
 	// add files
@@ -57,4 +59,44 @@ func addFolderDatabaseRec(folder globals.Folder) {
 func addFolderDatabase() {
 	addFolderDatabaseRec(directorylistFolders[myTui.directorylist.GetCurrentItem()])
 	drawplaylist()
+}
+
+func savePlaylist() {
+	var name = myTui.playlistinput.GetText()
+	database.SavePlaylist(name, playlistFiles)
+	closePlaylist()
+}
+
+// openSearch removes the keybinds box and replaces it with the search box.
+func openPlaylistInput() {
+	myTui.mainFlex.RemoveItem(myTui.keybinds)
+	myTui.mainFlex.AddItem(myTui.playlistinput, 1, 0, false)
+	myTui.playlistinput.SetText("")
+	myTui.app.SetFocus(myTui.playlistinput)
+}
+
+// closeSearch removes the search box and replaces it with the keybinds box.
+func closePlaylist() {
+	myTui.mainFlex.RemoveItem(myTui.playlistinput)
+	myTui.mainFlex.AddItem(myTui.keybinds, 1, 0, false)
+	myTui.app.SetFocus(myTui.filelist)
+	drawfilelist()
+}
+
+func insertPlaylist() {
+	audioplayer.Stop()
+	songindex = 0
+	pl := filelistFiles[myTui.filelist.GetCurrentItem()]
+	playlistFiles = database.GetPlaylistTracks(pl.ID)
+	drawplaylist()
+}
+
+func showPlaylists() {
+	myTui.filelist.SetTitle(" Playlists ")
+	filelistFiles = database.GetPlaylists()
+	myTui.filelist.Clear()
+	for _, track := range filelistFiles {
+		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, insertPlaylist)
+	}
+	myTui.app.SetFocus(myTui.filelist)
 }

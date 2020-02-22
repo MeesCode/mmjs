@@ -2,6 +2,7 @@
 package database
 
 import (
+	"database/sql"
 	"log"
 	"mmjs/globals"
 )
@@ -152,5 +153,125 @@ func GetSearchResults(term string) []globals.Track {
 	}
 
 	return tracks
+
+}
+
+// SavePlaylist saves aplaylist to the database
+func SavePlaylist(name string, tracks []globals.Track) {
+	db := getConnection()
+
+	// Prepare statement for creating a playlist
+	plIns, err := db.Prepare(`INSERT INTO Playlists (Name) VALUES (?)`)
+	if err != nil {
+		log.Fatalln("could not prepare statement", err)
+	}
+	defer plIns.Close()
+
+	// Prepare statement for adding a track to a playlist
+	plEntryIns, err := db.Prepare(`INSERT INTO PlaylistEntries (TrackID, PlaylistID) VALUES (?, ?)`)
+	if err != nil {
+		log.Fatalln("could not prepare statement", err)
+	}
+	defer plEntryIns.Close()
+
+	res, err := plIns.Exec(name)
+	id, err2 := res.LastInsertId()
+	if err != nil || err2 != nil {
+		log.Fatalln("could not create playlist", err, err2)
+	}
+
+	for _, track := range tracks {
+		plEntryIns.Exec(track.ID, id)
+	}
+
+}
+
+// GetPlaylistTracks return all tracks in a playlist
+func GetPlaylistTracks(playlistid int) []globals.Track {
+	db := getConnection()
+
+	plOut, err := db.Prepare(`SELECT Tracks.TrackID, Tracks.Path, Tracks.FolderID, 
+	Tracks.Title, Tracks.Album, Tracks.Artist, Tracks.Genre, Tracks.Year 
+	FROM Tracks 
+	JOIN PlaylistEntries ON Tracks.TrackID = PlaylistEntries.TrackID 
+	JOIN Playlists ON Playlists.PlaylistID = PlaylistEntries.PlaylistID 
+	WHERE Playlists.PlaylistID = ?`)
+	if err != nil {
+		log.Fatalln("could not prepare statement", err)
+	}
+	defer plOut.Close()
+
+	tracks := make([]globals.Track, 0)
+
+	rows, err := plOut.Query(playlistid)
+	if err != nil {
+		log.Println("Could not perform query", err)
+		return nil
+	}
+
+	for rows.Next() {
+		var track globals.Track
+		err = rows.Scan(
+			&track.ID,
+			&track.Path,
+			&track.FolderID,
+			&track.Title,
+			&track.Album,
+			&track.Artist,
+			&track.Genre,
+			&track.Year)
+
+		if err != nil {
+			log.Println("Could not find track in database", err)
+		} else {
+			tracks = append(tracks, track)
+		}
+
+	}
+
+	return tracks
+
+}
+
+// GetPlaylists searches the database for all playlists and return them desguised as tracks
+func GetPlaylists() []globals.Track {
+	db := getConnection()
+
+	plOut, err := db.Prepare(`SELECT PlaylistID, Name FROM Playlists`)
+	if err != nil {
+		log.Println("could not prepare statement.", err)
+	}
+	defer plOut.Close()
+
+	playlists := make([]globals.Track, 0)
+
+	rows, err := plOut.Query()
+	if err != nil {
+		log.Println("Could not perform search query", err)
+		return nil
+	}
+
+	for rows.Next() {
+		var playlist globals.Track
+		err = rows.Scan(
+			&playlist.ID,
+			&playlist.Title)
+
+		playlist.Album = sql.NullString{String: "playlist", Valid: true}
+		playlist.Artist = sql.NullString{String: "various", Valid: false}
+		playlist.FolderID = -1
+		playlist.Genre = sql.NullString{String: "various", Valid: true}
+		playlist.Path = "not applicable"
+		playlist.Year = sql.NullInt64{Int64: 0, Valid: false}
+
+		if err != nil {
+			log.Println("Could not find playlist", err)
+		} else {
+			playlists = append(playlists, playlist)
+		}
+
+	}
+
+	return playlists
 
 }

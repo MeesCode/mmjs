@@ -26,19 +26,19 @@ CREATE TABLE IF NOT EXISTS mmjs.Tracks (
   FOREIGN KEY (FolderID) REFERENCES Folders(FolderID)
 ) ENGINE=InnoDB;
 
-DROP TABLE IF EXISTS mmjs.Playlist;
-CREATE TABLE IF NOT EXISTS mmjs.Playlist (
+DROP TABLE IF EXISTS mmjs.Playlists;
+CREATE TABLE IF NOT EXISTS mmjs.Playlists (
   PlaylistID int NOT NULL AUTO_INCREMENT,
   Name VARCHAR(255) NOT NULL UNIQUE,
   PRIMARY KEY (PlaylistID)
 ) ENGINE=InnoDB;
 
-DROP TABLE IF EXISTS mmjs.PlaylistEntry;
-CREATE TABLE IF NOT EXISTS mmjs.PlaylistEntry (
+DROP TABLE IF EXISTS mmjs.PlaylistEntries;
+CREATE TABLE IF NOT EXISTS mmjs.PlaylistEntries (
   PlaylistEntryID int NOT NULL AUTO_INCREMENT,
   TrackID int NOT NULL,
   PlaylistID int NOT NULL,
   FOREIGN KEY (TrackID) REFERENCES Tracks(TrackID),
-  FOREIGN KEY (PlaylistID) REFERENCES Playlist(PlaylistID),
+  FOREIGN KEY (PlaylistID) REFERENCES Playlists(PlaylistID),
   PRIMARY KEY (PlaylistEntryID)
 ) ENGINE=InnoDB;
