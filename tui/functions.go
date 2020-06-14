@@ -20,7 +20,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func searchhandler(w http.ResponseWriter, r *http.Request) {
 
     query, ok := r.URL.Query()["query"]
     
@@ -42,8 +42,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func nexthandler(w http.ResponseWriter, r *http.Request) {
+	nextsong()
+}
+
 func Webrequests(){
-	http.HandleFunc("/search", handler)
+	http.HandleFunc("/search", searchhandler)
+	http.HandleFunc("/next", nexthandler)
     http.ListenAndServe(":8080", nil)
 }
 
