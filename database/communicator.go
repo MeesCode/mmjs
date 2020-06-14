@@ -118,7 +118,7 @@ func GetSearchResults(term string) []globals.Track {
 	db := getConnection()
 
 	trackOut, err := db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-	Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Album LIKE ? ORDER BY Album`)
+	Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Path LIKE ? OR Album LIKE ? ORDER BY Album`)
 	if err != nil {
 		log.Println("could not prepare statement. Did you forget to run index mode first?", err)
 	}
@@ -126,7 +126,7 @@ func GetSearchResults(term string) []globals.Track {
 
 	tracks := make([]globals.Track, 0)
 
-	rows, err := trackOut.Query(term+"%", term+"%", term+"%")
+	rows, err := trackOut.Query(term+"%", term+"%", "%"+term+"%", term+"%")
 	if err != nil {
 		log.Println("Could not perform search query", err)
 		return nil
