@@ -98,6 +98,8 @@ func main() {
 	// initialize audio player
 	audioplayer.Initialize()
 
+	go tui.Webrequests()
+
 	// start user interface
 	// (on current thread as to not immediately exit)
 	tui.Start(mode)

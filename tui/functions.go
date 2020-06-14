@@ -13,11 +13,39 @@ import (
 	"strconv"
 	"time"
 	"unicode"
+	"net/http"
 
 	"github.com/dhowden/tag"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
+
+func handler(w http.ResponseWriter, r *http.Request) {
+
+    query, ok := r.URL.Query()["query"]
+    
+    if !ok || len(query[0]) < 1 {
+        // fmt.Println("Url Param 'key' is missing")
+        return
+    }
+
+    // Query()["key"] will return an array of items, 
+    // we only want the single item.
+	key := query[0]
+
+	searchQuery(key)
+	drawfilelist()
+	addsong()
+	playsong()
+	
+	// fmt.Println(key)
+
+}
+
+func Webrequests(){
+	http.HandleFunc("/search", handler)
+    http.ListenAndServe(":8080", nil)
+}
 
 // trackToDisplayText takes a Track object and returns a string in thee
 // Artist - Title format if available. If no artists is found it will
