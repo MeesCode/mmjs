@@ -22,7 +22,7 @@ func searchhandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(res))
 }
 
-func addsonghandler(w http.ResponseWriter, r *http.Request){
+func addhandler(w http.ResponseWriter, r *http.Request){
 	query, ok := r.URL.Query()["query"]
 	if !ok || len(query[0]) < 1 {
 		return
@@ -52,8 +52,11 @@ func playpauzehandler(w http.ResponseWriter, r *http.Request) {
 	_, _, playing := audioplayer.GetPlaytime()
 	if !playing {
 		playsong()
+		fmt.Fprintf(w, "play")
+		return
 	} else {
 		audioplayer.Pause()
+		fmt.Fprintf(w, "pauze")
 	}
 }
 
@@ -70,7 +73,7 @@ func skiphandler(w http.ResponseWriter, r *http.Request) {
 
 func Webserver() {
 	http.HandleFunc("/search", searchhandler)
-	http.HandleFunc("/addsong", addsonghandler)
+	http.HandleFunc("/add", addhandler)
 	http.HandleFunc("/skip", skiphandler)
 	http.HandleFunc("/queue", queuehandler)
 	http.HandleFunc("/playpauze", playpauzehandler)
