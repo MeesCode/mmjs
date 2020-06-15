@@ -17,6 +17,7 @@ import (
 
 var (
 	mode  string
+	webserver bool
 	debug bool
 	help  bool
 	modes = []string{"filesystem", "database", "index"}
@@ -26,12 +27,15 @@ func init() {
 	var (
 		defaultMode = "filesystem"
 		defaultHelp = false
+		defaultWebserver = false
 
 		modeUsage = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
+		webserverUsage = "a boolean to specify whether to run the webserver."
 		helpUsage = "print this help message"
 	)
 
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
+	flag.BoolVar(&webserver, "w", defaultWebserver, webserverUsage)
 	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
 }
 
@@ -98,7 +102,10 @@ func main() {
 	// initialize audio player
 	audioplayer.Initialize()
 
-	go tui.Webrequests()
+	// start webserver for incoming requests
+	if webserver {
+		go tui.Webserver()
+	}
 
 	// start user interface
 	// (on current thread as to not immediately exit)

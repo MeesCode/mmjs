@@ -21,6 +21,7 @@ var (
 	myTui                tui
 	changedir            func()
 	search               func()
+	searchQuery          func(string)
 	addFolder            func()
 )
 
@@ -210,6 +211,7 @@ func Start(mode string) {
 		addFolder = addFolderFilesystem
 		changedir = changedirFilesystem
 		search = searchFilesystem
+		searchQuery = searchFilesystemQuery
 		folder = globals.Folder{
 			ID:       -1,
 			Path:     globals.Root,
@@ -218,6 +220,7 @@ func Start(mode string) {
 		addFolder = addFolderDatabase
 		changedir = changedirDatabase
 		search = searchDatabase
+		searchQuery = searchDatabaseQuery
 		folder = database.GetFolderByID(1)
 	}
 

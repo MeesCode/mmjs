@@ -8,7 +8,6 @@ import (
 	"mmjs/audioplayer"
 	"mmjs/database"
 	"mmjs/globals"
-	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -19,38 +18,6 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
-
-func searchhandler(w http.ResponseWriter, r *http.Request) {
-
-	query, ok := r.URL.Query()["query"]
-
-	if !ok || len(query[0]) < 1 {
-		// fmt.Println("Url Param 'key' is missing")
-		return
-	}
-
-	// Query()["key"] will return an array of items,
-	// we only want the single item.
-	key := query[0]
-
-	filelistFiles = database.GetSearchResults(key)
-
-	drawfilelist()
-	addsong()
-
-	// fmt.Println(key)
-
-}
-
-func nexthandler(w http.ResponseWriter, r *http.Request) {
-	nextsong()
-}
-
-func Webrequests() {
-	http.HandleFunc("/search", searchhandler)
-	http.HandleFunc("/next", nexthandler)
-	http.ListenAndServe(":8080", nil)
-}
 
 // trackToDisplayText takes a Track object and returns a string in thee
 // Artist - Title format if available. If no artists is found it will

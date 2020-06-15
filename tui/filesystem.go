@@ -62,7 +62,19 @@ func changedirFilesystem() {
 			}
 
 			var track = parseTrack(path.Join(base.Path, file.Name()))
-			filelistFiles = append(filelistFiles, track)
+
+			//check for duplicates
+			dup := false
+			for _, t := range filelistFiles {
+				if track.Artist == t.Artist && track.Title == t.Title {
+					dup = true
+					break;
+				}
+			}
+			
+			if !dup {
+				filelistFiles = append(filelistFiles, track)
+			}
 
 		}
 	}
@@ -73,7 +85,18 @@ func changedirFilesystem() {
 // searchFilesystem searches (while in filesystem mode) for the tracks that match on
 // either the title, album or artist. It uses the text that is currently entered in the searchbox.
 func searchFilesystem() {
-	var term = myTui.searchinput.GetText()
+	var query = myTui.searchinput.GetText()
+	doSearch(query)
+	closeSearch()
+}
+
+func searchFilesystemQuery(query string) {
+	openSearch()
+	doSearch(query)
+	closeSearch()
+}
+
+func doSearch(query string) []globals.Track{
 	filelistFiles = nil
 	err := filepath.Walk(globals.Root,
 		func(file string, info os.FileInfo, err error) error {
@@ -91,9 +114,9 @@ func searchFilesystem() {
 				// read metadata
 				track := parseTrack(file)
 
-				if strings.HasPrefix(strings.ToLower(track.Artist.String), strings.ToLower(term)) ||
-					strings.HasPrefix(strings.ToLower(track.Album.String), strings.ToLower(term)) ||
-					strings.HasPrefix(strings.ToLower(track.Title.String), strings.ToLower(term)) {
+				if strings.HasPrefix(strings.ToLower(track.Artist.String), strings.ToLower(query)) ||
+					strings.HasPrefix(strings.ToLower(track.Album.String), strings.ToLower(query)) ||
+					strings.HasPrefix(strings.ToLower(track.Title.String), strings.ToLower(query)) {
 
 					filelistFiles = append(filelistFiles, track)
 				}
@@ -104,7 +127,7 @@ func searchFilesystem() {
 	if err != nil {
 		log.Println("Could not walk the filesystem at the given location", err)
 	}
-	closeSearch()
+	return filelistFiles
 }
 
 // addFolderFilesystem is a recursive function that takes a folder and add all

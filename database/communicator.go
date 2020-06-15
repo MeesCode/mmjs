@@ -147,7 +147,20 @@ func GetSearchResults(term string) []globals.Track {
 		if err != nil {
 			log.Println("Could not find metadata, file corrupt?", err)
 		} else {
-			tracks = append(tracks, track)
+
+			//check for duplicates
+			dup := false
+			for _, t := range tracks {
+				if track.Artist == t.Artist && track.Title == t.Title {
+					dup = true
+					break;
+				}
+			}
+
+			if !dup {
+				tracks = append(tracks, track)
+			}
+			
 		}
 
 	}

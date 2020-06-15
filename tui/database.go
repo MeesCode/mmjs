@@ -39,6 +39,12 @@ func searchDatabase() {
 	closeSearch()
 }
 
+func searchDatabaseQuery(query string) {
+	openSearch()
+	filelistFiles = database.GetSearchResults(query)
+	closeSearch()
+}
+
 // addFolderDatabaseRec is a recursive function that takes a folder and add all
 // containing tracks to the playlist, after which it will call itself for every
 // child folder. This function should be called when in database mode.
