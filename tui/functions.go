@@ -8,12 +8,12 @@ import (
 	"mmjs/audioplayer"
 	"mmjs/database"
 	"mmjs/globals"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
 	"time"
 	"unicode"
-	"net/http"
 
 	"github.com/dhowden/tag"
 	"github.com/gdamore/tcell"
@@ -22,22 +22,22 @@ import (
 
 func searchhandler(w http.ResponseWriter, r *http.Request) {
 
-    query, ok := r.URL.Query()["query"]
-    
-    if !ok || len(query[0]) < 1 {
-        // fmt.Println("Url Param 'key' is missing")
-        return
-    }
+	query, ok := r.URL.Query()["query"]
 
-    // Query()["key"] will return an array of items, 
-    // we only want the single item.
+	if !ok || len(query[0]) < 1 {
+		// fmt.Println("Url Param 'key' is missing")
+		return
+	}
+
+	// Query()["key"] will return an array of items,
+	// we only want the single item.
 	key := query[0]
 
-	searchQuery(key)
+	filelistFiles = database.GetSearchResults(key)
+
 	drawfilelist()
 	addsong()
-	playsong()
-	
+
 	// fmt.Println(key)
 
 }
@@ -46,10 +46,10 @@ func nexthandler(w http.ResponseWriter, r *http.Request) {
 	nextsong()
 }
 
-func Webrequests(){
+func Webrequests() {
 	http.HandleFunc("/search", searchhandler)
 	http.HandleFunc("/next", nexthandler)
-    http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 // trackToDisplayText takes a Track object and returns a string in thee

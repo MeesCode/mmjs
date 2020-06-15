@@ -31,10 +31,6 @@ func changedirDatabase() {
 	drawfilelist()
 }
 
-func searchQuery(query string) {
-	filelistFiles = database.GetSearchResults(query)
-}
-
 // searchDatabase searches (while in database mode) for the tracks that match on
 // either the title, album or artist. It uses the text that is currently entered in the searchbox.
 func searchDatabase() {
