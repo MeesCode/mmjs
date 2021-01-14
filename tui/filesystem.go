@@ -86,13 +86,13 @@ func changedirFilesystem() {
 // either the title, album or artist. It uses the text that is currently entered in the searchbox.
 func searchFilesystem() {
 	var query = myTui.searchinput.GetText()
-	doSearch(query)
+	filelistFiles = doSearch(query)
 	closeSearch()
 }
 
 func searchFilesystemQuery(query string) {
 	openSearch()
-	doSearch(query)
+	filelistFiles = doSearch(query)
 	closeSearch()
 }
 
