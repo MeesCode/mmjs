@@ -4,7 +4,7 @@ package database
 import (
 	"fmt"
 	"log"
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/globals"
 	"os"
 	"path"
 	"path/filepath"

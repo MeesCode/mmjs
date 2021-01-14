@@ -2,9 +2,9 @@
 package tui
 
 import (
-	"mmjs/audioplayer"
-	"mmjs/database"
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/audioplayer"
+	"github.com/MeesCode/mmjs/database"
+	"github.com/MeesCode/mmjs/globals"
 )
 
 // changedirDatabase changes the current directory (when in database mode) to

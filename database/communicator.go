@@ -4,7 +4,7 @@ package database
 import (
 	"database/sql"
 	"log"
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/globals"
 )
 
 ////////////////////////////////////////////////

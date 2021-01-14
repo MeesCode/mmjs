@@ -4,11 +4,11 @@ package tui
 import (
 	"fmt"
 	"log"
-	"mmjs/audioplayer"
-	"mmjs/database"
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/audioplayer"
+	"github.com/MeesCode/mmjs/database"
+	"github.com/MeesCode/mmjs/globals"
 
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	colorFocus   = tcell.ColorCrimson
+	colorFocus   = tcell.ColorMaroon
 	colorUnfocus = tcell.ColorWhite
 )
 
@@ -55,18 +55,14 @@ func Start(mode string) {
 
 	// build interface
 	app := tview.NewApplication()
-	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		screen.Clear()
-		return false
-	})
 
 	directorylist := tview.NewList().ShowSecondaryText(false)
-	directorylist.SetBorder(true).SetTitle(" Directories ").SetBackgroundColor(-1)
+	directorylist.SetBorder(true).SetTitle(" Directories ")
 	directorylist.SetWrapAround(false)
 	directorylist.SetBorderColor(colorFocus)
 
 	infobox := tview.NewTable()
-	infobox.SetBorder(false).SetBackgroundColor(-1)
+	infobox.SetBorder(false)
 	infobox.SetCell(0, 0, tview.NewTableCell("Title"))
 	infobox.SetCell(1, 0, tview.NewTableCell("Artist"))
 	infobox.SetCell(2, 0, tview.NewTableCell("Album"))
@@ -76,7 +72,7 @@ func Start(mode string) {
 	infobox.SetCell(6, 0, tview.NewTableCell("directory"))
 
 	browseinfobox := tview.NewTable()
-	browseinfobox.SetBorder(true).SetTitle(" Selection Info ").SetBackgroundColor(-1)
+	browseinfobox.SetBorder(true).SetTitle(" Selection Info ")
 	browseinfobox.SetCell(0, 0, tview.NewTableCell("Title"))
 	browseinfobox.SetCell(1, 0, tview.NewTableCell("Artist"))
 	browseinfobox.SetCell(2, 0, tview.NewTableCell("Album"))
@@ -86,18 +82,18 @@ func Start(mode string) {
 	browseinfobox.SetCell(6, 0, tview.NewTableCell("directory"))
 
 	infoboxcontainer := tview.NewFlex()
-	infoboxcontainer.SetBorder(true).SetTitle(" Play Info ").SetBackgroundColor(-1)
+	infoboxcontainer.SetBorder(true).SetTitle(" Play Info ")
 	infoboxcontainer.SetDirection(tview.FlexRow)
 
 	playtime := tview.NewTextView()
-	playtime.SetBorder(false).SetBackgroundColor(-1)
+	playtime.SetBorder(false)
 
 	totaltime := tview.NewTextView()
 	totaltime.SetTextAlign(2)
-	totaltime.SetBorder(false).SetBackgroundColor(-1)
+	totaltime.SetBorder(false)
 
 	keybinds := tview.NewTextView()
-	keybinds.SetBorder(true).SetTitle(" Keybinds ").SetBackgroundColor(-1)
+	keybinds.SetBorder(true).SetTitle(" Keybinds ")
 	keybinds.SetTextAlign(1)
 	if mode == "database" {
 		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
@@ -109,9 +105,6 @@ func Start(mode string) {
 
 	searchinput := tview.NewInputField().
 		SetLabel("Enter a search term: ").
-		SetFieldTextColor(-1).
-		SetFieldBackgroundColor(-1).
-		SetLabelColor(-1).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEnter {
 				search()
@@ -120,13 +113,10 @@ func Start(mode string) {
 				closeSearch()
 			}
 		})
-	searchinput.SetBorder(true).SetTitle(" Search ").SetBackgroundColor(-1)
+	searchinput.SetBorder(true).SetTitle(" Search ")
 
 	playlistinput := tview.NewInputField().
 		SetLabel("Enter name of new playlist: ").
-		SetFieldTextColor(-1).
-		SetFieldBackgroundColor(-1).
-		SetLabelColor(-1).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEnter {
 				savePlaylist()
@@ -135,14 +125,14 @@ func Start(mode string) {
 				closePlaylist()
 			}
 		})
-	playlistinput.SetBorder(true).SetTitle(" Playlist name ").SetBackgroundColor(-1)
+	playlistinput.SetBorder(true).SetTitle(" Playlist name ")
 
 	progressbar := tview.NewTextView()
-	progressbar.SetBorder(false).SetBackgroundColor(-1)
+	progressbar.SetBorder(false)
 	progressbar.SetDynamicColors(true)
 
 	filelist := tview.NewList().ShowSecondaryText(false)
-	filelist.SetBorder(true).SetTitle(" Current directory ").SetBackgroundColor(-1)
+	filelist.SetBorder(true).SetTitle(" Current directory ")
 	filelist.SetWrapAround(false)
 	filelist.SetChangedFunc(func(i int, _, _ string, _ rune) {
 		if len(filelistFiles) > 0 {
@@ -151,7 +141,7 @@ func Start(mode string) {
 	})
 
 	playlist := tview.NewList()
-	playlist.SetBorder(true).SetTitle(" Playlist ").SetBackgroundColor(-1)
+	playlist.SetBorder(true).SetTitle(" Playlist ")
 	playlist.ShowSecondaryText(false).SetWrapAround(false)
 	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
 		if len(playlistFiles) > 0 {

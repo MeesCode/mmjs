@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strconv"
 	"net/http"
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/globals"
 	"encoding/json"
 	"math"
-	"mmjs/audioplayer"
+	"github.com/MeesCode/mmjs/audioplayer"
 )
 
 func searchhandler(w http.ResponseWriter, r *http.Request) {

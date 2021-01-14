@@ -4,7 +4,7 @@ package tui
 import (
 	"io/ioutil"
 	"log"
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/globals"
 	"os"
 	"path"
 	"path/filepath"

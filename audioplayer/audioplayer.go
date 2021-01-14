@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"mmjs/globals"
+	"github.com/MeesCode/mmjs/globals"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/flac"
