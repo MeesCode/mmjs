@@ -55,14 +55,20 @@ func Start(mode string) {
 
 	// build interface
 	app := tview.NewApplication()
+	app.SetBeforeDrawFunc(func(s tcell.Screen) bool {
+		s.Clear()
+		return false
+	})
 
 	directorylist := tview.NewList().ShowSecondaryText(false)
 	directorylist.SetBorder(true).SetTitle(" Directories ")
 	directorylist.SetWrapAround(false)
 	directorylist.SetBorderColor(colorFocus)
+	directorylist.SetBackgroundColor(tcell.ColorDefault)
 
 	infobox := tview.NewTable()
 	infobox.SetBorder(false)
+	infobox.SetBackgroundColor(tcell.ColorDefault)
 	infobox.SetCell(0, 0, tview.NewTableCell("Title"))
 	infobox.SetCell(1, 0, tview.NewTableCell("Artist"))
 	infobox.SetCell(2, 0, tview.NewTableCell("Album"))
@@ -72,6 +78,7 @@ func Start(mode string) {
 	infobox.SetCell(6, 0, tview.NewTableCell("directory"))
 
 	browseinfobox := tview.NewTable()
+	browseinfobox.SetBackgroundColor(tcell.ColorDefault)
 	browseinfobox.SetBorder(true).SetTitle(" Selection Info ")
 	browseinfobox.SetCell(0, 0, tview.NewTableCell("Title"))
 	browseinfobox.SetCell(1, 0, tview.NewTableCell("Artist"))
@@ -82,18 +89,22 @@ func Start(mode string) {
 	browseinfobox.SetCell(6, 0, tview.NewTableCell("directory"))
 
 	infoboxcontainer := tview.NewFlex()
+	infoboxcontainer.SetBackgroundColor(tcell.ColorDefault)
 	infoboxcontainer.SetBorder(true).SetTitle(" Play Info ")
 	infoboxcontainer.SetDirection(tview.FlexRow)
 
 	playtime := tview.NewTextView()
+	playtime.SetBackgroundColor(tcell.ColorDefault)
 	playtime.SetBorder(false)
 
 	totaltime := tview.NewTextView()
+	totaltime.SetBackgroundColor(tcell.ColorDefault)
 	totaltime.SetTextAlign(2)
 	totaltime.SetBorder(false)
 
 	keybinds := tview.NewTextView()
 	keybinds.SetBorder(true).SetTitle(" Keybinds ")
+	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
 	if mode == "database" {
 		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
@@ -114,6 +125,7 @@ func Start(mode string) {
 			}
 		})
 	searchinput.SetBorder(true).SetTitle(" Search ")
+	searchinput.SetBackgroundColor(tcell.ColorDefault)
 
 	playlistinput := tview.NewInputField().
 		SetLabel("Enter name of new playlist: ").
@@ -126,14 +138,17 @@ func Start(mode string) {
 			}
 		})
 	playlistinput.SetBorder(true).SetTitle(" Playlist name ")
+	playlistinput.SetBackgroundColor(tcell.ColorDefault)
 
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false)
 	progressbar.SetDynamicColors(true)
+	progressbar.SetBackgroundColor(tcell.ColorDefault)
 
 	filelist := tview.NewList().ShowSecondaryText(false)
 	filelist.SetBorder(true).SetTitle(" Current directory ")
 	filelist.SetWrapAround(false)
+	filelist.SetBackgroundColor(tcell.ColorDefault)
 	filelist.SetChangedFunc(func(i int, _, _ string, _ rune) {
 		if len(filelistFiles) > 0 {
 			updateInfoBox(filelistFiles[i], browseinfobox)
@@ -142,6 +157,7 @@ func Start(mode string) {
 
 	playlist := tview.NewList()
 	playlist.SetBorder(true).SetTitle(" Playlist ")
+	playlist.SetBackgroundColor(tcell.ColorDefault)
 	playlist.ShowSecondaryText(false).SetWrapAround(false)
 	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
 		if len(playlistFiles) > 0 {
@@ -171,7 +187,7 @@ func Start(mode string) {
 	// fill progress bar
 	fmt.Fprintf(myTui.playtime, "00:00:00")
 	fmt.Fprintf(myTui.totaltime, "00:00:00")
-	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[crimson]", tcell.RuneBlock, "[white]")
+	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[maroon]", tcell.RuneBlock, "[white]")
 	for i := 0; i < 200; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
 	}

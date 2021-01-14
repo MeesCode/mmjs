@@ -239,7 +239,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	for i := 0; i < fill-1; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneCkBoard)
 	}
-	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[crimson]", tcell.RuneBlock, "[white]")
+	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[maroon]", tcell.RuneBlock, "[white]")
 	for i := 0; i < width-fill; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
 	}
