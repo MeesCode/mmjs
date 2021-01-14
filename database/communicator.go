@@ -112,8 +112,9 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 }
 
 // GetSearchResults searches the database for a specific term and
-// return the results. The results a found by checking if the given search term matches
+// return the results. The results are found by checking if the given search term matches
 // the beginning of either the Title, Artist or Album name. Results are ordered by album.
+// Tries to remove duplicates. 
 func GetSearchResults(term string) []globals.Track {
 	db := getConnection()
 

@@ -1,3 +1,4 @@
+// BUG(mees): move to plugin package
 package tui
 
 import (
