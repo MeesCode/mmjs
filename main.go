@@ -13,12 +13,14 @@ import (
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
+	"github.com/MeesCode/mmjs/plugins"
 	"github.com/MeesCode/mmjs/tui"
 )
 
 var (
 	mode      string
 	webserver bool
+	port      int
 	debug     bool
 	help      bool
 	modes     = []string{"filesystem", "database", "index"}
@@ -29,15 +31,18 @@ func init() {
 		defaultMode      = "filesystem"
 		defaultHelp      = false
 		defaultWebserver = false
+		defaultPort      = 8080
 
 		modeUsage      = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
-		webserverUsage = "a boolean to specify whether to run the webserver."
+		webserverUsage = "a boolean to specify whether to run the webserver. (only in database mode)"
+		webserverPort  = "on which port the run the web server"
 		helpUsage      = "print this help message"
 	)
 
+	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
 	flag.BoolVar(&webserver, "w", defaultWebserver, webserverUsage)
-	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
+	flag.IntVar(&port, "p", defaultPort, webserverPort)
 }
 
 func main() {
@@ -104,9 +109,9 @@ func main() {
 	audioplayer.Initialize()
 
 	// start webserver for incoming requests
-	// if webserver {
-	// 	go tui.Webserver()
-	// }
+	if webserver && mode == "database" {
+		go plugins.Webserver(port)
+	}
 
 	// start user interface
 	// (on current thread as to not immediately exit)

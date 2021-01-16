@@ -9,9 +9,6 @@ import (
 // Root is the root folder where the player is initialized
 var Root string
 
-// Port is the port on which the webserver runs
-var Port = "8080"
-
 // DatabaseConnection is a struct that holds all database connection info.
 type DatabaseConnection struct {
 	Username string
