@@ -105,7 +105,6 @@ func drawplaylist() {
 			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, playsong)
 		}
 	}
-	myTui.playlist.SetCurrentItem(audioplayer.Songindex)
 }
 
 // drawfilelist draws the file list. This function should be called after every
@@ -264,36 +263,48 @@ func focusWithColor(primitive tview.Primitive) {
 }
 
 func playsong() {
+	index := myTui.playlist.GetCurrentItem()
 	audioplayer.PlaySong(myTui.playlist.GetCurrentItem())
-	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
-	drawplaylist()
+	UpdatePlayInfo()
+	myTui.playlist.SetCurrentItem(index)
 }
 
 func previoussong() {
+	index := myTui.playlist.GetCurrentItem()
 	audioplayer.Previoussong()
-	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
-	drawplaylist()
+	UpdatePlayInfo()
+	myTui.playlist.SetCurrentItem(index)
 }
 
 func nextsong() {
+	index := myTui.playlist.GetCurrentItem()
 	audioplayer.Nextsong()
-	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
-	drawplaylist()
+	UpdatePlayInfo()
+	myTui.playlist.SetCurrentItem(index)
 }
 
 func deletesong() {
-	audioplayer.Deletesong(myTui.playlist.GetCurrentItem())
-	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
-	drawplaylist()
+	index := myTui.playlist.GetCurrentItem()
+	audioplayer.Deletesong(index)
+	UpdatePlayInfo()
+	if index >= myTui.playlist.GetItemCount() {
+		index = myTui.playlist.GetItemCount() - 1
+	}
+	myTui.playlist.SetCurrentItem(index)
 }
 
 func insertsong() {
+	index := myTui.playlist.GetCurrentItem()
 	filelistIndex := myTui.filelist.GetCurrentItem()
 	if filelistIndex < len(filelistFiles)-1 {
 		myTui.filelist.SetCurrentItem(filelistIndex + 1)
 	}
 	audioplayer.Insertsong(filelistFiles[filelistIndex])
 	drawplaylist()
+	if index >= myTui.playlist.GetItemCount() {
+		index = myTui.playlist.GetItemCount() - 1
+	}
+	myTui.playlist.SetCurrentItem(index)
 }
 
 func addsong() {
@@ -307,14 +318,17 @@ func addsong() {
 
 func moveUp() {
 	index := myTui.playlist.GetCurrentItem()
+	if index == 0 {
+		return
+	}
 	audioplayer.MoveUp(index)
-	myTui.playlist.SetCurrentItem(index - 1)
 	drawplaylist()
+	myTui.playlist.SetCurrentItem(index - 1)
 }
 
 func moveDown() {
 	index := myTui.playlist.GetCurrentItem()
 	audioplayer.MoveDown(index)
-	myTui.playlist.SetCurrentItem(index + 1)
 	drawplaylist()
+	myTui.playlist.SetCurrentItem(index + 1)
 }
