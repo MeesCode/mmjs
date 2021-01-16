@@ -4,15 +4,15 @@ package tui
 import (
 	"database/sql"
 	"fmt"
-	"math/rand"
-	"github.com/MeesCode/mmjs/audioplayer"
-	"github.com/MeesCode/mmjs/database"
-	"github.com/MeesCode/mmjs/globals"
 	"os"
 	"path"
 	"strconv"
 	"time"
 	"unicode"
+
+	"github.com/MeesCode/mmjs/audioplayer"
+	"github.com/MeesCode/mmjs/database"
+	"github.com/MeesCode/mmjs/globals"
 
 	"github.com/dhowden/tag"
 	"github.com/gdamore/tcell"
@@ -61,7 +61,7 @@ func audioStateUpdater() {
 			if playing {
 				drawprogressbar(playtime, totaltime)
 				if playtime == totaltime {
-					nextsong()
+					audioplayer.Nextsong()
 				}
 			}
 		})
@@ -89,14 +89,14 @@ func updateInfoBox(track globals.Track, box *tview.Table) {
 // function that alters this list.
 func drawplaylist() {
 	myTui.playlist.Clear()
-	for index, track := range playlistFiles {
-		if songindex == index {
+	for index, track := range audioplayer.Playlist {
+		if audioplayer.Songindex == index {
 			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', playsong)
 		} else {
 			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, playsong)
 		}
 	}
-	myTui.playlist.SetCurrentItem(songindex)
+	myTui.playlist.SetCurrentItem(audioplayer.Songindex)
 }
 
 // drawfilelist draws the file list. This function should be called after every
@@ -123,102 +123,6 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 		}
 
 	}
-}
-
-// startTrack starts a given track and updates the ui accordingly
-func startTrack(t globals.Track) {
-	_, length := audioplayer.Play(t)
-	drawplaylist()
-	updateInfoBox(t, myTui.infobox)
-	drawprogressbar(time.Duration(0), length)
-}
-
-// playsong plays the song currently selected track on the playlist
-func playsong() {
-	if len(playlistFiles) == 0 || songindex > len(playlistFiles) {
-		return
-	}
-	songindex = myTui.playlist.GetCurrentItem()
-	drawplaylist()
-	startTrack(playlistFiles[myTui.playlist.GetCurrentItem()])
-}
-
-// nextsong plays the next song (if available)
-func nextsong() {
-	if len(playlistFiles) > songindex+1 {
-		songindex++
-		drawplaylist()
-		startTrack(playlistFiles[songindex])
-	}
-}
-
-// previoussong plays the previous song (if available)
-func previoussong() {
-	if songindex > 0 {
-		songindex--
-		drawplaylist()
-		startTrack(playlistFiles[songindex])
-	}
-}
-
-// addsong adds a song to the playlist
-func addsong() {
-	track := filelistFiles[myTui.filelist.GetCurrentItem()]
-	playlistFiles = append(playlistFiles, track)
-	drawplaylist()
-	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
-}
-
-// insertsong inserts a song into the playlist directly after the song that
-// is currently playing.
-func insertsong() {
-	track := filelistFiles[myTui.filelist.GetCurrentItem()]
-	playlistFiles = append(playlistFiles[:songindex+1], append([]globals.Track{track}, playlistFiles[songindex+1:]...)...)
-	drawplaylist()
-	myTui.filelist.SetCurrentItem(myTui.filelist.GetCurrentItem() + 1)
-}
-
-// deletesong removes the currently selected song from the playlist.
-func deletesong() {
-
-	// if list is empty do nothing
-	if len(playlistFiles) == 0 {
-		return
-	}
-
-	// remove selected song from the list
-	var i = myTui.playlist.GetCurrentItem()
-	playlistFiles = append(playlistFiles[:i], playlistFiles[i+1:]...)
-
-	// if after deleting an item the list is empty stop playback
-	if len(playlistFiles) == 0 {
-		audioplayer.Stop()
-		drawplaylist()
-		return
-	}
-
-	// stop the music when last song is deleted
-	if len(playlistFiles) == songindex && i == songindex {
-		audioplayer.Stop()
-		songindex--
-		drawplaylist()
-		return
-	}
-
-	// play the next song when the current song is deleted
-	// but there is a next song on the list
-	if i == songindex {
-		startTrack(playlistFiles[songindex])
-	}
-
-	// if we delete a song that is before the current one
-	// match the songindex to the new list
-	if i < songindex {
-		songindex--
-	}
-
-	drawplaylist()
-	myTui.playlist.SetCurrentItem(i)
 }
 
 // drawprogressbar draws the progressbar and timestamps.
@@ -253,30 +157,6 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 }
 
-// shuffle shuffles the playlist and places the currently playing track as the first
-// track in the playlist. It will not halt playback.
-func shuffle() {
-	if len(playlistFiles) == 0 {
-		return
-	}
-
-	// remove current song from list
-	var cursong = playlistFiles[songindex]
-	playlistFiles = append(playlistFiles[:songindex], playlistFiles[songindex+1:]...)
-
-	// shuffle the list
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(playlistFiles), func(i, j int) {
-		playlistFiles[i], playlistFiles[j] = playlistFiles[j], playlistFiles[i]
-	})
-
-	// prepend current song to the list
-	playlistFiles = append([]globals.Track{cursong}, playlistFiles...)
-	songindex = 0
-
-	drawplaylist()
-}
-
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
 	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
@@ -295,14 +175,6 @@ func closeSearch() {
 	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
 	focusWithColor(myTui.filelist)
 	drawfilelist()
-}
-
-// clear removes all entries from the playlist and stops playback.
-func clear() {
-	audioplayer.Stop()
-	songindex = 0
-	playlistFiles = nil
-	drawplaylist()
 }
 
 // jump to a new element in the list depending on the key pressed.
@@ -362,44 +234,6 @@ func parseTrack(file string) globals.Track {
 	return track
 }
 
-// moveUp swaps the currently selected track in the playlist with the one above it.
-func moveUp() {
-	selected := myTui.playlist.GetCurrentItem()
-
-	if selected == 0 {
-		return
-	}
-
-	if selected == songindex {
-		songindex--
-	} else if selected == songindex+1 {
-		songindex++
-	}
-
-	playlistFiles[selected], playlistFiles[selected-1] = playlistFiles[selected-1], playlistFiles[selected]
-	drawplaylist()
-	myTui.playlist.SetCurrentItem(selected - 1)
-}
-
-// moveDown swaps the currently selected track in the playlist with the one below it.
-func moveDown() {
-	selected := myTui.playlist.GetCurrentItem()
-
-	if selected+1 == len(playlistFiles) {
-		return
-	}
-
-	if selected == songindex {
-		songindex++
-	} else if selected == songindex-1 {
-		songindex--
-	}
-
-	playlistFiles[selected], playlistFiles[selected+1] = playlistFiles[selected+1], playlistFiles[selected]
-	drawplaylist()
-	myTui.playlist.SetCurrentItem(selected + 1)
-}
-
 func focusWithColor(primitive tview.Primitive) {
 	myTui.directorylist.SetBorderColor(colorUnfocus)
 	myTui.filelist.SetBorderColor(colorUnfocus)
@@ -418,4 +252,56 @@ func focusWithColor(primitive tview.Primitive) {
 	}
 
 	myTui.app.SetFocus(primitive)
+}
+
+func playsong() {
+	audioplayer.PlaySong(myTui.playlist.GetCurrentItem())
+	drawplaylist()
+}
+
+func previoussong() {
+	audioplayer.Previoussong()
+	drawplaylist()
+}
+
+func nextsong() {
+	audioplayer.Nextsong()
+	drawplaylist()
+}
+
+func deletesong() {
+	audioplayer.Deletesong(myTui.playlist.GetCurrentItem())
+	drawplaylist()
+}
+
+func insertsong() {
+	filelistIndex := myTui.filelist.GetCurrentItem()
+	if filelistIndex < len(filelistFiles)-1 {
+		myTui.filelist.SetCurrentItem(filelistIndex + 1)
+	}
+	audioplayer.Insertsong(filelistFiles[filelistIndex])
+	drawplaylist()
+}
+
+func addsong() {
+	index := myTui.filelist.GetCurrentItem()
+	if index < len(filelistFiles)-1 {
+		myTui.filelist.SetCurrentItem(index + 1)
+	}
+	audioplayer.Addsong(filelistFiles[index])
+	drawplaylist()
+}
+
+func moveUp() {
+	index := myTui.playlist.GetCurrentItem()
+	audioplayer.MoveUp(index)
+	myTui.playlist.SetCurrentItem(index - 1)
+	drawplaylist()
+}
+
+func moveDown() {
+	index := myTui.playlist.GetCurrentItem()
+	audioplayer.MoveDown(index)
+	myTui.playlist.SetCurrentItem(index + 1)
+	drawplaylist()
 }

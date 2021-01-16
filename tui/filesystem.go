@@ -4,11 +4,13 @@ package tui
 import (
 	"io/ioutil"
 	"log"
-	"github.com/MeesCode/mmjs/globals"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/MeesCode/mmjs/audioplayer"
+	"github.com/MeesCode/mmjs/globals"
 )
 
 // changedirFilesystem changes the current directory (when in filesystem mode) to
@@ -68,10 +70,10 @@ func changedirFilesystem() {
 			for _, t := range filelistFiles {
 				if track.Artist == t.Artist && track.Title == t.Title {
 					dup = true
-					break;
+					break
 				}
 			}
-			
+
 			if !dup {
 				filelistFiles = append(filelistFiles, track)
 			}
@@ -96,7 +98,7 @@ func searchFilesystemQuery(query string) {
 	closeSearch()
 }
 
-func doSearch(query string) []globals.Track{
+func doSearch(query string) []globals.Track {
 	filelistFiles = nil
 	err := filepath.Walk(globals.Root,
 		func(file string, info os.FileInfo, err error) error {
@@ -149,7 +151,7 @@ func addFolderFilesystem() {
 			}
 
 			if !info.IsDir() && globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
-				playlistFiles = append(playlistFiles, parseTrack(file))
+				audioplayer.Playlist = append(audioplayer.Playlist, parseTrack(file))
 			}
 
 			return nil

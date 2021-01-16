@@ -51,7 +51,7 @@ func searchDatabaseQuery(query string) {
 func addFolderDatabaseRec(folder globals.Folder) {
 	// add tracks from current folder
 	tracks := database.GetTracksByFolderID(folder.ID)
-	playlistFiles = append(playlistFiles, tracks...)
+	audioplayer.Playlist = append(audioplayer.Playlist, tracks...)
 
 	// add children recusively
 	folders := database.GetFoldersByParentID(folder.ID)
@@ -73,7 +73,7 @@ func savePlaylist() {
 		closePlaylist()
 		return
 	}
-	database.SavePlaylist(name, playlistFiles)
+	database.SavePlaylist(name, audioplayer.Playlist)
 	closePlaylist()
 }
 
@@ -98,9 +98,9 @@ func closePlaylist() {
 
 func insertPlaylist() {
 	audioplayer.Stop()
-	songindex = 0
+	audioplayer.Songindex = 0
 	pl := filelistFiles[myTui.filelist.GetCurrentItem()]
-	playlistFiles = database.GetPlaylistTracks(pl.ID)
+	audioplayer.Playlist = database.GetPlaylistTracks(pl.ID)
 	drawplaylist()
 }
 

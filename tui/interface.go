@@ -4,6 +4,7 @@ package tui
 import (
 	"fmt"
 	"log"
+
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
@@ -14,10 +15,8 @@ import (
 
 // global variables
 var (
-	playlistFiles        = make([]globals.Track, 0)
 	filelistFiles        = make([]globals.Track, 0)
 	directorylistFolders = make([]globals.Folder, 0)
-	songindex            = 0 // the index of the currently playing track
 	myTui                tui
 	changedir            func()
 	search               func()
@@ -160,8 +159,8 @@ func Start(mode string) {
 	playlist.SetBackgroundColor(tcell.ColorDefault)
 	playlist.ShowSecondaryText(false).SetWrapAround(false)
 	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
-		if len(playlistFiles) > 0 {
-			updateInfoBox(playlistFiles[i], browseinfobox)
+		if len(audioplayer.Playlist) > 0 {
+			updateInfoBox(audioplayer.Playlist[i], browseinfobox)
 		}
 	})
 
@@ -255,13 +254,15 @@ func Start(mode string) {
 
 		switch event.Key() {
 		case tcell.KeyF2:
-			clear()
+			audioplayer.Clear()
+			drawplaylist()
 			return nil
 		case tcell.KeyF3:
 			openSearch()
 			return nil
 		case tcell.KeyF5:
-			shuffle()
+			audioplayer.Shuffle()
+			drawplaylist()
 			return nil
 		case tcell.KeyF8:
 			_, _, playing := audioplayer.GetPlaytime()
@@ -335,7 +336,7 @@ func Start(mode string) {
 	// directory list
 	directorylist.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
-		// alt-enter is the onlty key combination in this system
+		// alt-enter is the only key combination in this system
 		// it's only here for legacy reasons
 		if event.Key() == tcell.KeyEnter && event.Modifiers() == tcell.ModAlt {
 			addFolder()

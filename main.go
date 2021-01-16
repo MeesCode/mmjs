@@ -6,32 +6,33 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
 	"github.com/MeesCode/mmjs/tui"
-	"os"
-	"path"
-	"strings"
 )
 
 var (
-	mode  string
+	mode      string
 	webserver bool
-	debug bool
-	help  bool
-	modes = []string{"filesystem", "database", "index"}
+	debug     bool
+	help      bool
+	modes     = []string{"filesystem", "database", "index"}
 )
 
 func init() {
 	var (
-		defaultMode = "filesystem"
-		defaultHelp = false
+		defaultMode      = "filesystem"
+		defaultHelp      = false
 		defaultWebserver = false
 
-		modeUsage = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
+		modeUsage      = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage = "a boolean to specify whether to run the webserver."
-		helpUsage = "print this help message"
+		helpUsage      = "print this help message"
 	)
 
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
@@ -103,9 +104,9 @@ func main() {
 	audioplayer.Initialize()
 
 	// start webserver for incoming requests
-	if webserver {
-		go tui.Webserver()
-	}
+	// if webserver {
+	// 	go tui.Webserver()
+	// }
 
 	// start user interface
 	// (on current thread as to not immediately exit)
