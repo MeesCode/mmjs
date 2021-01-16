@@ -9,6 +9,7 @@ import (
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
+	"github.com/MeesCode/mmjs/tui"
 )
 
 var files = make([]globals.Track, 0)
@@ -52,6 +53,7 @@ func addhandler(w http.ResponseWriter, r *http.Request) {
 
 		res, _ := json.Marshal(track)
 		fmt.Fprintf(w, string(res))
+		tui.UpdatePlayInfo()
 		return
 	}
 
@@ -59,7 +61,12 @@ func addhandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func playpausehandler(w http.ResponseWriter, r *http.Request) {
-	audioplayer.Pause()
+	_, _, playing := audioplayer.GetPlaytime()
+	if !playing {
+		audioplayer.PlaySong(audioplayer.Songindex)
+	} else {
+		audioplayer.Pause()
+	}
 	res, _ := json.Marshal(audioplayer.Playlist[audioplayer.Songindex])
 	fmt.Fprintf(w, string(res))
 }
@@ -73,6 +80,7 @@ func skiphandler(w http.ResponseWriter, r *http.Request) {
 	audioplayer.Nextsong()
 	res, _ := json.Marshal(audioplayer.Playlist[audioplayer.Songindex])
 	fmt.Fprintf(w, string(res))
+	tui.UpdatePlayInfo()
 }
 
 // Webserver starts an entry port for https requests

@@ -15,7 +15,7 @@ import (
 	"github.com/MeesCode/mmjs/globals"
 
 	"github.com/dhowden/tag"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -55,6 +55,7 @@ func audioStateUpdater() {
 
 		// update the play timer every half second
 		<-time.After(time.Second / 2)
+
 		// QueueUpdateDraw since this is performed outside the main thread
 		myTui.app.QueueUpdateDraw(func() {
 			playtime, totaltime, playing := audioplayer.GetPlaytime()
@@ -62,11 +63,19 @@ func audioStateUpdater() {
 				drawprogressbar(playtime, totaltime)
 				if playtime == totaltime {
 					audioplayer.Nextsong()
+					UpdatePlayInfo()
 				}
 			}
 		})
 
 	}
+}
+
+// UpdatePlayInfo forces the interface to update. This is usefull when the application
+// can be controlled from outside of the tui.
+func UpdatePlayInfo() {
+	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
+	drawplaylist()
 }
 
 // updateInfoBox updates one of the two information boxes with track information
@@ -256,21 +265,25 @@ func focusWithColor(primitive tview.Primitive) {
 
 func playsong() {
 	audioplayer.PlaySong(myTui.playlist.GetCurrentItem())
+	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
 	drawplaylist()
 }
 
 func previoussong() {
 	audioplayer.Previoussong()
+	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
 	drawplaylist()
 }
 
 func nextsong() {
 	audioplayer.Nextsong()
+	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
 	drawplaylist()
 }
 
 func deletesong() {
 	audioplayer.Deletesong(myTui.playlist.GetCurrentItem())
+	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
 	drawplaylist()
 }
 

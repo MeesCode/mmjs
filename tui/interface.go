@@ -289,14 +289,12 @@ func Start(mode string) {
 	// file list
 	filelist.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyTab:
-			focusWithColor(playlist)
-			return nil
 		case tcell.KeyInsert:
 			insertsong()
 			return nil
-		case tcell.KeyRight:
+		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(playlist)
+			updateInfoBox(audioplayer.Playlist[playlist.GetCurrentItem()], browseinfobox)
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(directorylist)
@@ -319,6 +317,7 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(filelist)
+			updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
 			return nil
 		case tcell.KeyRune:
 			if event.Rune() == '-' {
@@ -344,17 +343,16 @@ func Start(mode string) {
 		}
 
 		switch event.Key() {
-		case tcell.KeyTab:
-			focusWithColor(filelist)
-			return nil
 		case tcell.KeyRune:
 			jump(event.Rune())
 			return nil
-		case tcell.KeyRight:
+		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(filelist)
+			updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(playlist)
+			updateInfoBox(audioplayer.Playlist[playlist.GetCurrentItem()], browseinfobox)
 			return nil
 		case tcell.KeyBackspace:
 			goback()
