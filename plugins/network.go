@@ -61,13 +61,12 @@ func addhandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func playpausehandler(w http.ResponseWriter, r *http.Request) {
-	_, _, playing := audioplayer.GetPlaytime()
-	if !playing {
+	if !audioplayer.IsPlaying() {
 		audioplayer.PlaySong(audioplayer.Songindex)
 	} else {
 		audioplayer.Pause()
 	}
-	res, _ := json.Marshal(audioplayer.Playlist[audioplayer.Songindex])
+	res, _ := json.Marshal(audioplayer.GetPlaying())
 	fmt.Fprintf(w, string(res))
 }
 
@@ -78,7 +77,7 @@ func queuehandler(w http.ResponseWriter, r *http.Request) {
 
 func skiphandler(w http.ResponseWriter, r *http.Request) {
 	audioplayer.Nextsong()
-	res, _ := json.Marshal(audioplayer.Playlist[audioplayer.Songindex])
+	res, _ := json.Marshal(audioplayer.GetPlaying())
 	fmt.Fprintf(w, string(res))
 	tui.UpdatePlayInfo()
 }

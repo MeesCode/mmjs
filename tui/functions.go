@@ -51,21 +51,24 @@ func stringOrUnknown(s sql.NullString) string {
 // It will ask the audioplayer for the playing time of the current track.
 // It will also start the next sond if the current song is finished.
 func audioStateUpdater() {
+	trackID := -1
 	for {
 
-		// update the play timer every half second
-		<-time.After(time.Second / 2)
+		// update the play timer every second
+		<-time.After(time.Second)
 
-		// QueueUpdateDraw since this is performed outside the main thread
+		// update track info box when track id changed
+		if audioplayer.IsPlaying() && audioplayer.GetPlaying().ID != trackID {
+			myTui.app.QueueUpdateDraw(func() {
+				UpdatePlayInfo()
+				trackID = audioplayer.GetPlaying().ID
+			})
+		}
+
+		// update the progress bar every second
 		myTui.app.QueueUpdateDraw(func() {
-			playtime, totaltime, playing := audioplayer.GetPlaytime()
-			if playing {
-				drawprogressbar(playtime, totaltime)
-				if playtime == totaltime {
-					audioplayer.Nextsong()
-					UpdatePlayInfo()
-				}
-			}
+			playtime, totaltime := audioplayer.GetPlaytime()
+			drawprogressbar(playtime, totaltime)
 		})
 
 	}
@@ -74,7 +77,7 @@ func audioStateUpdater() {
 // UpdatePlayInfo forces the interface to update. This is usefull when the application
 // can be controlled from outside of the tui.
 func UpdatePlayInfo() {
-	updateInfoBox(audioplayer.Playlist[audioplayer.Songindex], myTui.infobox)
+	updateInfoBox(audioplayer.GetPlaying(), myTui.infobox)
 	drawplaylist()
 }
 
@@ -137,17 +140,18 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 // It will simply return whitout drawing if the total time of the track
 // has a length of 0
 func drawprogressbar(playtime time.Duration, length time.Duration) {
-	if length == 0 {
-		return
-	}
-
 	myTui.progressbar.Clear()
 	myTui.playtime.Clear()
 	myTui.totaltime.Clear()
 
 	// update the timestamps
 	_, _, width, _ := myTui.progressbar.GetInnerRect()
-	fill := width * int(playtime) / int(length)
+
+	fill := 0
+	if length > 0 {
+		fill = width * int(playtime) / int(length)
+	}
+
 	for i := 0; i < fill-1; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneCkBoard)
 	}

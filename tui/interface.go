@@ -183,14 +183,6 @@ func Start(mode string) {
 		playlistinput: playlistinput,
 	}
 
-	// fill progress bar
-	fmt.Fprintf(myTui.playtime, "00:00:00")
-	fmt.Fprintf(myTui.totaltime, "00:00:00")
-	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[maroon]", tcell.RuneBlock, "[white]")
-	for i := 0; i < 200; i++ {
-		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
-	}
-
 	// define tui locations
 	flex := tview.NewFlex().
 		AddItem(mainFlex.
@@ -265,8 +257,7 @@ func Start(mode string) {
 			drawplaylist()
 			return nil
 		case tcell.KeyF8:
-			_, _, playing := audioplayer.GetPlaytime()
-			if !playing {
+			if !audioplayer.IsPlaying() {
 				playsong()
 			} else {
 				audioplayer.Pause()
@@ -294,7 +285,7 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(playlist)
-			updateInfoBox(audioplayer.Playlist[playlist.GetCurrentItem()], browseinfobox)
+			updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(directorylist)
@@ -352,7 +343,7 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(playlist)
-			updateInfoBox(audioplayer.Playlist[playlist.GetCurrentItem()], browseinfobox)
+			updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
 			return nil
 		case tcell.KeyBackspace:
 			goback()

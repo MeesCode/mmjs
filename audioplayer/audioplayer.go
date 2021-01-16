@@ -32,6 +32,7 @@ var (
 	ctrl        *beep.Ctrl
 	audioLock   = new(sync.Mutex)
 	playingFile audioFile
+	done        chan bool
 )
 
 // a struct that holds information about the currently playing track.
@@ -45,7 +46,7 @@ type audioFile struct {
 
 // Play stops playback of the currently playing song (if any) and start the playback
 // of the provided song. It will open, decode resample and play the file in that order.
-func Play(file globals.Track) (globals.Track, time.Duration) {
+func Play(file globals.Track) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
@@ -53,7 +54,7 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 	if err != nil {
 		log.Println("Error opening the file", err)
 		speaker.Clear()
-		return file, time.Duration(0)
+		return
 	}
 
 	var streamer beep.StreamSeekCloser
@@ -71,7 +72,7 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 	default:
 		log.Println("error decoding file", err)
 		speaker.Clear()
-		return file, time.Duration(0)
+		return
 	}
 
 	st := beep.Seq(beep.Resample(quality, format.SampleRate, gsr, streamer))
@@ -83,9 +84,9 @@ func Play(file globals.Track) (globals.Track, time.Duration) {
 	speaker.Unlock()
 
 	speaker.Clear()
-	speaker.Play(ctrl)
-
-	return file, length
+	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
+		done <- true
+	})))
 }
 
 // Stop stops the playback of the currently playing track (if any).
@@ -106,7 +107,7 @@ func Pause() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
-	if ctrl == nil {
+	if !IsPlaying() {
 		return
 	}
 
@@ -118,12 +119,12 @@ func Pause() {
 // GetPlaytime returns the play time, and the total time of the track.
 // If no track is playing the returned boolean will be false and the
 // timings will be zero.
-func GetPlaytime() (time.Duration, time.Duration, bool) {
+func GetPlaytime() (time.Duration, time.Duration) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
-	if ctrl == nil {
-		return time.Duration(0), time.Duration(0), false
+	if !IsPlaying() {
+		return time.Duration(0), time.Duration(0)
 	}
 
 	speaker.Lock()
@@ -131,8 +132,28 @@ func GetPlaytime() (time.Duration, time.Duration, bool) {
 	var totaltime = playingFile.Length
 	speaker.Unlock()
 
-	return playtime, totaltime, true
+	return playtime, totaltime
 
+}
+
+// GetPlaying returns the currently loaded file
+func GetPlaying() globals.Track {
+	return playingFile.Track
+}
+
+// IsPlaying returns true when a file is loaded, either playing or paused
+func IsPlaying() bool {
+	if ctrl == nil {
+		return false
+	}
+	return true
+}
+
+func waitForNext() {
+	for {
+		<-done
+		Nextsong()
+	}
 }
 
 // Initialize the speaker with the specification defined at the top.
@@ -141,4 +162,6 @@ func Initialize() {
 	if err != nil {
 		log.Fatalln("failed to initialize audio device", err)
 	}
+	done = make(chan bool)
+	go waitForNext()
 }
