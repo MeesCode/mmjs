@@ -308,7 +308,9 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(filelist)
-			updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
+			if myTui.filelist.GetItemCount() > 0 {
+				updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
+			}
 			return nil
 		case tcell.KeyRune:
 			if event.Rune() == '-' {
@@ -339,7 +341,9 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(filelist)
-			updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
+			if myTui.filelist.GetItemCount() > 0 {
+				updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
+			}
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(playlist)

@@ -23,9 +23,9 @@ import (
 // For a more detailed explanation check the documentation of
 // the beep package.
 const (
-	bufferSize time.Duration   = 200 * time.Millisecond
+	bufferSize time.Duration   = 100 * time.Millisecond
 	gsr        beep.SampleRate = 48000 // the global sample rate
-	quality    int             = 4
+	quality    int             = 3
 )
 
 var (
@@ -70,6 +70,12 @@ func Play(file globals.Track) {
 	case ".flac":
 		streamer, format, err = flac.Decode(f)
 	default:
+		log.Println("filetype not supported", err)
+		speaker.Clear()
+		return
+	}
+
+	if err != nil {
 		log.Println("error decoding file", err)
 		speaker.Clear()
 		return
@@ -120,8 +126,8 @@ func Pause() {
 // If no track is playing the returned boolean will be false and the
 // timings will be zero.
 func GetPlaytime() (time.Duration, time.Duration) {
-	audioLock.Lock()
-	defer audioLock.Unlock()
+	// audioLock.Lock()
+	// defer audioLock.Unlock()
 
 	if !IsPlaying() {
 		return time.Duration(0), time.Duration(0)

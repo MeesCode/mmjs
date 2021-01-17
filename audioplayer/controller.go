@@ -20,14 +20,14 @@ func PlaySong(index int) {
 		return
 	}
 	Songindex = index
-	Play(Playlist[index])
+	go Play(Playlist[index])
 }
 
 // Nextsong plays the next song (if available)
 func Nextsong() {
 	if len(Playlist) > Songindex+1 {
 		Songindex++
-		Play(Playlist[Songindex])
+		go Play(Playlist[Songindex])
 	}
 }
 
@@ -35,7 +35,7 @@ func Nextsong() {
 func Previoussong() {
 	if Songindex > 0 {
 		Songindex--
-		Play(Playlist[Songindex])
+		go Play(Playlist[Songindex])
 	}
 }
 
@@ -71,7 +71,7 @@ func Deletesong(index int) {
 	// play the next song when the current song is deleted
 	// but there is a next song on the list
 	if index == Songindex {
-		Play(Playlist[Songindex])
+		go Play(Playlist[Songindex])
 	}
 
 	// if we delete a song that is before the current one
