@@ -111,4 +111,5 @@ func showPlaylists() {
 	for _, track := range filelistFiles {
 		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, insertPlaylist)
 	}
+	focusWithColor(myTui.filelist)
 }

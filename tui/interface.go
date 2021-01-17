@@ -257,8 +257,9 @@ func Start(mode string) {
 			drawplaylist()
 			return nil
 		case tcell.KeyF8:
-			if !audioplayer.IsPlaying() {
-				playsong()
+			// if no song is loaded, play the first song
+			if !audioplayer.IsPlaying() && len(audioplayer.Playlist) > 0 {
+				audioplayer.PlaySong(0)
 			} else {
 				audioplayer.Pause()
 			}

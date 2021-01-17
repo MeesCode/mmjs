@@ -108,9 +108,9 @@ func main() {
 	// initialize audio player
 	go audioplayer.Initialize()
 
-	///////////////////////////////
-	//     Start plugins here    //
-	///////////////////////////////
+	////////////////////////////////
+	//     Start plugins here     //
+	////////////////////////////////
 	if webserver && mode == "database" {
 		go plugins.Webserver(port)
 	}
