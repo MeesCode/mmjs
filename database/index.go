@@ -21,32 +21,7 @@ import (
 // Index indexes every folder and playable file that is contained within the
 // specified root folder. It ignores hidden folders entirely.
 func Index() {
-
-	db := getConnection()
-
-	// Prepare statement for inserting a folder
-	folderIns, err := db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)")
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer folderIns.Close()
-
-	// Prepare statement for inserting a file
-	fileIns, err := db.Prepare(`INSERT IGNORE INTO Tracks(Path, FolderID, Title, 
-		Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer fileIns.Close()
-
-	// Prepare statement for finding parent folder
-	parentOut, err := db.Prepare("SELECT FolderID FROM Folders WHERE Path = ?")
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer parentOut.Close()
-
-	err = filepath.Walk(globals.Root,
+	err := filepath.Walk(globals.Root,
 		func(file string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -71,7 +46,7 @@ func Index() {
 				var parentID = 0
 
 				if !isRoot {
-					err = parentOut.QueryRow(path.Dir(rpath)).Scan(&parentID)
+					err = pst.findFolderByPath.QueryRow(path.Dir(rpath)).Scan(&parentID)
 					if err != nil {
 						log.Println("Could not perform query, or query returned empty. query: ", path.Dir(rpath), err)
 					}
@@ -81,12 +56,12 @@ func Index() {
 				if info.IsDir() {
 					if isRoot {
 						// special case for when it's the root folder
-						_, err = folderIns.Exec("/", parentID)
+						_, err = pst.insertFolder.Exec("/", parentID)
 						if err != nil {
 							log.Println("Could not add root to the database", err)
 						}
 					} else {
-						_, err = folderIns.Exec(rpath, parentID)
+						_, err = pst.insertFolder.Exec(rpath, parentID)
 						if err != nil {
 							log.Println("Could not add folder to the database", err)
 						}
@@ -104,9 +79,9 @@ func Index() {
 
 						// if no tags were found default to nil
 						if err != nil {
-							_, err = fileIns.Exec(rpath, parentID, nil, nil, nil, nil, nil)
+							_, err = pst.insertTrack.Exec(rpath, parentID, nil, nil, nil, nil, nil)
 						} else {
-							_, err = fileIns.Exec(
+							_, err = pst.insertTrack.Exec(
 								rpath,
 								parentID,
 								StringToSQLNullableString(m.Title()),

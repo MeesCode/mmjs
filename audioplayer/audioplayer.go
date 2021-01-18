@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
 
 	"github.com/faiface/beep"
@@ -33,6 +34,7 @@ var (
 	audioLock   = new(sync.Mutex)
 	playingFile audioFile
 	done        chan bool
+	mode        string
 )
 
 // a struct that holds information about the currently playing track.
@@ -161,20 +163,27 @@ func IsPlaying() bool {
 }
 
 // wait for a signal that the track has finished playing.
-// automatically play the next sone
+// automatically play the next song
 func waitForNext() {
 	for {
 		<-done
+
+		// if in database mode, add one to the play counter
+		if mode == "database" {
+			database.IncrementPlayCounter(GetPlaying())
+		}
+
 		Nextsong()
 	}
 }
 
 // Initialize the speaker with the specification defined at the top.
-func Initialize() {
+func Initialize(m string) {
 	err := speaker.Init(gsr, gsr.N(bufferSize))
 	if err != nil {
 		log.Fatalln("failed to initialize audio device", err)
 	}
+	mode = m
 	done = make(chan bool)
 	go waitForNext()
 }

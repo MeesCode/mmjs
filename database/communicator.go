@@ -4,6 +4,7 @@ package database
 import (
 	"database/sql"
 	"log"
+
 	"github.com/MeesCode/mmjs/globals"
 )
 
@@ -11,20 +12,11 @@ import (
 // root folder always has id 1 and parentid 0 //
 ////////////////////////////////////////////////
 
-// GetFoldersByParentID returns the folder with the provided ParentID.
+// GetFoldersByParentID returns the folders with the provided ParentID.
 func GetFoldersByParentID(parentid int) []globals.Folder {
-	db := getConnection()
-
-	folderOut, err := db.Prepare(`SELECT FolderId, Path, ParentId FROM 
-	Folders WHERE ParentID = ? ORDER BY Path`)
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer folderOut.Close()
-
 	folders := make([]globals.Folder, 0)
 
-	rows, err := folderOut.Query(parentid)
+	rows, err := pst.findSubFolders.Query(parentid)
 	if err != nil {
 		log.Println("could not find folder", err)
 		return nil
@@ -48,18 +40,9 @@ func GetFoldersByParentID(parentid int) []globals.Folder {
 
 // GetFolderByID returns the folder with the provided ID.
 func GetFolderByID(folderid int) globals.Folder {
-	db := getConnection()
-
-	folderOut, err := db.Prepare(`SELECT FolderId, Path, ParentId FROM 
-	Folders WHERE FolderID = ?`)
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer folderOut.Close()
-
 	var folder globals.Folder
 
-	err = folderOut.QueryRow(folderid).Scan(&folder.ID, &folder.Path, &folder.ParentID)
+	err := pst.findFolder.QueryRow(folderid).Scan(&folder.ID, &folder.Path, &folder.ParentID)
 	if err != nil {
 		log.Fatalln("could not prepare statement. Did you forget to run index mode first?", err)
 	}
@@ -70,18 +53,9 @@ func GetFolderByID(folderid int) globals.Folder {
 
 // GetTracksByFolderID returns all tracks that are in a given folder.
 func GetTracksByFolderID(folderid int) []globals.Track {
-	db := getConnection()
-
-	folderOut, err := db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-	Genre, Year FROM Tracks WHERE FolderID = ?`)
-	if err != nil {
-		log.Println("could not prepare statement. Did you forget to run index mode first?", err)
-	}
-	defer folderOut.Close()
-
 	tracks := make([]globals.Track, 0)
 
-	rows, err := folderOut.Query(folderid)
+	rows, err := pst.findTracksInFolder.Query(folderid)
 	if err != nil {
 		log.Println("Could not find folder", err)
 		return nil
@@ -114,20 +88,12 @@ func GetTracksByFolderID(folderid int) []globals.Track {
 // GetSearchResults searches the database for a specific term and
 // return the results. The results are found by checking if the given search term matches
 // the beginning of either the Title, Artist or Album name. Results are ordered by album.
-// Tries to remove duplicates. 
+// Tries to remove duplicates.
 func GetSearchResults(term string) []globals.Track {
-	db := getConnection()
-
-	trackOut, err := db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-	Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Path LIKE ? OR Album LIKE ? ORDER BY Album`)
-	if err != nil {
-		log.Println("could not prepare statement. Did you forget to run index mode first?", err)
-	}
-	defer trackOut.Close()
 
 	tracks := make([]globals.Track, 0)
 
-	rows, err := trackOut.Query(term+"%", term+"%", "%"+term+"%", term+"%")
+	rows, err := pst.searchTracks.Query(term+"%", term+"%", "%"+term+"%", term+"%")
 	if err != nil {
 		log.Println("Could not perform search query", err)
 		return nil
@@ -154,14 +120,14 @@ func GetSearchResults(term string) []globals.Track {
 			for _, t := range tracks {
 				if track.Artist == t.Artist && track.Title == t.Title {
 					dup = true
-					break;
+					break
 				}
 			}
 
 			if !dup {
 				tracks = append(tracks, track)
 			}
-			
+
 		}
 
 	}
@@ -172,52 +138,23 @@ func GetSearchResults(term string) []globals.Track {
 
 // SavePlaylist saves aplaylist to the database
 func SavePlaylist(name string, tracks []globals.Track) {
-	db := getConnection()
-
-	// Prepare statement for creating a playlist
-	plIns, err := db.Prepare(`INSERT INTO Playlists (Name) VALUES (?)`)
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer plIns.Close()
-
-	// Prepare statement for adding a track to a playlist
-	plEntryIns, err := db.Prepare(`INSERT INTO PlaylistEntries (TrackID, PlaylistID) VALUES (?, ?)`)
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer plEntryIns.Close()
-
-	res, err := plIns.Exec(name)
+	res, err := pst.insertPlaylist.Exec(name)
 	id, err2 := res.LastInsertId()
 	if err != nil || err2 != nil {
 		log.Fatalln("could not create playlist", err, err2)
 	}
 
 	for _, track := range tracks {
-		plEntryIns.Exec(track.ID, id)
+		pst.insertPlaylistTrack.Exec(track.ID, id)
 	}
 
 }
 
 // GetPlaylistTracks return all tracks in a playlist
 func GetPlaylistTracks(playlistid int) []globals.Track {
-	db := getConnection()
-
-	plOut, err := db.Prepare(`SELECT Tracks.TrackID, Tracks.Path, Tracks.FolderID, 
-	Tracks.Title, Tracks.Album, Tracks.Artist, Tracks.Genre, Tracks.Year 
-	FROM Tracks 
-	JOIN PlaylistEntries ON Tracks.TrackID = PlaylistEntries.TrackID 
-	JOIN Playlists ON Playlists.PlaylistID = PlaylistEntries.PlaylistID 
-	WHERE Playlists.PlaylistID = ?`)
-	if err != nil {
-		log.Fatalln("could not prepare statement", err)
-	}
-	defer plOut.Close()
-
 	tracks := make([]globals.Track, 0)
 
-	rows, err := plOut.Query(playlistid)
+	rows, err := pst.findTracksInPlaylist.Query(playlistid)
 	if err != nil {
 		log.Println("Could not perform query", err)
 		return nil
@@ -249,17 +186,9 @@ func GetPlaylistTracks(playlistid int) []globals.Track {
 
 // GetPlaylists searches the database for all playlists and return them desguised as tracks
 func GetPlaylists() []globals.Track {
-	db := getConnection()
-
-	plOut, err := db.Prepare(`SELECT PlaylistID, Name FROM Playlists`)
-	if err != nil {
-		log.Println("could not prepare statement.", err)
-	}
-	defer plOut.Close()
-
 	playlists := make([]globals.Track, 0)
 
-	rows, err := plOut.Query()
+	rows, err := pst.findPlaylists.Query()
 	if err != nil {
 		log.Println("Could not perform search query", err)
 		return nil
@@ -288,4 +217,12 @@ func GetPlaylists() []globals.Track {
 
 	return playlists
 
+}
+
+// IncrementPlayCounter increments the play counter of a given track by one
+func IncrementPlayCounter(track globals.Track) {
+	_, err := pst.incrementCounter.Exec(track.ID)
+	if err != nil {
+		log.Println("Could not increment the play counter", err)
+	}
 }

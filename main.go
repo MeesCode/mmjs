@@ -114,7 +114,7 @@ func main() {
 	}
 
 	// initialize audio player
-	go audioplayer.Initialize()
+	go audioplayer.Initialize(mode)
 
 	////////////////////////////////
 	//     Start plugins here     //
