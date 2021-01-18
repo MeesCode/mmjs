@@ -107,6 +107,14 @@ func main() {
 		return
 	}
 
+	// reindex filesystem at specified path
+	if mode == "reindex" {
+		db := database.Warmup()
+		defer db.Close()
+		database.Reindex()
+		return
+	}
+
 	// start the databse connection pool
 	if mode != "filesystem" {
 		db := database.Warmup()

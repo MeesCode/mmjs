@@ -25,6 +25,9 @@ type preparedStatements struct {
 	findTracksInPlaylist *sql.Stmt
 	findPlaylists        *sql.Stmt
 	incrementCounter     *sql.Stmt
+	findAllFolders       *sql.Stmt
+	countTracksInFolder  *sql.Stmt
+	emptyFolder          *sql.Stmt
 }
 
 // Warmup the mysql connection pool
@@ -54,9 +57,9 @@ func prepareStatements(db *sql.DB) {
 	var err error
 	pst.insertFolder, err = db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)")
 	pst.insertTrack, err = db.Prepare(`INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`)
-	pst.findSubFolders, err = db.Prepare(`SELECT FolderId, Path, ParentId FROM 
+	pst.findSubFolders, err = db.Prepare(`SELECT FolderID, Path, ParentId FROM 
 		Folders WHERE ParentID = ? ORDER BY Path`)
-	pst.findFolder, err = db.Prepare(`SELECT FolderId, Path, ParentId FROM 
+	pst.findFolder, err = db.Prepare(`SELECT FolderID, Path, ParentId FROM 
 		Folders WHERE FolderID = ?`)
 	pst.findFolderByPath, err = db.Prepare("SELECT FolderID FROM Folders WHERE Path = ?")
 	pst.findTracksInFolder, err = db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
@@ -73,6 +76,9 @@ func prepareStatements(db *sql.DB) {
 		WHERE Playlists.PlaylistID = ?`)
 	pst.findPlaylists, err = db.Prepare(`SELECT PlaylistID, Name FROM Playlists`)
 	pst.incrementCounter, err = db.Prepare(`UPDATE Tracks SET Plays = Plays + 1 WHERE TrackID = ?`)
+	pst.findAllFolders, err = db.Prepare(`SELECT FolderID, Path FROM Folders`)
+	pst.countTracksInFolder, err = db.Prepare(`SELECT COUNT(*) FROM Tracks WHERE FolderID = ?`)
+	pst.emptyFolder, err = db.Prepare(`DELETE FROM Tracks WHERE FolderID = ?`)
 
 	if err != nil {
 		log.Fatalln("could not prepare statements", err)
