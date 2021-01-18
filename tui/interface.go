@@ -231,8 +231,11 @@ func Start(mode string) {
 	// the functions below are for handling user input not defined by tview //
 	//////////////////////////////////////////////////////////////////////////
 
+	// global input captures
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
+		// playlist functionallity is only available in database mode
+		// for abvious reasons
 		if mode == "database" {
 			switch event.Key() {
 			case tcell.KeyF6:
@@ -286,7 +289,9 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(playlist)
-			updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
+			if len(audioplayer.Playlist) > 0 {
+				updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
+			}
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(directorylist)
@@ -348,12 +353,11 @@ func Start(mode string) {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(playlist)
-			updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
+			if len(audioplayer.Playlist) > 0 {
+				updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
+			}
 			return nil
-		case tcell.KeyBackspace:
-			goback()
-			return nil
-		case tcell.KeyBackspace2:
+		case tcell.KeyBackspace, tcell.KeyBackspace2:
 			goback()
 			return nil
 		}

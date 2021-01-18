@@ -41,7 +41,6 @@ type audioFile struct {
 	Streamer beep.StreamSeekCloser
 	Format   beep.Format
 	Length   time.Duration
-	finished bool
 }
 
 // Play stops playback of the currently playing song (if any) and start the playback
@@ -86,7 +85,7 @@ func Play(file globals.Track) {
 	speaker.Lock()
 	length := format.SampleRate.D(streamer.Len())
 	ctrl = &beep.Ctrl{Paused: false, Streamer: st}
-	playingFile = audioFile{file, streamer, format, length, false}
+	playingFile = audioFile{file, streamer, format, length}
 	speaker.Unlock()
 
 	speaker.Clear()
@@ -104,7 +103,9 @@ func Stop() {
 		playingFile.Streamer.Close()
 	}
 
+	speaker.Lock()
 	ctrl = nil
+	speaker.Unlock()
 	speaker.Clear()
 }
 
@@ -142,9 +143,12 @@ func GetPlaytime() (time.Duration, time.Duration) {
 
 }
 
-// GetPlaying returns the currently loaded or being loaded.
+// GetPlaying returns track that is either loaded or being loaded.
 // in transition, new file will be returned
 func GetPlaying() globals.Track {
+	if len(Playlist) == 0 {
+		return globals.Track{}
+	}
 	return Playlist[Songindex]
 }
 
@@ -156,6 +160,8 @@ func IsPlaying() bool {
 	return true
 }
 
+// wait for a signal that the track has finished playing.
+// automatically play the next sone
 func waitForNext() {
 	for {
 		<-done
