@@ -32,7 +32,7 @@ func Index() {
 				globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
 
 				// skip hidden folders
-				if strings.Contains(file, "/.") {
+				if strings.Contains(file, "/.") || file == "/Uploads" || file == "/lost+found" {
 					return filepath.SkipDir
 				}
 
