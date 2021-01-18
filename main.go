@@ -101,6 +101,8 @@ func main() {
 
 	// index filesystem at specified path
 	if mode == "index" {
+		db := database.Warmup()
+		defer db.Close()
 		database.Index()
 		return
 	}

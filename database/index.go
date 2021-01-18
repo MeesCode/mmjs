@@ -4,11 +4,12 @@ package database
 import (
 	"fmt"
 	"log"
-	"github.com/MeesCode/mmjs/globals"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/MeesCode/mmjs/globals"
 
 	"github.com/dhowden/tag"
 
@@ -94,22 +95,26 @@ func Index() {
 					// if it's a file
 				} else {
 
-					// read metadata
-					f, _ := os.Open(file)
-					m, err := tag.ReadFrom(f)
+					// if we've encountered a playable file, add it to the file list
+					if globals.Contains(globals.GetSupportedFormats(), strings.ToLower(path.Ext(file))) {
 
-					// if no tags were found default to nil
-					if err != nil {
-						_, err = fileIns.Exec(rpath, parentID, nil, nil, nil, nil, nil)
-					} else {
-						_, err = fileIns.Exec(
-							rpath,
-							parentID,
-							StringToSQLNullableString(m.Title()),
-							StringToSQLNullableString(m.Album()),
-							StringToSQLNullableString(m.Artist()),
-							StringToSQLNullableString(m.Genre()),
-							IntToSQLNullableInt(m.Year()))
+						// read metadata
+						f, _ := os.Open(file)
+						m, err := tag.ReadFrom(f)
+
+						// if no tags were found default to nil
+						if err != nil {
+							_, err = fileIns.Exec(rpath, parentID, nil, nil, nil, nil, nil)
+						} else {
+							_, err = fileIns.Exec(
+								rpath,
+								parentID,
+								StringToSQLNullableString(m.Title()),
+								StringToSQLNullableString(m.Album()),
+								StringToSQLNullableString(m.Artist()),
+								StringToSQLNullableString(m.Genre()),
+								IntToSQLNullableInt(m.Year()))
+						}
 					}
 
 				}
