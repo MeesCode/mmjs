@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/database"
@@ -23,6 +25,7 @@ var (
 	port      int
 	debug     bool
 	help      bool
+	quiet     bool
 	modes     = []string{"filesystem", "database", "index"}
 )
 
@@ -30,18 +33,21 @@ func init() {
 	var (
 		defaultMode      = "filesystem"
 		defaultHelp      = false
+		defaultQuiet     = false
 		defaultWebserver = false
 		defaultPort      = 8080
 
 		modeUsage      = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage = "a boolean to specify whether to run the webserver. (only in database mode)"
 		webserverPort  = "on which port the run the web server"
+		quietUsage     = "quiet mode disables the text user interface"
 		helpUsage      = "print this help message"
 	)
 
 	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
 	flag.BoolVar(&webserver, "w", defaultWebserver, webserverUsage)
+	flag.BoolVar(&quiet, "q", defaultQuiet, quietUsage)
 	flag.IntVar(&port, "p", defaultPort, webserverPort)
 }
 
@@ -80,7 +86,7 @@ func main() {
 
 	// check if mode is correct
 	if !globals.Contains(modes, mode) {
-		fmt.Println("please use one of the availble modes")
+		fmt.Println("please use one of the available modes")
 		flag.PrintDefaults()
 		return
 	}
@@ -111,12 +117,30 @@ func main() {
 	////////////////////////////////
 	//     Start plugins here     //
 	////////////////////////////////
+
+	// the webserver relies heavily on the search function which, while
+	// functional is increadibly slow outside of database mode
 	if webserver && mode == "database" {
 		go plugins.Webserver(port)
 	}
 
-	// start user interface
-	// (on current thread as to not immediately exit)
-	tui.Start(mode)
+	///////////////////////////////
+	//  Begin main program loop  //
+	///////////////////////////////
+
+	if !quiet {
+		// start user interface
+		// on current thread as to not immediately exit
+		tui.Start(mode)
+	} else {
+		// idle until sigterm is caught
+		sigs := make(chan os.Signal, 1)
+
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		<-sigs
+
+		audioplayer.Stop()
+		fmt.Println("stopped manually")
+	}
 
 }

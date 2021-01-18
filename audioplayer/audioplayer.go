@@ -142,9 +142,10 @@ func GetPlaytime() (time.Duration, time.Duration) {
 
 }
 
-// GetPlaying returns the currently loaded file
+// GetPlaying returns the currently loaded or being loaded.
+// in transition, new file will be returned
 func GetPlaying() globals.Track {
-	return playingFile.Track
+	return Playlist[Songindex]
 }
 
 // IsPlaying returns true when a file is loaded, either playing or paused
