@@ -60,7 +60,7 @@ func audioStateUpdater() {
 		// update track info box when track id changed
 		if audioplayer.IsPlaying() && audioplayer.GetPlaying().ID != trackID {
 			myTui.app.QueueUpdateDraw(func() {
-				UpdatePlayInfo()
+				updatePlayInfo()
 				trackID = audioplayer.GetPlaying().ID
 			})
 		}
@@ -74,9 +74,9 @@ func audioStateUpdater() {
 	}
 }
 
-// UpdatePlayInfo forces the interface to update. This is usefull when the application
+// updatePlayInfo forces the interface to update. This is usefull when the application
 // can be controlled from outside of the tui.
-func UpdatePlayInfo() {
+func updatePlayInfo() {
 	updateInfoBox(audioplayer.GetPlaying(), myTui.infobox)
 	drawplaylist()
 }
@@ -100,14 +100,23 @@ func updateInfoBox(track globals.Track, box *tview.Table) {
 // drawplaylist draws the playlist. This function should be called after every
 // function that alters this list.
 func drawplaylist() {
+	index := myTui.playlist.GetCurrentItem()
 	myTui.playlist.Clear()
 	for index, track := range audioplayer.Playlist {
 		if audioplayer.Songindex == index {
-			myTui.playlist.AddItem(trackToDisplayText(track), "", '>', playsong)
+			myTui.playlist.AddItem("["+globals.Highlight+"]▶[white] "+trackToDisplayText(track), "", 0, playsong)
 		} else {
-			myTui.playlist.AddItem(trackToDisplayText(track), "", 0, playsong)
+			myTui.playlist.AddItem("  "+trackToDisplayText(track), "", 0, playsong)
 		}
 	}
+	itemCount := myTui.playlist.GetItemCount()
+	if itemCount == 0 {
+		return
+	}
+	if index >= itemCount {
+		index = itemCount - 1
+	}
+	myTui.playlist.SetCurrentItem(index)
 }
 
 // drawfilelist draws the file list. This function should be called after every
@@ -155,7 +164,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	for i := 0; i < fill-1; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneCkBoard)
 	}
-	fmt.Fprintf(myTui.progressbar, "%s%c%s", "[maroon]", tcell.RuneBlock, "[white]")
+	fmt.Fprintf(myTui.progressbar, "%s%c%s", "["+globals.Highlight+"]", tcell.RuneBlock, "[white]")
 	for i := 0; i < width-fill; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
 	}
@@ -269,28 +278,28 @@ func focusWithColor(primitive tview.Primitive) {
 func playsong() {
 	index := myTui.playlist.GetCurrentItem()
 	audioplayer.PlaySong(myTui.playlist.GetCurrentItem())
-	UpdatePlayInfo()
+	updatePlayInfo()
 	myTui.playlist.SetCurrentItem(index)
 }
 
 func previoussong() {
 	index := myTui.playlist.GetCurrentItem()
 	audioplayer.Previoussong()
-	UpdatePlayInfo()
+	updatePlayInfo()
 	myTui.playlist.SetCurrentItem(index)
 }
 
 func nextsong() {
 	index := myTui.playlist.GetCurrentItem()
 	audioplayer.Nextsong()
-	UpdatePlayInfo()
+	updatePlayInfo()
 	myTui.playlist.SetCurrentItem(index)
 }
 
 func deletesong() {
 	index := myTui.playlist.GetCurrentItem()
 	audioplayer.Deletesong(index)
-	UpdatePlayInfo()
+	updatePlayInfo()
 	if index >= myTui.playlist.GetItemCount() {
 		index = myTui.playlist.GetItemCount() - 1
 	}

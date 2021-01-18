@@ -10,3 +10,7 @@ var DatabaseCredentials = DatabaseConnection{
 	Host:     "localhost",
 	Port:     "3306",
 }
+
+// Highlight color in the user interface, check tcell source for options
+// or use hex notation (#ffffff)
+var Highlight = "#cb2821"

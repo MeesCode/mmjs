@@ -24,8 +24,8 @@ var (
 	addFolder            func()
 )
 
-const (
-	colorFocus   = tcell.ColorMaroon
+var (
+	colorFocus   = tcell.GetColor(globals.Highlight)
 	colorUnfocus = tcell.ColorWhite
 )
 
