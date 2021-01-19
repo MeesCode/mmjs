@@ -2,10 +2,10 @@
 package audioplayer
 
 import (
+	"io"
 	"log"
 	"os"
 	"path"
-	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +18,7 @@ import (
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/beep/wav"
+	"github.com/h2non/filetype"
 )
 
 // these values can be ajusted to improve playback.
@@ -51,27 +52,37 @@ func Play(file globals.Track) {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
-	f, err := os.Open(path.Join(globals.Root, file.Path))
+	filePath := path.Join(globals.Root, file.Path)
+
+	f, err := os.Open(filePath)
 	if err != nil {
 		log.Println("Error opening the file", err)
 		speaker.Clear()
 		return
 	}
 
+	// read the max file header and reset to begin
+	head := make([]byte, 261)
+	f.Read(head)
+	f.Seek(0, io.SeekStart)
+
+	// determine filetype by header
+	kind, _ := filetype.Match(head)
+
 	var streamer beep.StreamSeekCloser
 	var format beep.Format
 
-	switch strings.ToLower(path.Ext(file.Path)) {
-	case ".wav":
+	switch kind.MIME.Value {
+	case "audio/x-wav":
 		streamer, format, err = wav.Decode(f)
-	case ".mp3":
+	case "audio/mpeg":
 		streamer, format, err = mp3.Decode(f)
-	case ".ogg":
+	case "audio/ogg":
 		streamer, format, err = vorbis.Decode(f)
-	case ".flac":
+	case "audio/x-flac":
 		streamer, format, err = flac.Decode(f)
 	default:
-		log.Println("filetype not supported", err)
+		log.Println("filetype not supported")
 		speaker.Clear()
 		return
 	}
