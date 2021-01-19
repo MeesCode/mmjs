@@ -41,21 +41,21 @@ func init() {
 		defaultDatabasePassword = ""
 		defaultDatabase         = ""
 		defaultConfig           = ""
-		defaultHighlight        = "#cb2821"
+		defaultHighlight        = "cb2821"
 
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
-		webserverPort         = "on which port the run the web server"
 		quietUsage            = "quiet mode disables the text user interface"
 		loggingUsage          = "enable error logging"
 		helpUsage             = "print this help message"
 		webserverPortUsage    = "set the port to be used by the webserver plugin"
+		databasePortUsage     = "set the port to be used by the database"
 		databaseHostUsage     = "set the host for the database connection"
 		databaseUserUsage     = "set the database user"
 		databasePasswordUsage = "set the database password"
 		databaseUsage         = "The database to use"
 		configUsage           = "specify a config file to use (overrides command line arguments)"
-		highlightUsage        = "hex code (#ffffff) indicating the highlight color of the text user interface"
+		highlightUsage        = "hex code (ffffff) indicating the highlight color of the text user interface"
 	)
 
 	flag.BoolVar(&help, "help", defaultHelp, helpUsage)
@@ -65,8 +65,8 @@ func init() {
 	flag.BoolVar(&globals.Config.Quiet, "q", defaultQuiet, quietUsage)
 	flag.BoolVar(&globals.Config.Logging, "x", defaultLogging, loggingUsage)
 	flag.BoolVar(&globals.Config.Webserver.Enable, "w", defaultWebserver, webserverUsage)
-	flag.IntVar(&globals.Config.Webserver.Port, "wp", defaultWebserverPort, webserverPort)
-	flag.IntVar(&globals.Config.Database.Port, "dp", defaultDatabasePort, webserverPortUsage)
+	flag.IntVar(&globals.Config.Webserver.Port, "wp", defaultWebserverPort, webserverPortUsage)
+	flag.IntVar(&globals.Config.Database.Port, "dp", defaultDatabasePort, databasePortUsage)
 	flag.StringVar(&globals.Config.Database.Host, "h", defaultDatabaseHost, databaseHostUsage)
 	flag.StringVar(&globals.Config.Database.User, "u", defaultDatabaseUser, databaseUserUsage)
 	flag.StringVar(&globals.Config.Database.Password, "p", defaultDatabasePassword, databasePasswordUsage)
@@ -103,6 +103,7 @@ func main() {
 	// parse command line arguments
 	flag.Parse()
 
+	// load configuration file if one is specified
 	if configFile != "" {
 		globals.Config = loadConfiguration(configFile)
 	}

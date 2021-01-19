@@ -52,7 +52,7 @@ type tui struct {
 // down gracefully.
 func Start() {
 
-	colorFocus = tcell.GetColor(globals.Config.Highlight)
+	colorFocus = tcell.GetColor("#" + globals.Config.Highlight)
 
 	// build interface
 	app := tview.NewApplication()
