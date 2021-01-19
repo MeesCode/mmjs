@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -21,45 +22,90 @@ import (
 )
 
 var (
-	mode        string
-	webserver   bool
-	port        int
-	debug       bool
-	disableLogs bool
-	help        bool
-	quiet       bool
-	modes       = []string{"filesystem", "database", "index"}
+	modes      = []string{"filesystem", "database", "index"}
+	help       bool
+	configFile string
 )
 
 func init() {
 	var (
-		defaultMode        = "filesystem"
-		defaultHelp        = false
-		defaultQuiet       = false
-		defaultWebserver   = false
-		defaultDisableLogs = false
-		defaultPort        = 8080
+		defaultMode             = "filesystem"
+		defaultHelp             = false
+		defaultQuiet            = false
+		defaultWebserver        = false
+		defaultLogging          = false
+		defaultWebserverPort    = 8080
+		defaultDatabasePort     = 3306
+		defaultDatabaseHost     = "localhost"
+		defaultDatabaseUser     = ""
+		defaultDatabasePassword = ""
+		defaultDatabase         = ""
+		defaultConfig           = ""
+		defaultHighlight        = "#cb2821"
 
-		modeUsage        = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
-		webserverUsage   = "a boolean to specify whether to run the webserver. (only in database mode)"
-		webserverPort    = "on which port the run the web server"
-		quietUsage       = "quiet mode disables the text user interface"
-		disableLogsUsage = "disable error logging"
-		helpUsage        = "print this help message"
+		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
+		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
+		webserverPort         = "on which port the run the web server"
+		quietUsage            = "quiet mode disables the text user interface"
+		loggingUsage          = "enable error logging"
+		helpUsage             = "print this help message"
+		webserverPortUsage    = "set the port to be used by the webserver plugin"
+		databaseHostUsage     = "set the host for the database connection"
+		databaseUserUsage     = "set the database user"
+		databasePasswordUsage = "set the database password"
+		databaseUsage         = "The database to use"
+		configUsage           = "specify a config file to use (overrides command line arguments)"
+		highlightUsage        = "hex code (#ffffff) indicating the highlight color of the text user interface"
 	)
 
-	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
-	flag.StringVar(&mode, "m", defaultMode, modeUsage)
-	flag.BoolVar(&webserver, "w", defaultWebserver, webserverUsage)
-	flag.BoolVar(&quiet, "q", defaultQuiet, quietUsage)
-	flag.BoolVar(&disableLogs, "x", defaultDisableLogs, disableLogsUsage)
-	flag.IntVar(&port, "p", defaultPort, webserverPort)
+	flag.BoolVar(&help, "help", defaultHelp, helpUsage)
+	flag.StringVar(&configFile, "c", defaultConfig, configUsage)
+	flag.StringVar(&globals.Config.Mode, "m", defaultMode, modeUsage)
+	flag.StringVar(&globals.Config.Highlight, "hl", defaultHighlight, highlightUsage)
+	flag.BoolVar(&globals.Config.Quiet, "q", defaultQuiet, quietUsage)
+	flag.BoolVar(&globals.Config.Logging, "x", defaultLogging, loggingUsage)
+	flag.BoolVar(&globals.Config.Webserver.Enable, "w", defaultWebserver, webserverUsage)
+	flag.IntVar(&globals.Config.Webserver.Port, "wp", defaultWebserverPort, webserverPort)
+	flag.IntVar(&globals.Config.Database.Port, "dp", defaultDatabasePort, webserverPortUsage)
+	flag.StringVar(&globals.Config.Database.Host, "h", defaultDatabaseHost, databaseHostUsage)
+	flag.StringVar(&globals.Config.Database.User, "u", defaultDatabaseUser, databaseUserUsage)
+	flag.StringVar(&globals.Config.Database.Password, "p", defaultDatabasePassword, databasePasswordUsage)
+	flag.StringVar(&globals.Config.Database.Database, "d", defaultDatabase, databaseUsage)
+}
+
+// load the configuration from a json file
+func loadConfiguration(file string) globals.ConfigFile {
+	var config globals.ConfigFile
+	configFile, err := os.Open(file)
+	defer configFile.Close()
+	if err != nil {
+		log.Fatalln("could not open configuration file (config.json)", err)
+	}
+	jsonParser := json.NewDecoder(configFile)
+	err = jsonParser.Decode(&config)
+	if err != nil {
+		log.Fatalln("error decoding configuration file", err)
+	}
+	return config
 }
 
 func main() {
 
+	// check for help flag
+	if help {
+		flag.PrintDefaults()
+		return
+	}
+
+	// disable logs by default
+	log.SetOutput(ioutil.Discard)
+
 	// parse command line arguments
 	flag.Parse()
+
+	if configFile != "" {
+		globals.Config = loadConfiguration(configFile)
+	}
 
 	base, err := os.Getwd()
 
@@ -83,14 +129,8 @@ func main() {
 		globals.Root = path.Clean(path.Join(base, arg))
 	}
 
-	// check for help flag
-	if help {
-		flag.PrintDefaults()
-		return
-	}
-
 	// check if mode is correct
-	if !globals.Contains(modes, mode) {
+	if !globals.Contains(modes, globals.Config.Mode) {
 		fmt.Println("please use one of the available modes")
 		flag.PrintDefaults()
 		return
@@ -105,12 +145,12 @@ func main() {
 	}
 
 	// disabe logging output. discard instead
-	if disableLogs {
-		log.SetOutput(ioutil.Discard)
+	if globals.Config.Logging {
+		log.SetOutput(os.Stdout)
 	}
 
 	// index filesystem at specified path
-	if mode == "index" {
+	if globals.Config.Mode == "index" {
 		db := database.Warmup()
 		defer db.Close()
 		database.Index()
@@ -118,13 +158,13 @@ func main() {
 	}
 
 	// start the databse connection pool
-	if mode != "filesystem" {
+	if globals.Config.Mode != "filesystem" {
 		db := database.Warmup()
 		defer db.Close()
 	}
 
 	// initialize audio player
-	go audioplayer.Initialize(mode)
+	go audioplayer.Initialize()
 
 	////////////////////////////////
 	//     Start plugins here     //
@@ -132,20 +172,21 @@ func main() {
 
 	// the webserver relies heavily on the search function which, while
 	// functional is increadibly slow outside of database mode
-	if webserver && mode == "database" {
-		go plugins.Webserver(port)
+	if globals.Config.Webserver.Enable && globals.Config.Mode == "database" {
+		go plugins.Webserver()
 	}
 
 	///////////////////////////////
 	//  Begin main program loop  //
 	///////////////////////////////
 
-	if !quiet {
+	if !globals.Config.Quiet {
 		// start user interface
 		// on current thread as to not immediately exit
-		tui.Start(mode)
+		tui.Start()
 	} else {
 		// idle until sigterm is caught
+		fmt.Println("started in quiet mode")
 		sigs := make(chan os.Signal, 1)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

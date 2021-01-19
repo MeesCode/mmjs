@@ -4,6 +4,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"strconv"
 
 	"github.com/MeesCode/mmjs/globals"
 )
@@ -30,11 +31,11 @@ type preparedStatements struct {
 // Warmup the mysql connection pool
 func Warmup() *sql.DB {
 	db, err := sql.Open("mysql",
-		globals.DatabaseCredentials.Username+":"+
-			globals.DatabaseCredentials.Password+"@("+
-			globals.DatabaseCredentials.Host+":"+
-			globals.DatabaseCredentials.Port+")/"+
-			globals.DatabaseCredentials.Database)
+		globals.Config.Database.User+":"+
+			globals.Config.Database.Password+"@("+
+			globals.Config.Database.Host+":"+
+			strconv.Itoa(globals.Config.Database.Port)+")/"+
+			globals.Config.Database.Database)
 
 	if err != nil {
 		log.Fatalln("connection with database could not be established", err)

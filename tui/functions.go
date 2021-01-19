@@ -97,6 +97,11 @@ func updateInfoBox(track globals.Track, box *tview.Table) {
 	box.SetCell(6, 1, tview.NewTableCell(dir))
 }
 
+// convert hex value encoded in an int to rgb notation
+func hexToString(r int32) string {
+	return "#" + fmt.Sprintf("%06s", (strconv.FormatInt(int64(r), 16)))
+}
+
 // drawplaylist draws the playlist. This function should be called after every
 // function that alters this list.
 func drawplaylist() {
@@ -104,7 +109,7 @@ func drawplaylist() {
 	myTui.playlist.Clear()
 	for index, track := range audioplayer.Playlist {
 		if audioplayer.Songindex == index {
-			myTui.playlist.AddItem("["+globals.Highlight+"]▶[white] "+trackToDisplayText(track), "", 0, playsong)
+			myTui.playlist.AddItem("["+hexToString(colorFocus.Hex())+"]▶[white] "+trackToDisplayText(track), "", 0, playsong)
 		} else {
 			myTui.playlist.AddItem("  "+trackToDisplayText(track), "", 0, playsong)
 		}
@@ -164,7 +169,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 	for i := 0; i < fill-1; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneCkBoard)
 	}
-	fmt.Fprintf(myTui.progressbar, "%s%c%s", "["+globals.Highlight+"]", tcell.RuneBlock, "[white]")
+	fmt.Fprintf(myTui.progressbar, "%s%c%s", "["+hexToString(colorFocus.Hex())+"]", tcell.RuneBlock, "[white]")
 	for i := 0; i < width-fill; i++ {
 		fmt.Fprintf(myTui.progressbar, "%c", tcell.RuneHLine)
 	}

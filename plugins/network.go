@@ -80,12 +80,12 @@ func skiphandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Webserver starts an entry port for https requests
-func Webserver(port int) {
+func Webserver() {
 	http.HandleFunc("/search", searchhandler)
 	http.HandleFunc("/add", addhandler)
 	http.HandleFunc("/skip", skiphandler)
 	http.HandleFunc("/queue", queuehandler)
 	http.HandleFunc("/playpause", playpausehandler)
 
-	http.ListenAndServe(":"+strconv.Itoa(port), nil)
+	http.ListenAndServe(":"+strconv.Itoa(globals.Config.Webserver.Port), nil)
 }

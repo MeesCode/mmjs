@@ -25,7 +25,7 @@ var (
 )
 
 var (
-	colorFocus   = tcell.GetColor(globals.Highlight)
+	colorFocus   = tcell.ColorBlue
 	colorUnfocus = tcell.ColorWhite
 )
 
@@ -50,7 +50,9 @@ type tui struct {
 // Start builds the user interface, defines the keybinds and sets initial values.
 // This function will not stop until Ctrl-C is pressed, after which it will shut
 // down gracefully.
-func Start(mode string) {
+func Start() {
+
+	colorFocus = tcell.GetColor(globals.Config.Highlight)
 
 	// build interface
 	app := tview.NewApplication()
@@ -105,7 +107,7 @@ func Start(mode string) {
 	keybinds.SetBorder(true).SetTitle(" Keybinds ")
 	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
-	if mode == "database" {
+	if globals.Config.Mode == "database" {
 		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
 			"| F7: open playlist | F8: play/pause | F9: previous | F12: next ")
 	} else {
@@ -204,7 +206,7 @@ func Start(mode string) {
 	// do some stuff depending on if we are in database or filesystem mode
 	// and set the root folder as the current
 	var folder globals.Folder
-	if mode == "filesystem" {
+	if globals.Config.Mode == "filesystem" {
 		addFolder = addFolderFilesystem
 		changedir = changedirFilesystem
 		search = searchFilesystem
@@ -236,7 +238,7 @@ func Start(mode string) {
 
 		// playlist functionallity is only available in database mode
 		// for abvious reasons
-		if mode == "database" {
+		if globals.Config.Mode == "database" {
 			switch event.Key() {
 			case tcell.KeyF6:
 				openPlaylistInput()

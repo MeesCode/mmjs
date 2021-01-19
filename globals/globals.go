@@ -9,13 +9,23 @@ import (
 // Root is the root folder where the player is initialized
 var Root string
 
-// DatabaseConnection is a struct that holds all database connection info.
-type DatabaseConnection struct {
-	Username string
-	Password string
-	Database string
-	Host     string
-	Port     string
+// ConfigFile is a struct that holds all database connection info.
+type ConfigFile struct {
+	Mode     string `json:"mode"`
+	Database struct {
+		User     string `json:"user"`
+		Password string `json:"password"`
+		Database string `json:"database"`
+		Host     string `json:"host"`
+		Port     int    `json:"port"`
+	} `json:"database"`
+	Highlight string `json:"highlight"`
+	Quiet     bool   `json:"quiet"`
+	Logging   bool   `json:"logging"`
+	Webserver struct {
+		Enable bool `json:"enable"`
+		Port   int  `json:"port"`
+	} `json:"webserver"`
 }
 
 // Folder is a struct that holds all folder info, this correlates directly
@@ -40,6 +50,9 @@ type Track struct {
 	Genre    sql.NullString
 	Year     sql.NullInt64
 }
+
+// Config is the variable that holder the config file
+var Config ConfigFile
 
 // GetSupportedFormats returns an array of strings with the file extentions
 // that are supported by the program.

@@ -35,7 +35,6 @@ var (
 	audioLock   = new(sync.Mutex)
 	playingFile audioFile
 	done        chan bool
-	mode        string
 )
 
 // a struct that holds information about the currently playing track.
@@ -180,7 +179,7 @@ func waitForNext() {
 		<-done
 
 		// if in database mode, add one to the play counter
-		if mode == "database" {
+		if globals.Config.Mode == "database" {
 			database.IncrementPlayCounter(GetPlaying())
 		}
 
@@ -189,12 +188,11 @@ func waitForNext() {
 }
 
 // Initialize the speaker with the specification defined at the top.
-func Initialize(m string) {
+func Initialize() {
 	err := speaker.Init(gsr, gsr.N(bufferSize))
 	if err != nil {
 		log.Fatalln("failed to initialize audio device", err)
 	}
-	mode = m
 	done = make(chan bool)
 	go waitForNext()
 }
