@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -20,34 +21,38 @@ import (
 )
 
 var (
-	mode      string
-	webserver bool
-	port      int
-	debug     bool
-	help      bool
-	quiet     bool
-	modes     = []string{"filesystem", "database", "index"}
+	mode        string
+	webserver   bool
+	port        int
+	debug       bool
+	disableLogs bool
+	help        bool
+	quiet       bool
+	modes       = []string{"filesystem", "database", "index"}
 )
 
 func init() {
 	var (
-		defaultMode      = "filesystem"
-		defaultHelp      = false
-		defaultQuiet     = false
-		defaultWebserver = false
-		defaultPort      = 8080
+		defaultMode        = "filesystem"
+		defaultHelp        = false
+		defaultQuiet       = false
+		defaultWebserver   = false
+		defaultDisableLogs = false
+		defaultPort        = 8080
 
-		modeUsage      = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
-		webserverUsage = "a boolean to specify whether to run the webserver. (only in database mode)"
-		webserverPort  = "on which port the run the web server"
-		quietUsage     = "quiet mode disables the text user interface"
-		helpUsage      = "print this help message"
+		modeUsage        = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
+		webserverUsage   = "a boolean to specify whether to run the webserver. (only in database mode)"
+		webserverPort    = "on which port the run the web server"
+		quietUsage       = "quiet mode disables the text user interface"
+		disableLogsUsage = "disable error logging"
+		helpUsage        = "print this help message"
 	)
 
 	flag.BoolVar(&help, "h", defaultHelp, helpUsage)
 	flag.StringVar(&mode, "m", defaultMode, modeUsage)
 	flag.BoolVar(&webserver, "w", defaultWebserver, webserverUsage)
 	flag.BoolVar(&quiet, "q", defaultQuiet, quietUsage)
+	flag.BoolVar(&disableLogs, "x", defaultDisableLogs, disableLogsUsage)
 	flag.IntVar(&port, "p", defaultPort, webserverPort)
 }
 
@@ -99,6 +104,11 @@ func main() {
 		return
 	}
 
+	// disabe logging output. discard instead
+	if disableLogs {
+		log.SetOutput(ioutil.Discard)
+	}
+
 	// index filesystem at specified path
 	if mode == "index" {
 		db := database.Warmup()
@@ -142,7 +152,6 @@ func main() {
 		<-sigs
 
 		audioplayer.Stop()
-		fmt.Println("stopped manually")
 	}
 
 }
