@@ -46,7 +46,7 @@ func init() {
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
 		quietUsage            = "quiet mode disables the text user interface"
-		loggingUsage          = "enable error logging"
+		loggingUsage          = "enable error logging in stdout, will interfere with tui"
 		helpUsage             = "print this help message"
 		webserverPortUsage    = "set the port to be used by the webserver plugin"
 		databasePortUsage     = "set the port to be used by the database"
@@ -91,17 +91,17 @@ func loadConfiguration(file string) globals.ConfigFile {
 
 func main() {
 
-	// check for help flag
-	if help {
-		flag.PrintDefaults()
-		return
-	}
-
 	// disable logs by default
 	log.SetOutput(ioutil.Discard)
 
 	// parse command line arguments
 	flag.Parse()
+
+	// check for help flag
+	if help {
+		flag.PrintDefaults()
+		return
+	}
 
 	// load configuration file if one is specified
 	if configFile != "" {
@@ -119,7 +119,6 @@ func main() {
 	// check that a path has been given
 	if arg == "" {
 		fmt.Println("please specify a path")
-		flag.PrintDefaults()
 		return
 	}
 

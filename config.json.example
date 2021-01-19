@@ -7,7 +7,7 @@
         "host":     "localhost",
         "port":     3306
     },
-    "highlight": "#cb2821",
+    "highlight": "cb2821",
     "quiet": false,
     "logging": false,
     "webserver": {

@@ -84,17 +84,17 @@ func updatePlayInfo() {
 // updateInfoBox updates one of the two information boxes with track information
 func updateInfoBox(track globals.Track, box *tview.Table) {
 	dir, name := path.Split(track.Path)
-	box.SetCell(0, 1, tview.NewTableCell(stringOrUnknown(track.Title)))
-	box.SetCell(1, 1, tview.NewTableCell(stringOrUnknown(track.Artist)))
-	box.SetCell(2, 1, tview.NewTableCell(stringOrUnknown(track.Album)))
-	box.SetCell(3, 1, tview.NewTableCell(stringOrUnknown(track.Genre)))
+	box.SetCell(0, 1, tview.NewTableCell(tview.Escape(stringOrUnknown(track.Title))))
+	box.SetCell(1, 1, tview.NewTableCell(tview.Escape(stringOrUnknown(track.Artist))))
+	box.SetCell(2, 1, tview.NewTableCell(tview.Escape(stringOrUnknown(track.Album))))
+	box.SetCell(3, 1, tview.NewTableCell(tview.Escape(stringOrUnknown(track.Genre))))
 	if track.Year.Valid {
 		box.SetCell(4, 1, tview.NewTableCell(strconv.FormatInt(track.Year.Int64, 10)))
 	} else {
 		box.SetCell(4, 1, tview.NewTableCell("unknown"))
 	}
-	box.SetCell(5, 1, tview.NewTableCell(name))
-	box.SetCell(6, 1, tview.NewTableCell(dir))
+	box.SetCell(5, 1, tview.NewTableCell(tview.Escape(name)))
+	box.SetCell(6, 1, tview.NewTableCell(tview.Escape(dir)))
 }
 
 // convert hex value encoded in an int to rgb notation
@@ -109,9 +109,9 @@ func drawplaylist() {
 	myTui.playlist.Clear()
 	for index, track := range audioplayer.Playlist {
 		if audioplayer.Songindex == index {
-			myTui.playlist.AddItem("["+hexToString(colorFocus.Hex())+"]▶[white] "+trackToDisplayText(track), "", 0, playsong)
+			myTui.playlist.AddItem("["+hexToString(colorFocus.Hex())+"]▶[white] "+tview.Escape(trackToDisplayText(track)), "", 0, playsong)
 		} else {
-			myTui.playlist.AddItem("  "+trackToDisplayText(track), "", 0, playsong)
+			myTui.playlist.AddItem("  "+tview.Escape(trackToDisplayText(track)), "", 0, playsong)
 		}
 	}
 	itemCount := myTui.playlist.GetItemCount()
@@ -129,7 +129,7 @@ func drawplaylist() {
 func drawfilelist() {
 	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
-		myTui.filelist.AddItem(trackToDisplayText(track), "", 0, addsong)
+		myTui.filelist.AddItem(tview.Escape(trackToDisplayText(track)), "", 0, addsong)
 	}
 }
 
@@ -144,7 +144,7 @@ func drawdirectorylist(parentFunc func(), isRoot bool) {
 		if index == 0 && !isRoot {
 			myTui.directorylist.AddItem("..", "", 0, parentFunc)
 		} else {
-			myTui.directorylist.AddItem(path.Base(folder.Path), "", 0, parentFunc)
+			myTui.directorylist.AddItem(tview.Escape(path.Base(folder.Path)), "", 0, parentFunc)
 		}
 
 	}
