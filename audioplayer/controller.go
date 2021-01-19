@@ -20,14 +20,14 @@ func PlaySong(index int) {
 		return
 	}
 	Songindex = index
-	go Play(Playlist[index])
+	go play()
 }
 
 // Nextsong plays the next song (if available)
 func Nextsong() {
 	if len(Playlist) > Songindex+1 {
 		Songindex++
-		go Play(Playlist[Songindex])
+		go play()
 	}
 }
 
@@ -35,7 +35,7 @@ func Nextsong() {
 func Previoussong() {
 	if Songindex > 0 {
 		Songindex--
-		go Play(Playlist[Songindex])
+		go play()
 	}
 }
 
@@ -46,6 +46,7 @@ func Addsong(track globals.Track) {
 
 // Deletesong removes the currently selected song from the playlist.
 func Deletesong(index int) {
+	forcePlayOnNextPlay()
 
 	// if list is empty do nothing
 	if len(Playlist) == 0 {
@@ -71,7 +72,7 @@ func Deletesong(index int) {
 	// play the next song when the current song is deleted
 	// but there is a next song on the list
 	if index == Songindex {
-		go Play(Playlist[Songindex])
+		go play()
 	}
 
 	// if we delete a song that is before the current one
@@ -91,6 +92,7 @@ func Insertsong(track globals.Track) {
 // Shuffle shuffles the playlist and places the currently playing track as the first
 // track in the playlist. It will not halt playback.
 func Shuffle() {
+	forcePlayOnNextPlay()
 	if len(Playlist) == 0 {
 		return
 	}
@@ -112,6 +114,7 @@ func Shuffle() {
 
 // Clear removes all entries from the playlist and stops playback.
 func Clear() {
+	forcePlayOnNextPlay()
 	Stop()
 	Songindex = 0
 	Playlist = nil
@@ -119,6 +122,7 @@ func Clear() {
 
 // MoveUp swaps the currently selected track in the playlist with the one above it.
 func MoveUp(index int) {
+	forcePlayOnNextPlay()
 	if index == 0 {
 		return
 	}
@@ -134,6 +138,7 @@ func MoveUp(index int) {
 
 // MoveDown swaps the currently selected track in the playlist with the one below it.
 func MoveDown(index int) {
+	forcePlayOnNextPlay()
 	if index+1 == len(Playlist) {
 		return
 	}

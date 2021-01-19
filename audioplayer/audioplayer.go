@@ -31,10 +31,11 @@ const (
 )
 
 var (
-	ctrl        *beep.Ctrl
-	audioLock   = new(sync.Mutex)
-	playingFile audioFile
-	done        chan bool
+	ctrl          *beep.Ctrl
+	audioLock     = new(sync.Mutex)
+	playingFile   audioFile
+	done          chan bool
+	prevSongindex = -1
 )
 
 // a struct that holds information about the currently playing track.
@@ -45,11 +46,29 @@ type audioFile struct {
 	Length   time.Duration
 }
 
+func forcePlayOnNextPlay() {
+	prevSongindex = -1
+}
+
 // Play stops playback of the currently playing song (if any) and start the playback
-// of the provided song. It will open, decode resample and play the file in that order.
-func Play(file globals.Track) {
+// of the current songindex. It will open, decode resample and play the file in that order.
+// when calling play without changing the songindex nothing will happen
+func play() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
+
+	// when scrolling with f12 (which is something people do) ignore
+	// when the songindex didn't change. This has to do with multiple threads
+	// calling this function and having to wait for every file to finish decoding
+	// this makes scrolling very slow. This might not be the best way to do this, but i
+	// can't think of another.
+	if prevSongindex == Songindex {
+		return
+	}
+
+	prevSongindex = Songindex
+
+	file := GetPlaying()
 
 	filePath := path.Join(globals.Root, file.Path)
 
