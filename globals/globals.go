@@ -19,10 +19,11 @@ type ConfigFile struct {
 		Host     string `json:"host"`
 		Port     int    `json:"port"`
 	} `json:"database"`
-	Highlight string `json:"highlight"`
-	Quiet     bool   `json:"quiet"`
-	Logging   bool   `json:"logging"`
-	Webserver struct {
+	Highlight    string `json:"highlight"`
+	Quiet        bool   `json:"quiet"`
+	Logging      bool   `json:"logging"`
+	DisableSound bool   `json:"disableSound"`
+	Webserver    struct {
 		Enable bool `json:"enable"`
 		Port   int  `json:"port"`
 	} `json:"webserver"`

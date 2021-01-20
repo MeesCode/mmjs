@@ -10,6 +10,7 @@
     "highlight": "cb2821",
     "quiet": false,
     "logging": false,
+    "disableSound": false,
     "webserver": {
         "enable": false,
         "port": 8080

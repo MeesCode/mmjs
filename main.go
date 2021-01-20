@@ -41,6 +41,7 @@ func init() {
 		defaultDatabasePassword = ""
 		defaultDatabase         = ""
 		defaultConfig           = ""
+		defaultDisableSound     = false
 		defaultHighlight        = "cb2821"
 
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
@@ -54,6 +55,7 @@ func init() {
 		databaseUserUsage     = "set the database user"
 		databasePasswordUsage = "set the database password"
 		databaseUsage         = "The database to use"
+		disableSoundUsage     = "disables initialization of the sound card (for server use)"
 		configUsage           = "specify a config file to use (overrides command line arguments)"
 		highlightUsage        = "hex code (ffffff) indicating the highlight color of the text user interface"
 	)
@@ -71,6 +73,7 @@ func init() {
 	flag.StringVar(&globals.Config.Database.User, "u", defaultDatabaseUser, databaseUserUsage)
 	flag.StringVar(&globals.Config.Database.Password, "p", defaultDatabasePassword, databasePasswordUsage)
 	flag.StringVar(&globals.Config.Database.Database, "d", defaultDatabase, databaseUsage)
+	flag.BoolVar(&globals.Config.DisableSound, "ds", defaultDisableSound, disableSoundUsage)
 }
 
 // load the configuration from a json file
@@ -164,7 +167,9 @@ func main() {
 	}
 
 	// initialize audio player
-	go audioplayer.Initialize()
+	if !globals.Config.DisableSound {
+		go audioplayer.Initialize()
+	}
 
 	////////////////////////////////
 	//     Start plugins here     //
