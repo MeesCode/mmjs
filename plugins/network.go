@@ -33,6 +33,12 @@ func searchhandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(res))
 }
 
+func randomhandler(w http.ResponseWriter, r *http.Request) {
+	files = database.GetRandomTracks(10)
+	res, _ := json.Marshal(files)
+	fmt.Fprintf(w, string(res))
+}
+
 func addhandler(w http.ResponseWriter, r *http.Request) {
 	query, ok := r.URL.Query()["query"]
 	if !ok || len(query[0]) < 1 {
@@ -86,6 +92,7 @@ func Webserver() {
 	http.HandleFunc("/skip", skiphandler)
 	http.HandleFunc("/queue", queuehandler)
 	http.HandleFunc("/playpause", playpausehandler)
+	http.HandleFunc("/random", randomhandler)
 
 	http.ListenAndServe(":"+strconv.Itoa(globals.Config.Webserver.Port), nil)
 }

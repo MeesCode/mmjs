@@ -26,6 +26,7 @@ type preparedStatements struct {
 	findTracksInPlaylist *sql.Stmt
 	findPlaylists        *sql.Stmt
 	incrementCounter     *sql.Stmt
+	randomTracks         *sql.Stmt
 }
 
 // Warmup the mysql connection pool
@@ -74,6 +75,8 @@ func prepareStatements(db *sql.DB) {
 		WHERE Playlists.PlaylistID = ?`)
 	pst.findPlaylists, err = db.Prepare(`SELECT PlaylistID, Name FROM Playlists`)
 	pst.incrementCounter, err = db.Prepare(`UPDATE Tracks SET Plays = Plays + 1 WHERE TrackID = ?`)
+	pst.randomTracks, err = db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
+	Genre, Year FROM Tracks ORDER BY RAND() LIMIT ?`)
 
 	if err != nil {
 		log.Fatalln("could not prepare statements", err)

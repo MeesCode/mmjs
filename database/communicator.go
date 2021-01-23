@@ -136,6 +136,45 @@ func GetSearchResults(term string) []globals.Track {
 
 }
 
+// GetRandomTracks get n random tracks from the database
+func GetRandomTracks(n int) []globals.Track {
+
+	if n < 1 {
+		return nil
+	}
+
+	tracks := make([]globals.Track, 0)
+
+	rows, err := pst.randomTracks.Query(n)
+	if err != nil {
+		log.Println("Could not perform search query", err)
+		return nil
+	}
+
+	for rows.Next() {
+		var track globals.Track
+		err = rows.Scan(
+			&track.ID,
+			&track.Path,
+			&track.FolderID,
+			&track.Title,
+			&track.Album,
+			&track.Artist,
+			&track.Genre,
+			&track.Year)
+
+		if err != nil {
+			log.Println("Could not find metadata, file corrupt?", err)
+		} else {
+			tracks = append(tracks, track)
+		}
+
+	}
+
+	return tracks
+
+}
+
 // SavePlaylist saves aplaylist to the database
 func SavePlaylist(name string, tracks []globals.Track) {
 	res, err := pst.insertPlaylist.Exec(name)
