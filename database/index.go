@@ -21,7 +21,24 @@ import (
 // Index indexes every folder and playable file that is contained within the
 // specified root folder. It ignores hidden folders entirely.
 func Index() {
-	err := filepath.Walk(globals.Root,
+
+	var err error
+	findFolderByPath, err := db.Prepare(stmts.findFolderByPath)
+	if err != nil {
+		log.Fatalln("could not prepare statements")
+	}
+
+	insertFolder, err := db.Prepare(stmts.insertFolder)
+	if err != nil {
+		log.Fatalln("could not prepare statements")
+	}
+
+	insertTrack, err := db.Prepare(stmts.insertTrack)
+	if err != nil {
+		log.Fatalln("could not prepare statements")
+	}
+
+	err = filepath.Walk(globals.Root,
 		func(file string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -46,7 +63,7 @@ func Index() {
 				var parentID = 0
 
 				if !isRoot {
-					err = db.QueryRow(stmts.findFolderByPath, path.Dir(rpath)).Scan(&parentID)
+					err = findFolderByPath.QueryRow(path.Dir(rpath)).Scan(&parentID)
 					if err != nil {
 						log.Println("Could not perform query, or query returned empty. query: ", path.Dir(rpath), err)
 					}
@@ -56,12 +73,12 @@ func Index() {
 				if info.IsDir() {
 					if isRoot {
 						// special case for when it's the root folder
-						_, err = db.Exec(stmts.insertFolder, "/", parentID)
+						_, err = insertFolder.Exec("/", parentID)
 						if err != nil {
 							log.Println("Could not add root to the database", err)
 						}
 					} else {
-						_, err = db.Exec(stmts.insertFolder, rpath, parentID)
+						_, err = insertFolder.Exec(rpath, parentID)
 						if err != nil {
 							log.Println("Could not add folder to the database", err)
 						}
@@ -79,9 +96,9 @@ func Index() {
 
 						// if no tags were found default to nil
 						if err != nil {
-							_, err = db.Exec(stmts.insertTrack, rpath, parentID, nil, nil, nil, nil, nil)
+							_, err = insertTrack.Exec(rpath, parentID, nil, nil, nil, nil, nil)
 						} else {
-							_, err = db.Exec(stmts.insertTrack,
+							_, err = insertTrack.Exec(
 								rpath,
 								parentID,
 								StringToSQLNullableString(m.Title()),
