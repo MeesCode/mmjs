@@ -16,11 +16,12 @@ import (
 func GetFoldersByParentID(parentid int) []globals.Folder {
 	folders := make([]globals.Folder, 0)
 
-	rows, err := pst.findSubFolders.Query(parentid)
+	rows, err := db.Query(stmts.findSubFolders, parentid)
 	if err != nil {
 		log.Println("could not find folder", err)
 		return nil
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var folder globals.Folder
@@ -42,7 +43,7 @@ func GetFoldersByParentID(parentid int) []globals.Folder {
 func GetFolderByID(folderid int) globals.Folder {
 	var folder globals.Folder
 
-	err := pst.findFolder.QueryRow(folderid).Scan(&folder.ID, &folder.Path, &folder.ParentID)
+	err := db.QueryRow(stmts.findFolder, folderid).Scan(&folder.ID, &folder.Path, &folder.ParentID)
 	if err != nil {
 		log.Fatalln("could not prepare statement. Did you forget to run index mode first?", err)
 	}
@@ -55,11 +56,12 @@ func GetFolderByID(folderid int) globals.Folder {
 func GetTracksByFolderID(folderid int) []globals.Track {
 	tracks := make([]globals.Track, 0)
 
-	rows, err := pst.findTracksInFolder.Query(folderid)
+	rows, err := db.Query(stmts.findTracksInFolder, folderid)
 	if err != nil {
 		log.Println("Could not find folder", err)
 		return nil
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var track globals.Track
@@ -93,11 +95,12 @@ func GetSearchResults(term string) []globals.Track {
 
 	tracks := make([]globals.Track, 0)
 
-	rows, err := pst.searchTracks.Query(term+"%", term+"%", "%"+term+"%", term+"%")
+	rows, err := db.Query(stmts.searchTracks, term+"%", term+"%", "%"+term+"%", term+"%")
 	if err != nil {
 		log.Println("Could not perform search query", err)
 		return nil
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var track globals.Track
@@ -145,11 +148,12 @@ func GetRandomTracks(n int) []globals.Track {
 
 	tracks := make([]globals.Track, 0)
 
-	rows, err := pst.randomTracks.Query(n)
+	rows, err := db.Query(stmts.randomTracks, n)
 	if err != nil {
 		log.Println("Could not perform search query", err)
 		return nil
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var track globals.Track
@@ -177,14 +181,14 @@ func GetRandomTracks(n int) []globals.Track {
 
 // SavePlaylist saves aplaylist to the database
 func SavePlaylist(name string, tracks []globals.Track) {
-	res, err := pst.insertPlaylist.Exec(name)
+	res, err := db.Exec(stmts.insertPlaylist, name)
 	id, err2 := res.LastInsertId()
 	if err != nil || err2 != nil {
 		log.Fatalln("could not create playlist", err, err2)
 	}
 
 	for _, track := range tracks {
-		pst.insertPlaylistTrack.Exec(track.ID, id)
+		db.Exec(stmts.insertPlaylistTrack, track.ID, id)
 	}
 
 }
@@ -193,11 +197,12 @@ func SavePlaylist(name string, tracks []globals.Track) {
 func GetPlaylistTracks(playlistid int) []globals.Track {
 	tracks := make([]globals.Track, 0)
 
-	rows, err := pst.findTracksInPlaylist.Query(playlistid)
+	rows, err := db.Query(stmts.findTracksInPlaylist, playlistid)
 	if err != nil {
 		log.Println("Could not perform query", err)
 		return nil
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var track globals.Track
@@ -227,11 +232,12 @@ func GetPlaylistTracks(playlistid int) []globals.Track {
 func GetPlaylists() []globals.Track {
 	playlists := make([]globals.Track, 0)
 
-	rows, err := pst.findPlaylists.Query()
+	rows, err := db.Query(stmts.findPlaylists)
 	if err != nil {
 		log.Println("Could not perform search query", err)
 		return nil
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var playlist globals.Track
@@ -260,7 +266,7 @@ func GetPlaylists() []globals.Track {
 
 // IncrementPlayCounter increments the play counter of a given track by one
 func IncrementPlayCounter(track globals.Track) {
-	_, err := pst.incrementCounter.Exec(track.ID)
+	_, err := db.Exec(stmts.incrementCounter, track.ID)
 	if err != nil {
 		log.Println("Could not increment the play counter", err)
 	}

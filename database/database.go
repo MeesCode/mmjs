@@ -9,29 +9,32 @@ import (
 	"github.com/MeesCode/mmjs/globals"
 )
 
-// this stuct holds all prepared statements
-var pst preparedStatements
+// this stuct holds all defined statements
+var stmts definedStatements
+var db *sql.DB
 
-// list of prepared statements
-type preparedStatements struct {
-	insertFolder         *sql.Stmt
-	insertTrack          *sql.Stmt
-	findSubFolders       *sql.Stmt
-	findFolder           *sql.Stmt
-	findFolderByPath     *sql.Stmt
-	findTracksInFolder   *sql.Stmt
-	searchTracks         *sql.Stmt
-	insertPlaylistTrack  *sql.Stmt
-	insertPlaylist       *sql.Stmt
-	findTracksInPlaylist *sql.Stmt
-	findPlaylists        *sql.Stmt
-	incrementCounter     *sql.Stmt
-	randomTracks         *sql.Stmt
+// list of defined statements
+type definedStatements struct {
+	insertFolder         string
+	insertTrack          string
+	findSubFolders       string
+	findFolder           string
+	findFolderByPath     string
+	findTracksInFolder   string
+	searchTracks         string
+	insertPlaylistTrack  string
+	insertPlaylist       string
+	findTracksInPlaylist string
+	findPlaylists        string
+	incrementCounter     string
+	randomTracks         string
 }
 
 // Warmup the mysql connection pool
 func Warmup() *sql.DB {
-	db, err := sql.Open("mysql",
+	defineStatements()
+
+	dbc, err := sql.Open("mysql",
 		globals.Config.Database.User+":"+
 			globals.Config.Database.Password+"@("+
 			globals.Config.Database.Host+":"+
@@ -42,45 +45,41 @@ func Warmup() *sql.DB {
 		log.Fatalln("connection with database could not be established", err)
 	}
 
-	err = db.Ping()
+	err = dbc.Ping()
 	if err != nil {
 		log.Fatalln("connection with database could not be pinged", err)
 	}
 
-	prepareStatements(db)
-	return db
+	db = dbc
+
+	return dbc
 }
 
-// prepare all statements ahead of time
-func prepareStatements(db *sql.DB) {
-	var err error
-	pst.insertFolder, err = db.Prepare("INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)")
-	pst.insertTrack, err = db.Prepare(`INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`)
-	pst.findSubFolders, err = db.Prepare(`SELECT FolderId, Path, ParentId FROM 
-		Folders WHERE ParentID = ? ORDER BY Path`)
-	pst.findFolder, err = db.Prepare(`SELECT FolderId, Path, ParentId FROM 
-		Folders WHERE FolderID = ?`)
-	pst.findFolderByPath, err = db.Prepare("SELECT FolderID FROM Folders WHERE Path = ?")
-	pst.findTracksInFolder, err = db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-		Genre, Year FROM Tracks WHERE FolderID = ?`)
-	pst.searchTracks, err = db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-		Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Path LIKE ? OR Album LIKE ? ORDER BY Album`)
-	pst.insertPlaylist, err = db.Prepare(`INSERT INTO Playlists (Name) VALUES (?)`)
-	pst.insertPlaylistTrack, err = db.Prepare(`INSERT INTO PlaylistEntries (TrackID, PlaylistID) VALUES (?, ?)`)
-	pst.findTracksInPlaylist, err = db.Prepare(`SELECT Tracks.TrackID, Tracks.Path, Tracks.FolderID, 
+// define all statements ahead of time
+func defineStatements() {
+	stmts.insertFolder = "INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)"
+	stmts.insertTrack = `INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	stmts.findSubFolders = `SELECT FolderId, Path, ParentId FROM 
+		Folders WHERE ParentID = ? ORDER BY Path`
+	stmts.findFolder = `SELECT FolderId, Path, ParentId FROM 
+		Folders WHERE FolderID = ?`
+	stmts.findFolderByPath = "SELECT FolderID FROM Folders WHERE Path = ?"
+	stmts.findTracksInFolder = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
+		Genre, Year FROM Tracks WHERE FolderID = ?`
+	stmts.searchTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
+		Genre, Year FROM Tracks WHERE Artist LIKE ? OR Title LIKE ? OR Path LIKE ? OR Album LIKE ? ORDER BY Album`
+	stmts.insertPlaylist = `INSERT INTO Playlists (Name) VALUES (?)`
+	stmts.insertPlaylistTrack = `INSERT INTO PlaylistEntries (TrackID, PlaylistID) VALUES (?, ?)`
+	stmts.findTracksInPlaylist = `SELECT Tracks.TrackID, Tracks.Path, Tracks.FolderID, 
 		Tracks.Title, Tracks.Album, Tracks.Artist, Tracks.Genre, Tracks.Year 
 		FROM Tracks 
 		JOIN PlaylistEntries ON Tracks.TrackID = PlaylistEntries.TrackID 
 		JOIN Playlists ON Playlists.PlaylistID = PlaylistEntries.PlaylistID 
-		WHERE Playlists.PlaylistID = ?`)
-	pst.findPlaylists, err = db.Prepare(`SELECT PlaylistID, Name FROM Playlists`)
-	pst.incrementCounter, err = db.Prepare(`UPDATE Tracks SET Plays = Plays + 1 WHERE TrackID = ?`)
-	pst.randomTracks, err = db.Prepare(`SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-	Genre, Year FROM Tracks ORDER BY RAND() LIMIT ?`)
-
-	if err != nil {
-		log.Fatalln("could not prepare statements", err)
-	}
+		WHERE Playlists.PlaylistID = ?`
+	stmts.findPlaylists = `SELECT PlaylistID, Name FROM Playlists`
+	stmts.incrementCounter = `UPDATE Tracks SET Plays = Plays + 1 WHERE TrackID = ?`
+	stmts.randomTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
+	Genre, Year FROM Tracks ORDER BY RAND() LIMIT ?`
 }
 
 // StringToSQLNullableString converts a string into a nullable string.

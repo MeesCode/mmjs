@@ -46,7 +46,7 @@ func Index() {
 				var parentID = 0
 
 				if !isRoot {
-					err = pst.findFolderByPath.QueryRow(path.Dir(rpath)).Scan(&parentID)
+					err = db.QueryRow(stmts.findFolderByPath, path.Dir(rpath)).Scan(&parentID)
 					if err != nil {
 						log.Println("Could not perform query, or query returned empty. query: ", path.Dir(rpath), err)
 					}
@@ -56,12 +56,12 @@ func Index() {
 				if info.IsDir() {
 					if isRoot {
 						// special case for when it's the root folder
-						_, err = pst.insertFolder.Exec("/", parentID)
+						_, err = db.Exec(stmts.insertFolder, "/", parentID)
 						if err != nil {
 							log.Println("Could not add root to the database", err)
 						}
 					} else {
-						_, err = pst.insertFolder.Exec(rpath, parentID)
+						_, err = db.Exec(stmts.insertFolder, rpath, parentID)
 						if err != nil {
 							log.Println("Could not add folder to the database", err)
 						}
@@ -79,9 +79,9 @@ func Index() {
 
 						// if no tags were found default to nil
 						if err != nil {
-							_, err = pst.insertTrack.Exec(rpath, parentID, nil, nil, nil, nil, nil)
+							_, err = db.Exec(stmts.insertTrack, rpath, parentID, nil, nil, nil, nil, nil)
 						} else {
-							_, err = pst.insertTrack.Exec(
+							_, err = db.Exec(stmts.insertTrack,
 								rpath,
 								parentID,
 								StringToSQLNullableString(m.Title()),
