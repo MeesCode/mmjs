@@ -208,7 +208,8 @@ func GetPopularTracks(n int) []globals.Track {
 			&track.Album,
 			&track.Artist,
 			&track.Genre,
-			&track.Year)
+			&track.Year,
+			&track.Plays)
 
 		if err != nil {
 			log.Println("Could not find metadata, file corrupt?", err)
