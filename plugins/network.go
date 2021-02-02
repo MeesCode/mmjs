@@ -106,6 +106,7 @@ func incplaycounterhandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func popularhandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("handler")
 	files = database.GetPopularTracks(10)
 	res, _ := json.Marshal(files)
 	fmt.Fprintf(w, string(res))
