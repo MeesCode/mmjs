@@ -82,7 +82,7 @@ func defineStatements() {
 	stmts.randomTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
 	Genre, Year FROM Tracks ORDER BY RAND() LIMIT ?`
 	stmts.popularTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
-	Genre, Year FROM Tracks ORDER BY Plays DESC LIMIT ?`
+	Genre, Year, Plays FROM Tracks ORDER BY Plays DESC LIMIT ?`
 }
 
 // StringToSQLNullableString converts a string into a nullable string.

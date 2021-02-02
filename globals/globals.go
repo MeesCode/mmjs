@@ -50,6 +50,7 @@ type Track struct {
 	Artist   sql.NullString
 	Genre    sql.NullString
 	Year     sql.NullInt64
+	Plays    int
 }
 
 // Config is the variable that holder the config file
