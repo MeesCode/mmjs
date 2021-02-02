@@ -179,6 +179,46 @@ func GetRandomTracks(n int) []globals.Track {
 
 }
 
+// GetPopularTracks get n popular tracks from the database
+func GetPopularTracks(n int) []globals.Track {
+
+	if n < 1 {
+		return nil
+	}
+
+	tracks := make([]globals.Track, 0)
+
+	rows, err := db.Query(stmts.popularTracks, n)
+	if err != nil {
+		log.Println("Could not perform search query", err)
+		return nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var track globals.Track
+		err = rows.Scan(
+			&track.ID,
+			&track.Path,
+			&track.FolderID,
+			&track.Title,
+			&track.Album,
+			&track.Artist,
+			&track.Genre,
+			&track.Year)
+
+		if err != nil {
+			log.Println("Could not find metadata, file corrupt?", err)
+		} else {
+			tracks = append(tracks, track)
+		}
+
+	}
+
+	return tracks
+
+}
+
 // SavePlaylist saves aplaylist to the database
 func SavePlaylist(name string, tracks []globals.Track) {
 	res, err := db.Exec(stmts.insertPlaylist, name)
@@ -265,8 +305,8 @@ func GetPlaylists() []globals.Track {
 }
 
 // IncrementPlayCounter increments the play counter of a given track by one
-func IncrementPlayCounter(track globals.Track) {
-	_, err := db.Exec(stmts.incrementCounter, track.ID)
+func IncrementPlayCounter(track_id int) {
+	_, err := db.Exec(stmts.incrementCounter, track_id)
 	if err != nil {
 		log.Println("Could not increment the play counter", err)
 	}

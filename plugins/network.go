@@ -85,6 +85,32 @@ func skiphandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(res))
 }
 
+func incplaycounterhandler(w http.ResponseWriter, r *http.Request) {
+	query, ok := r.URL.Query()["query"]
+	if !ok || len(query[0]) < 1 {
+		fmt.Fprintf(w, "failed")
+		return
+	}
+
+	key := query[0]
+
+	i, err := strconv.Atoi(key)
+
+	if err != nil {
+		fmt.Fprintf(w, "failed")
+		return
+	}
+
+	database.IncrementPlayCounter(i)
+	fmt.Fprintf(w, "success")
+}
+
+func popularhandler(w http.ResponseWriter, r *http.Request) {
+	files = database.GetPopularTracks(10)
+	res, _ := json.Marshal(files)
+	fmt.Fprintf(w, string(res))
+}
+
 // Webserver starts an entry port for https requests
 func Webserver() {
 	http.HandleFunc("/search", searchhandler)
@@ -93,6 +119,8 @@ func Webserver() {
 	http.HandleFunc("/queue", queuehandler)
 	http.HandleFunc("/playpause", playpausehandler)
 	http.HandleFunc("/random", randomhandler)
+	http.HandleFunc("/incplaycounter", incplaycounterhandler)
+	http.HandleFunc("/popular", popularhandler)
 
 	http.ListenAndServe(":"+strconv.Itoa(globals.Config.Webserver.Port), nil)
 }

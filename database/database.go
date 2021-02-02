@@ -28,6 +28,7 @@ type definedStatements struct {
 	findPlaylists        string
 	incrementCounter     string
 	randomTracks         string
+	popularTracks        string
 }
 
 // Warmup the mysql connection pool
@@ -80,6 +81,8 @@ func defineStatements() {
 	stmts.incrementCounter = `UPDATE Tracks SET Plays = Plays + 1 WHERE TrackID = ?`
 	stmts.randomTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
 	Genre, Year FROM Tracks ORDER BY RAND() LIMIT ?`
+	stmts.popularTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
+	Genre, Year FROM Tracks ORDER BY Plays DESC LIMIT ?`
 }
 
 // StringToSQLNullableString converts a string into a nullable string.

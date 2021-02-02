@@ -199,9 +199,9 @@ func waitForNext() {
 
 		// if in database mode, add one to the play counter
 		if globals.Config.Mode == "database" {
-			database.IncrementPlayCounter(GetPlaying())
+			database.IncrementPlayCounter(GetPlaying().ID)
 		}
-		
+
 		// always start a new song when the previous is finished
 		forcePlayOnNextPlay()
 		Nextsong()
