@@ -263,7 +263,7 @@ func Start() {
 			return nil
 		case tcell.KeyF8:
 			// if no song is loaded, play the first song
-			if !audioplayer.IsPlaying() && len(audioplayer.Playlist) > 0 {
+			if !audioplayer.IsLoaded() && len(audioplayer.Playlist) > 0 {
 				audioplayer.PlaySong(0)
 			} else {
 				audioplayer.Pause()

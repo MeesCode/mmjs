@@ -5,6 +5,7 @@ import (
 	"time"
     "net/http"
 	"encoding/json"
+	"strconv"
 
     "github.com/gorilla/websocket"
 	"github.com/MeesCode/mmjs/audioplayer"
@@ -46,12 +47,24 @@ func commands(w http.ResponseWriter, r *http.Request) {
 			return
         }
 
-		// send response
-		err = conn.WriteMessage(websocket.TextMessage, []byte("command received"))
-        if err != nil {
-            log.Println("Error during message writing:", err)
-			return
-        }
+		switch string(msg) {
+			case "play":
+				if !audioplayer.IsLoaded(){
+					audioplayer.PlaySong(audioplayer.Songindex)
+					break;
+				}
+				audioplayer.Resume()
+				break;
+			case "pause":
+				audioplayer.Pause()
+				break;
+			case "next":
+				audioplayer.Nextsong()
+				break;
+			case "previous":
+				audioplayer.Previoussong()
+				break;
+		}
 	}
 }
 
@@ -92,11 +105,11 @@ func broadcaster() {
 	}
 }
 
-func Socket() {
+func Webinterface() {
     http.HandleFunc("/stats", stats)
 	http.HandleFunc("/commands", commands)
 
 	// start broadcaster routine
 	go broadcaster()
-	log.Fatal(http.ListenAndServe(":4567", nil))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(globals.Config.Webinterface.Port), nil))
 }

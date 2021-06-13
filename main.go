@@ -33,9 +33,11 @@ func init() {
 		defaultHelp             = false
 		defaultQuiet            = false
 		defaultWebserver        = false
+		defaultWebinterface     = false
 		defaultLogging          = false
+		defaultWebinterfacePort = 3307
+		defaultDatabasePort     = 8081
 		defaultWebserverPort    = 8080
-		defaultDatabasePort     = 3306
 		defaultDatabaseHost     = "localhost"
 		defaultDatabaseUser     = ""
 		defaultDatabasePassword = ""
@@ -46,10 +48,12 @@ func init() {
 
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
+		webinterfaceUsage     = "a boolean to specify whether to run the web interface"
 		quietUsage            = "quiet mode disables the text user interface"
 		loggingUsage          = "enable error logging in stdout, will interfere with tui"
 		helpUsage             = "print this help message"
 		webserverPortUsage    = "set the port to be used by the webserver plugin"
+		webinterfacePortUsage = "set the port to be used by the webinterface plugin"
 		databasePortUsage     = "set the port to be used by the database"
 		databaseHostUsage     = "set the host for the database connection"
 		databaseUserUsage     = "set the database user"
@@ -68,6 +72,8 @@ func init() {
 	flag.BoolVar(&globals.Config.Logging, "x", defaultLogging, loggingUsage)
 	flag.BoolVar(&globals.Config.Webserver.Enable, "w", defaultWebserver, webserverUsage)
 	flag.IntVar(&globals.Config.Webserver.Port, "wp", defaultWebserverPort, webserverPortUsage)
+	flag.BoolVar(&globals.Config.Webinterface.Enable, "i", defaultWebinterface, webinterfaceUsage)
+	flag.IntVar(&globals.Config.Webinterface.Port, "ip", defaultWebinterfacePort, webinterfacePortUsage)
 	flag.IntVar(&globals.Config.Database.Port, "dp", defaultDatabasePort, databasePortUsage)
 	flag.StringVar(&globals.Config.Database.Host, "h", defaultDatabaseHost, databaseHostUsage)
 	flag.StringVar(&globals.Config.Database.User, "u", defaultDatabaseUser, databaseUserUsage)
@@ -181,7 +187,9 @@ func main() {
 		go plugins.Webserver()
 	}
 
-	go plugins.Socket()
+	if globals.Config.Webinterface.Enable {
+		go plugins.Webinterface()
+	}
 
 	///////////////////////////////
 	//  Begin main program loop  //

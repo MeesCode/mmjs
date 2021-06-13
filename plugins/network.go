@@ -65,7 +65,7 @@ func addhandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func playpausehandler(w http.ResponseWriter, r *http.Request) {
-	if !audioplayer.IsPlaying() {
+	if !audioplayer.IsLoaded() {
 		audioplayer.PlaySong(audioplayer.Songindex)
 	} else {
 		audioplayer.Pause()

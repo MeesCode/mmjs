@@ -27,6 +27,10 @@ type ConfigFile struct {
 		Enable bool `json:"enable"`
 		Port   int  `json:"port"`
 	} `json:"webserver"`
+	Webinterface    struct {
+		Enable bool `json:"enable"`
+		Port   int  `json:"port"`
+	} `json:"webinterface"`
 }
 
 // Folder is a struct that holds all folder info, this correlates directly

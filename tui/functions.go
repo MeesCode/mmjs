@@ -58,7 +58,7 @@ func audioStateUpdater() {
 		<-time.After(time.Second)
 
 		// update track info box when track id changed
-		if audioplayer.IsPlaying() && audioplayer.GetPlaying().ID != trackID {
+		if audioplayer.IsLoaded() && audioplayer.GetPlaying().ID != trackID {
 			myTui.app.QueueUpdateDraw(func() {
 				updatePlayInfo()
 				trackID = audioplayer.GetPlaying().ID

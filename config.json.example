@@ -14,5 +14,9 @@
     "webserver": {
         "enable": false,
         "port": 8080
+    },
+    "webinterface": {
+        "enable": false,
+        "port": 8080
     }
 }

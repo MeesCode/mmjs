@@ -145,12 +145,26 @@ func Pause() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
-	if !IsPlaying() {
+	if !IsLoaded() {
 		return
 	}
 
 	speaker.Lock()
-	ctrl.Paused = !ctrl.Paused
+	ctrl.Paused = true
+	speaker.Unlock()
+}
+
+// Pause the currently playing track (if any).
+func Resume() {
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
+	if !IsLoaded() {
+		return
+	}
+
+	speaker.Lock()
+	ctrl.Paused = false
 	speaker.Unlock()
 }
 
@@ -161,7 +175,7 @@ func GetPlaytime() (time.Duration, time.Duration) {
 	// audioLock.Lock()
 	// defer audioLock.Unlock()
 
-	if !IsPlaying() {
+	if !IsLoaded() {
 		return time.Duration(0), time.Duration(0)
 	}
 
@@ -183,12 +197,28 @@ func GetPlaying() globals.Track {
 	return Playlist[Songindex]
 }
 
+// IsLoaded returns true when a file is loaded, either playing or paused
+func IsLoaded() bool {
+	if ctrl == nil {
+		return false
+	}
+	return true
+}
+
 // IsPlaying returns true when a file is loaded, either playing or paused
 func IsPlaying() bool {
 	if ctrl == nil {
 		return false
 	}
-	return true
+	return !ctrl.Paused
+}
+
+// IsPaused returns true when a file is loaded, either playing or paused
+func IsPaused() bool {
+	if ctrl == nil {
+		return true
+	}
+	return ctrl.Paused
 }
 
 // wait for a signal that the track has finished playing.
