@@ -117,7 +117,7 @@ func Clear() {
 	forcePlayOnNextPlay()
 	Stop()
 	Songindex = 0
-	Playlist = nil
+	Playlist = make([]globals.Track, 0)
 }
 
 // MoveUp swaps the currently selected track in the playlist with the one above it.

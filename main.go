@@ -181,6 +181,8 @@ func main() {
 		go plugins.Webserver()
 	}
 
+	go plugins.Socket()
+
 	///////////////////////////////
 	//  Begin main program loop  //
 	///////////////////////////////
