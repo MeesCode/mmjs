@@ -8,34 +8,32 @@
 
     <head>
         <title>mmjs remote</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" referrerpolicy="no-referrer" />
     </head>
 
     <body>
+        <!-- the entire vue application including template -->
         <div id="app"></div>
     </body>
 
-    <!-- the entire vue application including template -->
     <script>
         var mySimpleApp = new Vue({
             el: '#app',
             template: `
             <div id="app-wrapper">
 
-                <table class="table">
+                <table class="table is-striped is-hoverable is-fullwidth">
                     <thead>
                         <tr>
-                            <th></th>
                             <th>Artist</th>
                             <th>Title</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="i, key of tracks">
-                            <td v-if="index === key"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i></td>
-                            <td v-else></td>
+                        <tr v-for="i, key of tracks" v-bind:class="{'playing': index === key}">
                             <td v-if="i.Artist.Valid">{{i.Artist.String}}</td>
                             <td v-else>unknown</td>
                             <td v-if="i.Title.Valid">{{i.Title.String}}</td>
@@ -44,18 +42,30 @@
                     </tbody>
                 </table>
 
-                <div id="controls">
-                    <div id="previous" class="control-button" @click="previous">
-                        <i class="fas fa-step-backward"></i>
+                <div ref="controls" class="controls columns is-mobile">
+                    <div class="controls-left column is-one-fifth">
+                        <span class="control-button" @click="sendcommand('shuffle')">
+                            <i class="fas fa-random"></i>
+                        </span>
                     </div>
-                    <div v-if="playing" id="pause" class="control-button" @click="pause">
-                        <i class="fas fa-pause"></i>
+                    <div class="controls-center column">
+                        <span class="control-button" @click="sendcommand('previous')">
+                            <i class="fas fa-step-backward"></i>
+                        </span>
+                        <span v-if="playing" class="control-button" @click="sendcommand('pause')">
+                            <i class="fas fa-pause"></i>
+                        </span>
+                        <span v-else class="control-button" @click="sendcommand('play')">
+                            <i class="fas fa-play"></i>
+                        </span>
+                        <span class="control-button" @click="sendcommand('next')">
+                            <i class="fas fa-step-forward"></i>
+                        </span>
                     </div>
-                    <div v-else id="play" class="control-button" @click="play">
-                        <i class="fas fa-play"></i>
-                    </div>
-                    <div id="next" class="control-button" @click="next">
-                        <i class="fas fa-step-forward"></i>
+                    <div class="controls-right column is-one-fifth">
+                        <span class="control-button" @click="sendcommand('clear')">
+                            <i class="fas fa-ban"></i>
+                        </span>
                     </div>
                 </div>
 
@@ -66,34 +76,29 @@
                     tracks: [],
                     playing: false,
                     index: 0,
+                    length: 0,
+                    progress: 0,
                     commandsocket: null,
                     statsocket: null
                 }
             },
             mounted(){
-                this.commandsocket = new WebSocket("ws://localhost:8081/commands");
-                this.statsocket = new WebSocket("ws://localhost:8081/stats");
+                this.commandsocket = new WebSocket(`ws://${window.location.host}/commands`);
+                this.statsocket = new WebSocket(`ws://${window.location.host}/stats`);
 
                 this.statsocket.onmessage = (e) => {
                     let stats = JSON.parse(e.data)
-                    console.log(stats.Playing)
                     this.tracks = stats.Queue
                     this.index = stats.Index
                     this.playing = stats.Playing
+
+                    let percentage = Math.round(100 * (stats.Progress / stats.Length)) 
+                    this.$refs.controls.style.background = `linear-gradient(90deg, rgba(128,9,12,1) ${percentage}%, rgba(203,40,33,1) ${percentage}%)`
                 };
             },
             methods: {
-                pause(){
-                    this.commandsocket.send('pause')
-                },
-                play(){
-                    this.commandsocket.send('play')
-                },
-                previous(){
-                    this.commandsocket.send('previous')
-                },
-                next(){
-                    this.commandsocket.send('next')
+                sendcommand(command){
+                    this.commandsocket.send(command)
                 }
             }
         })
@@ -101,27 +106,53 @@
 
     <style>
         .table{
-            width: 100%;
+            margin-bottom: 55px !important;
         }
 
-        #controls{
-            background-color: #80090c;
+        .playing{
+            background-color: #80090c !important;
+            color: white;
+        }
+
+        .playing:hover{
+            background-color: #80090c !important;
+            color: white;
+        }
+
+        .controls{
+            background-color: rgba(203,40,33,1);
+            transition: .2s ease all;
+            /* background: linear-gradient(90deg, rgba(128,9,12,1) 62%, rgba(203,40,33,1) 62%); */
             position: fixed;
             width: 100%;
-            height: 100px;
+            height: 55px;
             bottom: 0px;
+            padding: 0px;
+            margin: 0px;
         }
 
         .control-button{
-            display: inline;
-            font-size: 65px;
-            padding-left: 15px;
+            font-size: 30px;
             color: white;
-            /* background-color: #cb2821; */
-            margin-top: 10px;
-            margin-right: 20px;
-            border-radius: 10px;
+            margin: 0 10px;
             cursor: pointer;
+            width: 80px;
+        }
+
+        .controls-center{
+            text-align: center;
+        }
+
+        .controls-left{
+            text-align: left;
+        }
+
+        .controls-right{
+            text-align: right;
+        }
+
+        .column{
+            padding: 0;
         }
     </style>
 

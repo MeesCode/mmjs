@@ -13,9 +13,11 @@ import (
 )
 
 type Stats struct {
-    Queue []globals.Track `json:"Queue"`
-    Playing bool `json:"Playing"`
-    Index int `json:"Index"`
+    Queue []globals.Track
+    Playing bool
+    Index int
+	Length time.Duration 
+	Progress time.Duration
 }
 
 var statobject Stats
@@ -27,6 +29,10 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true	
 	},
+}
+
+func page(w http.ResponseWriter, r *http.Request){
+	http.ServeFile(w, r, "webinterface.html")
 }
 
 func commands(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +70,12 @@ func commands(w http.ResponseWriter, r *http.Request) {
 			case "previous":
 				audioplayer.Previoussong()
 				break;
+			case "shuffle":
+				audioplayer.Shuffle()
+				break;
+			case "clear":
+				audioplayer.Clear()
+				break;
 		}
 	}
 }
@@ -89,6 +101,7 @@ func broadcaster() {
 		statobject.Queue = audioplayer.Playlist
 		statobject.Index = audioplayer.Songindex
 		statobject.Playing = audioplayer.IsPlaying()
+		statobject.Progress, statobject.Length = audioplayer.GetPlaytime()
 
 		// get current stats in json format
 		queue, _ := json.Marshal(statobject)
@@ -106,6 +119,7 @@ func broadcaster() {
 }
 
 func Webinterface() {
+	http.HandleFunc("/", page)
     http.HandleFunc("/stats", stats)
 	http.HandleFunc("/commands", commands)
 

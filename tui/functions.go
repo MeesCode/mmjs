@@ -51,17 +51,15 @@ func stringOrUnknown(s sql.NullString) string {
 // It will ask the audioplayer for the playing time of the current track.
 // It will also start the next sond if the current song is finished.
 func audioStateUpdater() {
-	trackID := -1
 	for {
 
 		// update the play timer every second
 		<-time.After(time.Second)
 
-		// update track info box when track id changed
-		if audioplayer.IsLoaded() && audioplayer.GetPlaying().ID != trackID {
+		// update track info box
+		if audioplayer.IsLoaded() {
 			myTui.app.QueueUpdateDraw(func() {
 				updatePlayInfo()
-				trackID = audioplayer.GetPlaying().ID
 			})
 		}
 
@@ -74,8 +72,7 @@ func audioStateUpdater() {
 	}
 }
 
-// updatePlayInfo forces the interface to update. This is usefull when the application
-// can be controlled from outside of the tui.
+// updatePlayInfo forces the interface to update.
 func updatePlayInfo() {
 	updateInfoBox(audioplayer.GetPlaying(), myTui.infobox)
 	drawplaylist()
