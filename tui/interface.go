@@ -160,11 +160,6 @@ func Start() {
 	playlist.SetBorder(true).SetTitle(" Playlist ")
 	playlist.SetBackgroundColor(tcell.ColorDefault)
 	playlist.ShowSecondaryText(false).SetWrapAround(false)
-	playlist.SetChangedFunc(func(i int, _, _ string, _ rune) {
-		if len(audioplayer.Playlist) > 0 {
-			updateInfoBox(audioplayer.Playlist[i], browseinfobox)
-		}
-	})
 
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 
@@ -291,9 +286,6 @@ func Start() {
 			return nil
 		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(playlist)
-			if len(audioplayer.Playlist) > 0 {
-				updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
-			}
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(directorylist)
@@ -355,9 +347,6 @@ func Start() {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(playlist)
-			if len(audioplayer.Playlist) > 0 {
-				updateInfoBox(audioplayer.GetPlaying(), browseinfobox)
-			}
 			return nil
 		case tcell.KeyBackspace, tcell.KeyBackspace2:
 			goback()

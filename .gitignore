@@ -2,3 +2,4 @@
 globals/config.go
 vendor/
 config.json
+mmjs

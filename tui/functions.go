@@ -19,7 +19,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-// trackToDisplayText takes a Track object and returns a string in thee
+// trackToDisplayText takes a Track object and returns a string in the
 // Artist - Title format if available. If no artists is found it will
 // omit this and if no track is found the filename will be used as title.
 func trackToDisplayText(track globals.Track) string {
