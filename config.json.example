@@ -19,4 +19,8 @@
         "enable": false,
         "port": 8080
     }
+    "serial": {
+        "enable": false,
+        "port": "/dev/ttyUSB0"
+    }
 }

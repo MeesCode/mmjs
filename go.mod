@@ -10,4 +10,5 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/h2non/filetype v1.1.0
 	github.com/rivo/tview v0.0.0-20210111184519-c818a0c789ee
+	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 )

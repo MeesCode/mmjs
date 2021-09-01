@@ -33,6 +33,7 @@ func init() {
 		defaultHelp             = false
 		defaultQuiet            = false
 		defaultWebserver        = false
+		defaultSerial	        = false
 		defaultWebinterface     = false
 		defaultLogging          = false
 		defaultWebinterfacePort = 3307
@@ -49,6 +50,7 @@ func init() {
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
 		webinterfaceUsage     = "a boolean to specify whether to run the web interface"
+		serialUsage  		  = "a boolean to specify whether listen to serial input, if received skip track"
 		quietUsage            = "quiet mode disables the text user interface"
 		loggingUsage          = "enable error logging in stdout, will interfere with tui"
 		helpUsage             = "print this help message"
@@ -71,6 +73,7 @@ func init() {
 	flag.BoolVar(&globals.Config.Quiet, "q", defaultQuiet, quietUsage)
 	flag.BoolVar(&globals.Config.Logging, "x", defaultLogging, loggingUsage)
 	flag.BoolVar(&globals.Config.Webserver.Enable, "w", defaultWebserver, webserverUsage)
+	flag.BoolVar(&globals.Config.Serial.Enable, "s", defaultSerial, serialUsage)
 	flag.IntVar(&globals.Config.Webserver.Port, "wp", defaultWebserverPort, webserverPortUsage)
 	flag.BoolVar(&globals.Config.Webinterface.Enable, "i", defaultWebinterface, webinterfaceUsage)
 	flag.IntVar(&globals.Config.Webinterface.Port, "ip", defaultWebinterfacePort, webinterfacePortUsage)
@@ -189,6 +192,10 @@ func main() {
 
 	if globals.Config.Webinterface.Enable {
 		go plugins.Webinterface()
+	}
+
+	if globals.Config.Serial.Enable {
+		go plugins.Coinslot()
 	}
 
 	///////////////////////////////
