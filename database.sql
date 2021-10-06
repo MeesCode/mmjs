@@ -7,7 +7,7 @@ USE mmjs;
 DROP TABLE IF EXISTS mmjs.Folders;
 CREATE TABLE IF NOT EXISTS mmjs.Folders (
   FolderID int NOT NULL AUTO_INCREMENT,
-  Path varchar(191) NOT NULL UNIQUE,
+  Path varchar(255) NOT NULL UNIQUE,
   ParentID int DEFAULT NULL REFERENCES Folders(FolderID),
   PRIMARY KEY (FolderID)
 ) ENGINE=InnoDB;
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS mmjs.Folders (
 DROP TABLE IF EXISTS mmjs.Tracks;
 CREATE TABLE IF NOT EXISTS mmjs.Tracks (
   TrackID int NOT NULL AUTO_INCREMENT,
-  Path varchar(191) NOT NULL UNIQUE,
+  Path varchar(255) NOT NULL UNIQUE,
   FolderID int NOT NULL,
   Title varchar(191) DEFAULT NULL,
 	Album varchar(191) DEFAULT NULL,

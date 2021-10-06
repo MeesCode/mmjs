@@ -3,7 +3,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/MeesCode/mmjs/globals"
@@ -182,8 +181,6 @@ func GetRandomTracks(n int) []globals.Track {
 
 // GetPopularTracks get n popular tracks from the database
 func GetPopularTracks(n int) []globals.Track {
-
-	fmt.Println("get popular")
 
 	if n < 1 {
 		return nil

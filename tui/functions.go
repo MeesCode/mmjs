@@ -130,6 +130,15 @@ func drawfilelist() {
 	}
 }
 
+// drawfilelistWithPlays draws the file list. This function should be called after every
+// function that alters this list. Will add a playcounter
+func drawfilelistWithPlays() {
+	myTui.filelist.Clear()
+	for _, track := range filelistFiles {
+		myTui.filelist.AddItem(tview.Escape("(" + strconv.Itoa(track.Plays) + ") " + trackToDisplayText(track)), "", 0, addsong)
+	}
+}
+
 // drawdirectorylist draws the directory list. This function should be called after every
 // function that alters this list.
 func drawdirectorylist(parentFunc func(), isRoot bool) {

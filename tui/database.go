@@ -31,6 +31,12 @@ func changedirDatabase() {
 	drawfilelist()
 }
 
+// get 100 most popular tracks
+func getPopular(){
+	filelistFiles = database.GetPopularTracks(100)
+	drawfilelistWithPlays()
+}
+
 // searchDatabase searches (while in database mode) for the tracks that match on
 // either the title, album or artist. It uses the text that is currently entered in the searchbox.
 func searchDatabase() {
