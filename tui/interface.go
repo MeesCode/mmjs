@@ -107,13 +107,13 @@ func Start() {
 	keybinds.SetBorder(true).SetTitle(" Keybinds ")
 	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
-	if globals.Config.Mode == "database" {
-		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
-			"| F7: open playlist | F8: play/pause | F9: previous | F12: next ")
-	} else {
-		fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle "+
-			" | F8: play/pause | F9: previous | F12: next ")
-	}
+	// if globals.Config.Mode == "database" {
+	// 	fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle | F6: save playlist "+
+	// 		"| F7: open playlist | F8: play/pause | F9: previous | F12: next ")
+	// } else {
+	fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle "+
+		" | F8: play/pause | F9: previous | F12: next ")
+	// }
 
 	searchinput := tview.NewInputField().
 		SetLabel("Enter a search term: ").
@@ -233,16 +233,16 @@ func Start() {
 
 		// playlist functionallity is only available in database mode
 		// for abvious reasons
-		if globals.Config.Mode == "database" {
-			switch event.Key() {
-			case tcell.KeyF6:
-				openPlaylistInput()
-				return nil
-			case tcell.KeyF7:
-				showPlaylists()
-				return nil
-			}
-		}
+		// if globals.Config.Mode == "database" {
+		// 	switch event.Key() {
+		// 	case tcell.KeyF6:
+		// 		openPlaylistInput()
+		// 		return nil
+		// 	case tcell.KeyF7:
+		// 		showPlaylists()
+		// 		return nil
+		// 	}
+		// }
 
 		switch event.Key() {
 		case tcell.KeyF2:
