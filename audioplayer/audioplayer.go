@@ -154,7 +154,7 @@ func Pause() {
 	speaker.Unlock()
 }
 
-// Pause the currently playing track (if any).
+// Resume the currently playing track (if any).
 func Resume() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
@@ -205,7 +205,7 @@ func IsLoaded() bool {
 	return true
 }
 
-// IsPlaying returns true when a file is loaded, either playing or paused
+// IsPlaying returns true when a file is loaded and playing
 func IsPlaying() bool {
 	if ctrl == nil {
 		return false
@@ -213,7 +213,7 @@ func IsPlaying() bool {
 	return !ctrl.Paused
 }
 
-// IsPaused returns true when a file is loaded, either playing or paused
+// IsPaused returns true when a file is not loaded or paused
 func IsPaused() bool {
 	if ctrl == nil {
 		return true

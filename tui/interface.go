@@ -260,8 +260,10 @@ func Start() {
 			// if no song is loaded, play the first song
 			if !audioplayer.IsLoaded() && len(audioplayer.Playlist) > 0 {
 				audioplayer.PlaySong(0)
-			} else {
+			} else if audioplayer.IsPlaying() {
 				audioplayer.Pause()
+			} else {
+				audioplayer.Resume()
 			}
 			return nil
 		case tcell.KeyF9:
