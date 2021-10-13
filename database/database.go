@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/MeesCode/mmjs/globals"
 )
@@ -41,6 +42,8 @@ func Warmup() *sql.DB {
 			globals.Config.Database.Host+":"+
 			strconv.Itoa(globals.Config.Database.Port)+")/"+
 			globals.Config.Database.Database)
+
+	dbc.SetConnMaxLifetime(time.Minute * 5)
 
 	if err != nil {
 		log.Fatalln("connection with database could not be established", err)
