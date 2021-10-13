@@ -169,8 +169,7 @@ func Resume() {
 }
 
 // GetPlaytime returns the play time, and the total time of the track.
-// If no track is playing the returned boolean will be false and the
-// timings will be zero.
+// If no track is playing the returned timings will be zero.
 func GetPlaytime() (time.Duration, time.Duration) {
 	// audioLock.Lock()
 	// defer audioLock.Unlock()
@@ -213,12 +212,22 @@ func IsPlaying() bool {
 	return !ctrl.Paused
 }
 
-// IsPaused returns true when a file is not loaded or paused
+// IsPaused returns true when a file is loaded and paused
 func IsPaused() bool {
 	if ctrl == nil {
-		return true
+		return false
 	}
 	return ctrl.Paused
+}
+
+// PlayPause is a shorthand, it will play if paused (and a song is loaded)
+// it will pause if playing (and a song is loaded)
+func PlayPause(){
+	if IsPaused(){
+		Resume()
+	} else {
+		Pause()
+	}
 }
 
 // wait for a signal that the track has finished playing.

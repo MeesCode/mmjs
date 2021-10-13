@@ -130,8 +130,7 @@ func drawfilelist() {
 	}
 }
 
-// drawfilelistWithPlays draws the file list. This function should be called after every
-// function that alters this list. Will add a playcounter
+// drawfilelistWithPlays draws the file list. Will add a playcounter.
 func drawfilelistWithPlays() {
 	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
