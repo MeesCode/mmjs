@@ -33,6 +33,7 @@ var (
 // from the global namespace.
 type tui struct {
 	app           *tview.Application
+	pages         *tview.Pages
 	directorylist *tview.List
 	filelist      *tview.List
 	playlist      *tview.List
@@ -42,7 +43,8 @@ type tui struct {
 	playtime      *tview.TextView
 	totaltime     *tview.TextView
 	keybinds      *tview.TextView
-	mainFlex      *tview.Flex
+	main          *tview.Flex
+	searchbox     *tview.Flex
 	searchinput   *tview.InputField
 	playlistinput *tview.InputField
 }
@@ -116,17 +118,24 @@ func Start() {
 	}
 
 	searchinput := tview.NewInputField().
-		SetLabel("Enter a search term: ").
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEnter {
 				search()
 			}
 			if key == tcell.KeyEsc {
-				closeSearch()
+				closeSearch(false)
 			}
 		})
-	searchinput.SetBorder(true).SetTitle(" Search ")
 	searchinput.SetBackgroundColor(tcell.ColorDefault)
+	searchinput.SetBorder(true).SetTitle(" Search ")
+
+	searchbox := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(searchinput, 3, 1, false).
+			AddItem(nil, 0, 1, false), 60, 1, false).
+		AddItem(nil, 0, 1, false)
 
 	playlistinput := tview.NewInputField().
 		SetLabel("Enter name of new playlist: ").
@@ -161,11 +170,30 @@ func Start() {
 	playlist.SetBackgroundColor(tcell.ColorDefault)
 	playlist.ShowSecondaryText(false).SetWrapAround(false)
 
-	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+	main := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(directorylist, 0, 1, false).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+				AddItem(filelist, 0, 1, false).
+				AddItem(browseinfobox, 9, 0, false), 0, 1, false).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+				AddItem(infoboxcontainer.
+					AddItem(infobox, 0, 1, false).
+					AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+						AddItem(playtime, 9, 0, false).
+						AddItem(progressbar, 0, 1, false).
+						AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
+				AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
+		AddItem(keybinds, 3, 0, false)
+
+	pages := tview.NewPages().
+		AddPage("main", main, true, true)
 
 	// save interface
 	myTui = tui{
 		app:           app,
+		pages:         pages,
 		directorylist: directorylist,
 		filelist:      filelist,
 		playlist:      playlist,
@@ -175,28 +203,11 @@ func Start() {
 		totaltime:     totaltime,
 		browseinfobox: browseinfobox,
 		keybinds:      keybinds,
-		mainFlex:      mainFlex,
+		main:          main,
+		searchbox:     searchbox,
 		searchinput:   searchinput,
 		playlistinput: playlistinput,
 	}
-
-	// define tui locations
-	flex := tview.NewFlex().
-		AddItem(mainFlex.
-			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-				AddItem(directorylist, 0, 1, false).
-				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-					AddItem(filelist, 0, 1, false).
-					AddItem(browseinfobox, 9, 0, false), 0, 1, false).
-				AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-					AddItem(infoboxcontainer.
-						AddItem(infobox, 0, 1, false).
-						AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-							AddItem(playtime, 9, 0, false).
-							AddItem(progressbar, 0, 1, false).
-							AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
-					AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
-			AddItem(keybinds, 3, 0, false), 0, 1, false)
 
 	// do some stuff depending on if we are in database or filesystem mode
 	// and set the root folder as the current
@@ -362,7 +373,7 @@ func Start() {
 	})
 
 	// finished, draw to screen
-	if err := app.SetRoot(flex, true).SetFocus(directorylist).Run(); err != nil {
+	if err := app.SetRoot(pages, true).SetFocus(directorylist).Run(); err != nil {
 		log.Fatalln("Could not start the user interface", err)
 	}
 

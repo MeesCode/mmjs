@@ -42,13 +42,13 @@ func getPopular(){
 func searchDatabase() {
 	var term = myTui.searchinput.GetText()
 	filelistFiles = database.GetSearchResults(term)
-	closeSearch()
+	closeSearch(true)
 }
 
 func searchDatabaseQuery(query string) {
 	openSearch()
 	filelistFiles = database.GetSearchResults(query)
-	closeSearch()
+	closeSearch(true)
 }
 
 // addFolderDatabaseRec is a recursive function that takes a folder and add all
@@ -88,16 +88,16 @@ func openPlaylistInput() {
 	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
 		return
 	}
-	myTui.mainFlex.RemoveItem(myTui.keybinds)
-	myTui.mainFlex.AddItem(myTui.playlistinput, 3, 0, false)
+	myTui.main.RemoveItem(myTui.keybinds)
+	myTui.main.AddItem(myTui.playlistinput, 3, 0, false)
 	myTui.playlistinput.SetText("")
 	focusWithColor(myTui.playlistinput)
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
 func closePlaylist() {
-	myTui.mainFlex.RemoveItem(myTui.playlistinput)
-	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
+	myTui.main.RemoveItem(myTui.playlistinput)
+	myTui.main.AddItem(myTui.keybinds, 3, 0, false)
 	focusWithColor(myTui.filelist)
 	drawfilelist()
 }

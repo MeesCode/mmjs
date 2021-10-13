@@ -89,13 +89,13 @@ func changedirFilesystem() {
 func searchFilesystem() {
 	var query = myTui.searchinput.GetText()
 	filelistFiles = doSearch(query)
-	closeSearch()
+	closeSearch(true)
 }
 
 func searchFilesystemQuery(query string) {
 	openSearch()
 	filelistFiles = doSearch(query)
-	closeSearch()
+	closeSearch(true)
 }
 
 func doSearch(query string) []globals.Track {

@@ -193,17 +193,17 @@ func openSearch() {
 	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
 		return
 	}
-	myTui.mainFlex.RemoveItem(myTui.keybinds)
-	myTui.mainFlex.AddItem(myTui.searchinput, 3, 0, false)
+	myTui.pages.AddPage("search", myTui.searchbox, true, true)
 	myTui.searchinput.SetText("")
 	focusWithColor(myTui.searchinput)
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
-func closeSearch() {
-	myTui.filelist.SetTitle(" Search results ")
-	myTui.mainFlex.RemoveItem(myTui.searchinput)
-	myTui.mainFlex.AddItem(myTui.keybinds, 3, 0, false)
+func closeSearch(action bool) {
+	if action {
+		myTui.filelist.SetTitle(" Search results ")
+	}
+	myTui.pages.RemovePage("search")
 	focusWithColor(myTui.filelist)
 	drawfilelist()
 }
@@ -220,8 +220,6 @@ func jump(r rune) {
 
 // goback selects the top item in the directory list and enters it.
 func goback() {
-	// BUG(mees): when in the root folder we enter the top folder instead of going to
-	// the parent folder.
 	myTui.directorylist.SetCurrentItem(0)
 	changedir()
 }
