@@ -48,6 +48,8 @@ type tui struct {
 	searchinput   *tview.InputField
 	playlistinput *tview.InputField
 	playlistbox   *tview.Flex
+	keybindstext  *tview.TextView
+	keybindsbox   *tview.Flex
 }
 
 // Start builds the user interface, defines the keybinds and sets initial values.
@@ -110,13 +112,7 @@ func Start() {
 	keybinds.SetBorder(true).SetTitle(" Keybinds ")
 	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
-	if globals.Config.Mode == "database" {
-		fmt.Fprintf(keybinds, "F2: clear | F3: search | F4: popular | F5: shuffle \n"+
-			"F6: show playlists | F7: save playlist | F8: play/pause | F9: previous | F12: next")
-	} else {
-	fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle "+
-		" | F8: play/pause | F9: previous | F12: next ")
-	}
+	fmt.Fprintf(keybinds, "F1: show all | F3: search | F8: play/pause | F9: previous | F12: next ")
 
 	searchinput := tview.NewInputField().
 		SetDoneFunc(func(key tcell.Key) {
@@ -137,6 +133,25 @@ func Start() {
 			AddItem(searchinput, 3, 1, false).
 			AddItem(nil, 0, 1, false), 60, 1, false).
 		AddItem(nil, 0, 1, false)
+
+	keybindstext := tview.NewTextView()
+	if globals.Config.Mode == "database" {
+		fmt.Fprintf(keybindstext, "F1:  show all\nF2:  clear\nF3:  search\nF4:  popular\nF5:  shuffle\n" +
+			"F6:  show playlists\nF7:  save playlist\nF8:  play/pause\nF9:  previous\nF11: toggle fullscreen\nF12: next")
+	} else {
+		fmt.Fprintf(keybindstext, "F1:  show all\nF2:  clear\nF3:  search\nF4:  popular\nF5:  shuffle\n" +
+			"F8:  play/pause\nF9:  previous\nF11: toggle fullscreen\nF12: next")
+	}
+	
+	keybindsbox := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(keybindstext, 13, 1, false).
+			AddItem(nil, 0, 1, false), 30, 1, false).
+		AddItem(nil, 0, 1, false)
+	keybindstext.SetBackgroundColor(tcell.ColorDefault)
+	keybindstext.SetBorder(true).SetTitle(" All keybindings ")
 
 	playlistinput := tview.NewInputField().
 		SetDoneFunc(func(key tcell.Key) {
@@ -193,7 +208,7 @@ func Start() {
 						AddItem(progressbar, 0, 1, false).
 						AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
 				AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
-		AddItem(keybinds, 4, 0, false)
+		AddItem(keybinds, 3, 0, false)
 
 	pages := tview.NewPages().
 		AddPage("main", main, true, true)
@@ -216,6 +231,8 @@ func Start() {
 		searchinput:   searchinput,
 		playlistbox:   playlistbox,
 		playlistinput: playlistinput,
+		keybindsbox:   keybindsbox,
+		keybindstext:  keybindstext,
 	}
 
 	// do some stuff depending on if we are in database or filesystem mode
@@ -269,6 +286,9 @@ func Start() {
 		}
 
 		switch event.Key() {
+		case tcell.KeyF1:
+			openKeybinds()
+			return nil
 		case tcell.KeyF2:
 			audioplayer.Clear()
 			drawplaylist()
@@ -315,6 +335,16 @@ func Start() {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(directorylist)
+			return nil
+		}
+		return event
+	})
+
+	// keybindstext
+	keybindstext.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc:
+			closeKeybinds()
 			return nil
 		}
 		return event

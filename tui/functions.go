@@ -190,7 +190,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
-	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
+	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() || myTui.keybindstext.HasFocus() {
 		return
 	}
 	myTui.pages.AddPage("search", myTui.searchbox, true, true)
@@ -206,6 +206,21 @@ func closeSearch(action bool) {
 	myTui.pages.RemovePage("search")
 	focusWithColor(myTui.filelist)
 	drawfilelist()
+}
+
+// openKeybinds opens a dialog with all key bindings
+func openKeybinds() {
+	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() || myTui.keybindstext.HasFocus() {
+		return
+	}
+	myTui.pages.AddPage("keybinds", myTui.keybindsbox, true, true)
+	focusWithColor(myTui.keybindstext)
+}
+
+// closeKeybinds closes the dialog with all key bindings
+func closeKeybinds() {
+	myTui.pages.RemovePage("keybinds")
+	focusWithColor(myTui.filelist)
 }
 
 // jump to a new element in the list depending on the key pressed.
@@ -317,7 +332,7 @@ func deletesong() {
 func insertsong() {
 	index := myTui.playlist.GetCurrentItem()
 	filelistIndex := myTui.filelist.GetCurrentItem()
-	
+
 	// playlists don't support insertion 
 	if filelistFiles[filelistIndex].Path == "not applicable" {
 		return
