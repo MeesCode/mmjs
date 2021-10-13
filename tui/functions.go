@@ -220,7 +220,7 @@ func openKeybinds() {
 // closeKeybinds closes the dialog with all key bindings
 func closeKeybinds() {
 	myTui.pages.RemovePage("keybinds")
-	focusWithColor(myTui.filelist)
+	focusWithColor(myTui.directorylist)
 }
 
 // jump to a new element in the list depending on the key pressed.
@@ -293,6 +293,11 @@ func focusWithColor(primitive tview.Primitive) {
 	inputfield, ok := primitive.(*tview.InputField)
 	if ok {
 		inputfield.SetBorderColor(colorFocus)
+	}
+
+	textview, ok := primitive.(*tview.TextView)
+	if ok {
+		textview.SetBorderColor(colorFocus)
 	}
 
 	myTui.app.SetFocus(primitive)

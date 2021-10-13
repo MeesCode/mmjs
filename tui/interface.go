@@ -112,7 +112,7 @@ func Start() {
 	keybinds.SetBorder(true).SetTitle(" Keybinds ")
 	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
-	fmt.Fprintf(keybinds, "F1: show all | F3: search | F8: play/pause | F9: previous | F12: next ")
+	fmt.Fprintf(keybinds, "F1: help | F3: search | F8: play/pause | F9: previous | F12: next ")
 
 	searchinput := tview.NewInputField().
 		SetDoneFunc(func(key tcell.Key) {
@@ -137,17 +137,19 @@ func Start() {
 	keybindstext := tview.NewTextView()
 	if globals.Config.Mode == "database" {
 		fmt.Fprintf(keybindstext, "F1:  show all\nF2:  clear\nF3:  search\nF4:  popular\nF5:  shuffle\n" +
-			"F6:  show playlists\nF7:  save playlist\nF8:  play/pause\nF9:  previous\nF11: toggle fullscreen\nF12: next")
+			"F6:  show playlists\nF7:  save playlist\nF8:  play/pause\nF9:  previous\nF12: next\n\n" +
+			"F11:   toggle fullscreen\nCrtl-: zoom out\nCtrl+: Zoom in\n\nEsc: go back")
 	} else {
 		fmt.Fprintf(keybindstext, "F1:  show all\nF2:  clear\nF3:  search\nF4:  popular\nF5:  shuffle\n" +
-			"F8:  play/pause\nF9:  previous\nF11: toggle fullscreen\nF12: next")
+			"F8:  play/pause\nF9:  previous\nF12: next\n\n" + 
+			"F11:   toggle fullscreen\nCrtl-: zoom out\nCtrl+: Zoom in\n\nEsc: go back")
 	}
 	
 	keybindsbox := tview.NewFlex().
 		AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(nil, 0, 1, false).
-			AddItem(keybindstext, 13, 1, false).
+			AddItem(keybindstext, 18, 1, false).
 			AddItem(nil, 0, 1, false), 30, 1, false).
 		AddItem(nil, 0, 1, false)
 	keybindstext.SetBackgroundColor(tcell.ColorDefault)
@@ -163,7 +165,7 @@ func Start() {
 			}
 		})
 	playlistinput.SetBackgroundColor(tcell.ColorDefault)
-	playlistinput.SetBorder(true).SetTitle(" Playlist name ")
+	playlistinput.SetBorder(true).SetTitle(" Name for new playlist ")
 
 	playlistbox := tview.NewFlex().
 		AddItem(nil, 0, 1, false).

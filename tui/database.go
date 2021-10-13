@@ -101,7 +101,7 @@ func closePlaylist() {
 }
 
 func insertPlaylist() {
-	audioplayer.Stop()
+	audioplayer.Clear()
 	audioplayer.Songindex = 0
 	pl := filelistFiles[myTui.filelist.GetCurrentItem()]
 	audioplayer.Playlist = database.GetPlaylistTracks(pl.ID)
