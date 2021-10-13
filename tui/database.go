@@ -88,16 +88,14 @@ func openPlaylistInput() {
 	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() {
 		return
 	}
-	myTui.main.RemoveItem(myTui.keybinds)
-	myTui.main.AddItem(myTui.playlistinput, 3, 0, false)
+	myTui.pages.AddPage("playlist", myTui.playlistbox, true, true)
 	myTui.playlistinput.SetText("")
 	focusWithColor(myTui.playlistinput)
 }
 
 // closeSearch removes the search box and replaces it with the keybinds box.
 func closePlaylist() {
-	myTui.main.RemoveItem(myTui.playlistinput)
-	myTui.main.AddItem(myTui.keybinds, 3, 0, false)
+	myTui.pages.RemovePage("playlist")
 	focusWithColor(myTui.filelist)
 	drawfilelist()
 }

@@ -317,6 +317,12 @@ func deletesong() {
 func insertsong() {
 	index := myTui.playlist.GetCurrentItem()
 	filelistIndex := myTui.filelist.GetCurrentItem()
+	
+	// playlists don't support insertion 
+	if filelistFiles[filelistIndex].Path == "not applicable" {
+		return
+	}
+
 	if filelistIndex < len(filelistFiles)-1 {
 		myTui.filelist.SetCurrentItem(filelistIndex + 1)
 	}

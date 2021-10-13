@@ -47,6 +47,7 @@ type tui struct {
 	searchbox     *tview.Flex
 	searchinput   *tview.InputField
 	playlistinput *tview.InputField
+	playlistbox   *tview.Flex
 }
 
 // Start builds the user interface, defines the keybinds and sets initial values.
@@ -77,8 +78,8 @@ func Start() {
 	infobox.SetCell(2, 0, tview.NewTableCell("Album"))
 	infobox.SetCell(3, 0, tview.NewTableCell("Genre"))
 	infobox.SetCell(4, 0, tview.NewTableCell("Year"))
-	infobox.SetCell(5, 0, tview.NewTableCell("filename"))
-	infobox.SetCell(6, 0, tview.NewTableCell("directory"))
+	infobox.SetCell(5, 0, tview.NewTableCell("Filename"))
+	infobox.SetCell(6, 0, tview.NewTableCell("Directory"))
 
 	browseinfobox := tview.NewTable()
 	browseinfobox.SetBackgroundColor(tcell.ColorDefault)
@@ -88,8 +89,8 @@ func Start() {
 	browseinfobox.SetCell(2, 0, tview.NewTableCell("Album"))
 	browseinfobox.SetCell(3, 0, tview.NewTableCell("Genre"))
 	browseinfobox.SetCell(4, 0, tview.NewTableCell("Year"))
-	browseinfobox.SetCell(5, 0, tview.NewTableCell("filename"))
-	browseinfobox.SetCell(6, 0, tview.NewTableCell("directory"))
+	browseinfobox.SetCell(5, 0, tview.NewTableCell("Filename"))
+	browseinfobox.SetCell(6, 0, tview.NewTableCell("Directory"))
 
 	infoboxcontainer := tview.NewFlex()
 	infoboxcontainer.SetBackgroundColor(tcell.ColorDefault)
@@ -110,8 +111,8 @@ func Start() {
 	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
 	if globals.Config.Mode == "database" {
-		fmt.Fprintf(keybinds, "F2: clear | F3: search | F4: popular | F5: shuffle "+
-			"| F8: play/pause | F9: previous | F12: next ")
+		fmt.Fprintf(keybinds, "F2: clear | F3: search | F4: popular | F5: shuffle \n"+
+			"F6: show playlists | F7: save playlist | F8: play/pause | F9: previous | F12: next")
 	} else {
 	fmt.Fprintf(keybinds, "F2: clear | F3: search | F5: shuffle "+
 		" | F8: play/pause | F9: previous | F12: next ")
@@ -138,7 +139,6 @@ func Start() {
 		AddItem(nil, 0, 1, false)
 
 	playlistinput := tview.NewInputField().
-		SetLabel("Enter name of new playlist: ").
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEnter {
 				savePlaylist()
@@ -147,8 +147,16 @@ func Start() {
 				closePlaylist()
 			}
 		})
-	playlistinput.SetBorder(true).SetTitle(" Playlist name ")
 	playlistinput.SetBackgroundColor(tcell.ColorDefault)
+	playlistinput.SetBorder(true).SetTitle(" Playlist name ")
+
+	playlistbox := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(playlistinput, 3, 1, false).
+			AddItem(nil, 0, 1, false), 60, 1, false).
+		AddItem(nil, 0, 1, false)
 
 	progressbar := tview.NewTextView()
 	progressbar.SetBorder(false)
@@ -185,7 +193,7 @@ func Start() {
 						AddItem(progressbar, 0, 1, false).
 						AddItem(totaltime, 9, 0, false), 1, 0, false), 11, 0, false).
 				AddItem(playlist, 0, 1, false), 0, 1, false), 0, 1, false).
-		AddItem(keybinds, 3, 0, false)
+		AddItem(keybinds, 4, 0, false)
 
 	pages := tview.NewPages().
 		AddPage("main", main, true, true)
@@ -206,6 +214,7 @@ func Start() {
 		main:          main,
 		searchbox:     searchbox,
 		searchinput:   searchinput,
+		playlistbox:   playlistbox,
 		playlistinput: playlistinput,
 	}
 
@@ -246,12 +255,12 @@ func Start() {
 		// for abvious reasons
 		if globals.Config.Mode == "database" {
 			switch event.Key() {
-		// 	case tcell.KeyF6:
-		// 		openPlaylistInput()
-		// 		return nil
-		// 	case tcell.KeyF7:
-		// 		showPlaylists()
-		// 		return nil
+			case tcell.KeyF6:
+				showPlaylists()
+				return nil
+			case tcell.KeyF7:
+				openPlaylistInput()
+				return nil
 			case tcell.KeyF4:
 				getPopular()
 				focusWithColor(filelist)
