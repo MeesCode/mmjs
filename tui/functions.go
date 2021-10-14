@@ -107,6 +107,8 @@ func drawplaylist() {
 	for index, track := range audioplayer.Playlist {
 		if audioplayer.Songindex == index {
 			myTui.playlist.AddItem("["+hexToString(colorFocus.Hex())+"]▶[white] "+tview.Escape(trackToDisplayText(track)), "", 0, playsong)
+		} else if track.Error {
+			myTui.playlist.AddItem("["+hexToString(colorFocus.Hex())+"]🞩[white] "+tview.Escape(trackToDisplayText(track)), "", 0, playsong)
 		} else {
 			myTui.playlist.AddItem("  "+tview.Escape(trackToDisplayText(track)), "", 0, playsong)
 		}

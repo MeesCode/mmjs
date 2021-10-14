@@ -70,11 +70,18 @@ func play() {
 
 	file := GetPlaying()
 
+	if file.Error {
+		log.Println("Previously detected error, skipping file", file.Path)
+		Nextsong()
+		return
+	}
+
 	filePath := path.Join(globals.Root, file.Path)
 
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Println("Error opening the file", err)
+		Playlist[Songindex].Error = true
 		Nextsong()
 		return
 	}
@@ -101,12 +108,14 @@ func play() {
 		streamer, format, err = flac.Decode(f)
 	default:
 		log.Println("filetype not supported")
+		Playlist[Songindex].Error = true
 		Nextsong()
 		return
 	}
 
 	if err != nil {
 		log.Println("Error decoding file", err, file.Path)
+		Playlist[Songindex].Error = true
 		Nextsong()
 		return
 	}

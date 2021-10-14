@@ -59,6 +59,7 @@ type Track struct {
 	Genre    sql.NullString
 	Year     sql.NullInt64
 	Plays    int
+	Error    bool
 }
 
 // Config is the variable that holder the config file
