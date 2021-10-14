@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -96,15 +95,19 @@ func loadConfiguration(file string) globals.ConfigFile {
 	jsonParser := json.NewDecoder(configFile)
 	err = jsonParser.Decode(&config)
 	if err != nil {
-		log.Fatalln("error decoding configuration file", err)
+		log.Fatalln("Error decoding configuration file", err)
 	}
 	return config
 }
 
 func main() {
 
-	// disable logs by default
-	log.SetOutput(ioutil.Discard)
+	// write log to file
+	f, err := os.OpenFile("debug.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("cannot open or create logfile")
+	}
+	log.SetOutput(f)
 
 	// parse command line arguments
 	flag.Parse()

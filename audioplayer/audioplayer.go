@@ -75,7 +75,7 @@ func play() {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Println("Error opening the file", err)
-		speaker.Clear()
+		Nextsong()
 		return
 	}
 
@@ -101,13 +101,13 @@ func play() {
 		streamer, format, err = flac.Decode(f)
 	default:
 		log.Println("filetype not supported")
-		speaker.Clear()
+		Nextsong()
 		return
 	}
 
 	if err != nil {
-		log.Println("error decoding file", err)
-		speaker.Clear()
+		log.Println("Error decoding file", err, file.Path)
+		Nextsong()
 		return
 	}
 
