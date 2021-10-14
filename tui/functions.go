@@ -190,7 +190,7 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
-	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() || myTui.keybindstext.HasFocus() {
+	if myTui.pages.HasPage("search") || myTui.pages.HasPage("playlist") || myTui.pages.HasPage("keybinds") {
 		return
 	}
 	myTui.pages.AddPage("search", myTui.searchbox, true, true)
@@ -198,11 +198,9 @@ func openSearch() {
 	focusWithColor(myTui.searchinput)
 }
 
-// closeSearch removes the search box and replaces it with the keybinds box.
-func closeSearch(action bool) {
-	if action {
-		myTui.filelist.SetTitle(" Search results ")
-	}
+// finishSearch removes the search box and replaces it with the keybinds box.
+func finishSearch() {
+	myTui.filelist.SetTitle(" Search results ")
 	myTui.pages.RemovePage("search")
 	focusWithColor(myTui.filelist)
 	drawfilelist()
@@ -210,17 +208,11 @@ func closeSearch(action bool) {
 
 // openKeybinds opens a dialog with all key bindings
 func openKeybinds() {
-	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() || myTui.keybindstext.HasFocus() {
+	if myTui.pages.HasPage("search") || myTui.pages.HasPage("playlist") || myTui.pages.HasPage("keybinds") {
 		return
 	}
 	myTui.pages.AddPage("keybinds", myTui.keybindsbox, true, true)
 	focusWithColor(myTui.keybindstext)
-}
-
-// closeKeybinds closes the dialog with all key bindings
-func closeKeybinds() {
-	myTui.pages.RemovePage("keybinds")
-	focusWithColor(myTui.directorylist)
 }
 
 // jump to a new element in the list depending on the key pressed.
@@ -228,6 +220,18 @@ func jump(r rune) {
 	for index, folder := range directorylistFolders {
 		if unicode.ToLower(rune(path.Base(folder.Path)[0])) == unicode.ToLower(r) {
 			myTui.directorylist.SetCurrentItem(index)
+			return
+		}
+	}
+}
+
+// closeModals closes all the modals on the screen and moves the cursor
+func closeModals(){
+	var modals = [3]string{"search", "playlist", "keybinds"}
+	for _, i := range modals {
+		if myTui.pages.HasPage(i) {
+			myTui.pages.RemovePage(i)
+			focusWithColor(myTui.directorylist)
 			return
 		}
 	}

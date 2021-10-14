@@ -119,9 +119,6 @@ func Start() {
 			if key == tcell.KeyEnter {
 				search()
 			}
-			if key == tcell.KeyEsc {
-				closeSearch(false)
-			}
 		})
 	searchinput.SetBackgroundColor(tcell.ColorDefault)
 	searchinput.SetBorder(true).SetTitle(" Search ")
@@ -159,9 +156,6 @@ func Start() {
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEnter {
 				savePlaylist()
-			}
-			if key == tcell.KeyEsc {
-				closePlaylist()
 			}
 		})
 	playlistinput.SetBackgroundColor(tcell.ColorDefault)
@@ -278,7 +272,11 @@ func Start() {
 				showPlaylists()
 				return nil
 			case tcell.KeyF7:
-				openPlaylistInput()
+				if pages.HasPage("playlist") {
+					closeModals()
+				} else {
+					openPlaylistInput()
+				}
 				return nil
 			case tcell.KeyF4:
 				getPopular()
@@ -289,14 +287,22 @@ func Start() {
 
 		switch event.Key() {
 		case tcell.KeyF1:
-			openKeybinds()
+			if pages.HasPage("keybinds") {
+				closeModals()
+			} else {
+				openKeybinds()
+			}
 			return nil
 		case tcell.KeyF2:
 			audioplayer.Clear()
 			drawplaylist()
 			return nil
 		case tcell.KeyF3:
-			openSearch()
+			if pages.HasPage("search") {
+				closeModals()
+			} else {
+				openSearch()
+			}
 			return nil
 		case tcell.KeyF5:
 			audioplayer.Shuffle()
@@ -322,6 +328,9 @@ func Start() {
 			audioplayer.Stop()
 			app.Stop()
 			return nil
+		case tcell.KeyEsc:
+			closeModals()
+			return nil
 		}
 		return event
 	})
@@ -337,16 +346,6 @@ func Start() {
 			return nil
 		case tcell.KeyLeft:
 			focusWithColor(directorylist)
-			return nil
-		}
-		return event
-	})
-
-	// keybindstext
-	keybindstext.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEsc:
-			closeKeybinds()
 			return nil
 		}
 		return event

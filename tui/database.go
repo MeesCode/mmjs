@@ -42,13 +42,13 @@ func getPopular(){
 func searchDatabase() {
 	var term = myTui.searchinput.GetText()
 	filelistFiles = database.GetSearchResults(term)
-	closeSearch(true)
+	finishSearch()
 }
 
 func searchDatabaseQuery(query string) {
 	openSearch()
 	filelistFiles = database.GetSearchResults(query)
-	closeSearch(true)
+	finishSearch()
 }
 
 // addFolderDatabaseRec is a recursive function that takes a folder and add all
@@ -75,29 +75,22 @@ func addFolderDatabase() {
 
 func savePlaylist() {
 	var name = myTui.playlistinput.GetText()
+	myTui.pages.RemovePage("playlist")
 	if name == "" {
-		closePlaylist()
 		return
 	}
 	database.SavePlaylist(name, audioplayer.Playlist)
-	closePlaylist()
+	showPlaylists()
 }
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openPlaylistInput() {
-	if myTui.searchinput.HasFocus() || myTui.playlistinput.HasFocus() || myTui.keybindstext.HasFocus() {
+	if myTui.pages.HasPage("search") || myTui.pages.HasPage("playlist") || myTui.pages.HasPage("keybinds") {
 		return
 	}
 	myTui.pages.AddPage("playlist", myTui.playlistbox, true, true)
 	myTui.playlistinput.SetText("")
 	focusWithColor(myTui.playlistinput)
-}
-
-// closeSearch removes the search box and replaces it with the keybinds box.
-func closePlaylist() {
-	myTui.pages.RemovePage("playlist")
-	focusWithColor(myTui.filelist)
-	showPlaylists()
 }
 
 func insertPlaylist() {
