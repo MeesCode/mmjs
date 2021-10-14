@@ -144,6 +144,7 @@ F6:  show playlists
 F7:  save playlist
 F8:  play/pause
 F9:  previous
+F10: random
 F12: next
 
 [window]
@@ -209,7 +210,7 @@ Esc: go back`)
 		AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(nil, 0, 1, false).
-			AddItem(keybindstext, 37, 1, false).
+			AddItem(keybindstext, 38, 1, false).
 			AddItem(nil, 0, 1, false), 50, 1, false).
 		AddItem(nil, 0, 1, false)
 	keybindstext.SetBackgroundColor(tcell.ColorDefault)
@@ -343,6 +344,10 @@ Esc: go back`)
 				return nil
 			case tcell.KeyF4:
 				getPopular()
+				focusWithColor(filelist)
+				return nil
+			case tcell.KeyF10:
+				getRandom()
 				focusWithColor(filelist)
 				return nil
 			}

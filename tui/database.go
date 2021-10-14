@@ -34,7 +34,15 @@ func changedirDatabase() {
 // get 100 most popular tracks
 func getPopular(){
 	filelistFiles = database.GetPopularTracks(100)
+	myTui.filelist.SetTitle(" Popular tracks ")
 	drawfilelistWithPlays()
+}
+
+// get 100 random tracks
+func getRandom(){
+	filelistFiles = database.GetRandomTracks(100)
+	myTui.filelist.SetTitle(" Random tracks ")
+	drawfilelist()
 }
 
 // searchDatabase searches (while in database mode) for the tracks that match on
