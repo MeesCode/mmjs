@@ -133,20 +133,55 @@ func Start() {
 
 	keybindstext := tview.NewTextView()
 	if globals.Config.Mode == "database" {
-		fmt.Fprintf(keybindstext, "F1:  show all\nF2:  clear\nF3:  search\nF4:  popular\nF5:  shuffle\n" +
-			"F6:  show playlists\nF7:  save playlist\nF8:  play/pause\nF9:  previous\nF12: next\n\n" +
-			"F11:   toggle fullscreen\nCrtl-: zoom out\nCtrl+: Zoom in\n\nEsc: go back")
+		fmt.Fprintf(keybindstext,
+`F1:  show all
+F2:  clear
+F3:  search
+F4:  popular
+F5:  shuffle
+F6:  show playlists
+F7:  save playlist
+F8:  play/pause
+F9:  previous
+F12: next
+
++: move track down
+-: move track up
+
+Backspace: previous folder
+
+F11:   toggle fullscreen
+Crtl-: zoom out
+Ctrl+: Zoom in
+
+Esc: go back`)
 	} else {
-		fmt.Fprintf(keybindstext, "F1:  show all\nF2:  clear\nF3:  search\nF4:  popular\nF5:  shuffle\n" +
-			"F8:  play/pause\nF9:  previous\nF12: next\n\n" + 
-			"F11:   toggle fullscreen\nCrtl-: zoom out\nCtrl+: Zoom in\n\nEsc: go back")
+		fmt.Fprintf(keybindstext, 
+`F1:  show all
+F2:  clear
+F3:  search
+F5:  shuffle
+F8:  play/pause
+F9:  previous
+F12: next
+
++: move track down
+-: move track up
+
+Backspace: previous folder
+
+F11:   toggle fullscreen
+Crtl-: zoom out
+Ctrl+: Zoom in
+
+Esc: go back`)
 	}
 	
 	keybindsbox := tview.NewFlex().
 		AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(nil, 0, 1, false).
-			AddItem(keybindstext, 18, 1, false).
+			AddItem(keybindstext, 23, 1, false).
 			AddItem(nil, 0, 1, false), 30, 1, false).
 		AddItem(nil, 0, 1, false)
 	keybindstext.SetBackgroundColor(tcell.ColorDefault)
@@ -374,7 +409,7 @@ func Start() {
 				moveUp()
 				return nil
 			}
-			if event.Rune() == '+' {
+			if event.Rune() == '+' || event.Rune() == '=' {
 				moveDown()
 				return nil
 			}
