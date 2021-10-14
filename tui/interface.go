@@ -134,7 +134,8 @@ func Start() {
 	keybindstext := tview.NewTextView()
 	if globals.Config.Mode == "database" {
 		fmt.Fprintf(keybindstext,
-`F1:  show all
+`[application]
+F1:  show all
 F2:  clear
 F3:  search
 F4:  popular
@@ -145,19 +146,33 @@ F8:  play/pause
 F9:  previous
 F12: next
 
-+: move track down
--: move track up
+[window]
+F11:    toggle fullscreen
+Crtl-:  zoom out
+Ctrl+:  zoom in
+Crtl+C: close application
 
+[playlist]
+Enter:     play selected track
+Delete:    remove selected track
+plus (+):  move track down
+minus (-): move track up
+
+[directories]
+Enter:     enter folder
+Alt+Enter: add entire folder
 Backspace: previous folder
 
-F11:   toggle fullscreen
-Crtl-: zoom out
-Ctrl+: Zoom in
+[file selection]
+Enter:  add track
+Intert: add as next track
 
+[contextual]
 Esc: go back`)
 	} else {
 		fmt.Fprintf(keybindstext, 
-`F1:  show all
+`[application]
+F1:  show all
 F2:  clear
 F3:  search
 F5:  shuffle
@@ -165,15 +180,28 @@ F8:  play/pause
 F9:  previous
 F12: next
 
-+: move track down
--: move track up
+[window]
+F11:    toggle fullscreen
+Crtl-:  zoom out
+Ctrl+:  zoom in
+Crtl+C: close application
 
+[playlist]
+Enter:     play selected track
+Delete:    remove selected track
+plus (+):  move track down
+minus (-): move track up
+
+[directories]
+Enter:     enter folder
+Alt+Enter: add entire folder
 Backspace: previous folder
 
-F11:   toggle fullscreen
-Crtl-: zoom out
-Ctrl+: Zoom in
+[file selection]
+Enter:  add track
+Intert: add as next track
 
+[contextual]
 Esc: go back`)
 	}
 	
@@ -181,8 +209,8 @@ Esc: go back`)
 		AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(nil, 0, 1, false).
-			AddItem(keybindstext, 23, 1, false).
-			AddItem(nil, 0, 1, false), 30, 1, false).
+			AddItem(keybindstext, 37, 1, false).
+			AddItem(nil, 0, 1, false), 50, 1, false).
 		AddItem(nil, 0, 1, false)
 	keybindstext.SetBackgroundColor(tcell.ColorDefault)
 	keybindstext.SetBorder(true).SetTitle(" All keybindings ")
