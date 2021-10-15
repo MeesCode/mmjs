@@ -31,6 +31,7 @@ type definedStatements struct {
 	randomTracks         string
 	popularTracks        string
 	updatePath           string
+	deleteTrack          string
 }
 
 // Warmup the mysql connection pool
@@ -88,6 +89,7 @@ func defineStatements() {
 	stmts.popularTracks = `SELECT TrackID, Path, FolderID, Title, Album, Artist, 
 	Genre, Year, Plays FROM Tracks ORDER BY Plays DESC LIMIT ?`
 	stmts.updatePath = `UPDATE Tracks SET Path = ? where TrackID = ?`
+	stmts.deleteTrack = `DELETE FROM Tracks where TrackID = ?`
 }
 
 // StringToSQLNullableString converts a string into a nullable string.

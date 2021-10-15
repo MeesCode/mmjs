@@ -132,7 +132,7 @@ func play() {
 		}
 
 		// conversion succeeded
-		f, err := os.Open(filePath + ".flac")
+		f, err := os.Open(path.Clean(path.Join(globals.Root, Playlist[Songindex].Path)))
 		if err != nil {
 			log.Println("Error opening the file, even after conversion", err)
 			Playlist[Songindex].Error = true

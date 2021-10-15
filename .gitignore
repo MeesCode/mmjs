@@ -5,3 +5,7 @@ config.json
 mmjs
 
 *.log
+
+*.mp3
+
+*.flac
