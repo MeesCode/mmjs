@@ -115,9 +115,41 @@ func play() {
 
 	if err != nil {
 		log.Println("Error decoding file", err, file.Path)
-		Playlist[Songindex].Error = true
-		Nextsong()
-		return
+
+		if !globals.Config.AudioConvert {
+			Playlist[Songindex].Error = true
+			Nextsong()
+			return
+		}
+
+		// conversion failed
+		log.Println("Try to convert file")
+		if !convertFile(Playlist[Songindex]) {
+			log.Println("File conversion failed")
+			Playlist[Songindex].Error = true
+			Nextsong()
+			return
+		}
+
+		// conversion succeeded
+		f, err := os.Open(filePath + ".flac")
+		if err != nil {
+			log.Println("Error opening the file, even after conversion", err)
+			Playlist[Songindex].Error = true
+			Nextsong()
+			return
+		}
+
+		streamer, format, err = flac.Decode(f)
+
+		// decoding failed still, just give up at this point
+		if err != nil {
+			log.Println("Error decoding file, cannot convert", err, file.Path)
+			Playlist[Songindex].Error = true
+			Nextsong()
+			return
+		}
+
 	}
 
 	st := beep.Seq(beep.Resample(quality, format.SampleRate, gsr, streamer))

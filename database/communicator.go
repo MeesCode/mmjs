@@ -312,3 +312,12 @@ func IncrementPlayCounter(track_id int) {
 		log.Println("Could not increment the play counter", err)
 	}
 }
+
+// updatePath changes the path of the file
+func UpdatePath(path string, track_id int) {
+	_, err := db.Exec(stmts.updatePath, path, track_id)
+	if err != nil {
+		log.Println("Could not update path", err)
+	}
+}
+

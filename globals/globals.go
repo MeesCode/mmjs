@@ -23,6 +23,7 @@ type ConfigFile struct {
 	Quiet        bool   `json:"quiet"`
 	Logging      bool   `json:"logging"`
 	DisableSound bool   `json:"disableSound"`
+	AudioConvert bool   `json:"audioConvert"`
 	Webserver    struct {
 		Enable bool `json:"enable"`
 		Port   int  `json:"port"`

@@ -45,6 +45,7 @@ func init() {
 		defaultConfig           = ""
 		defaultDisableSound     = false
 		defaultHighlight        = "cb2821"
+		defaultAudioConvert     = false
 
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
@@ -63,6 +64,7 @@ func init() {
 		disableSoundUsage     = "disables initialization of the sound card (for server use)"
 		configUsage           = "specify a config file to use (overrides command line arguments)"
 		highlightUsage        = "hex code (ffffff) indicating the highlight color of the text user interface"
+		audioConvert          = "if a file cannot be decoded, convert the file to flac"
 	)
 
 	flag.BoolVar(&help, "help", defaultHelp, helpUsage)
@@ -82,6 +84,7 @@ func init() {
 	flag.StringVar(&globals.Config.Database.Password, "p", defaultDatabasePassword, databasePasswordUsage)
 	flag.StringVar(&globals.Config.Database.Database, "d", defaultDatabase, databaseUsage)
 	flag.BoolVar(&globals.Config.DisableSound, "ds", defaultDisableSound, disableSoundUsage)
+	flag.BoolVar(&globals.Config.AudioConvert, "ac", defaultAudioConvert, audioConvert)
 }
 
 // load the configuration from a json file

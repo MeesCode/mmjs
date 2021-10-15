@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/dhowden/tag v0.0.0-20201120070457-d52dcb253c63
-	github.com/faiface/beep v1.1.0
+	github.com/faiface/beep v1.1.1-0.20211013000407-c2062e63e612
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/websocket v1.4.2
