@@ -21,7 +21,7 @@ var (
 	audioLock  = new(sync.Mutex)
 )
 
-// player is always playing, this function only returns the the playlist is cleared
+// play is always playing, this function only returns when the playlist is cleared
 // and only runs the first time it is called because only 
 // then it has something to play
 func play() {

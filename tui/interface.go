@@ -382,7 +382,7 @@ Esc: go back`)
 			// if no song is loaded, play the first song
 			if len(audioplayer.Playlist) > 0 {
 				if !audioplayer.IsLoaded() {
-					audioplayer.PlaySong(0)
+					audioplayer.PlaySong(audioplayer.Songindex)
 				} else {
 					audioplayer.PlayPause()
 				}
