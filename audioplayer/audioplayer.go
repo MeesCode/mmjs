@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"path"
+	"sync"
 
 	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
@@ -13,13 +14,14 @@ import (
 )
 
 var (
-	player  *vlc.Player
-	manager *vlc.EventManager
-	quit    chan struct{}
-	eventID vlc.EventID
+	player     *vlc.Player
+	manager    *vlc.EventManager
+	quit       chan struct{}
+	eventID    vlc.EventID
+	audioLock  = new(sync.Mutex)
 )
 
-// player is always playing, this function never returns
+// player is always playing, this function only returns the the playlist is cleared
 // and only runs the first time it is called because only 
 // then it has something to play
 func play() {
@@ -36,17 +38,23 @@ func play() {
 
 // SetTrack changes the track that is playing
 func SetTrack(){
+
+	audioLock.Lock()
+	defer audioLock.Unlock()
+
 	media, err := player.LoadMediaFromPath(path.Clean(path.Join(globals.Root, Playlist[Songindex].Path)))
 	if err != nil {
 		Playlist[Songindex].Error = true
 		log.Println(err)
 		defer Nextsong()
 		return
+	} else {
+		Playlist[Songindex].Error = false
 	}
 	defer media.Release()
 
 	if !player.IsPlaying(){
-		play()
+		go play()
 	}
 }
 
