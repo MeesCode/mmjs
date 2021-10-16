@@ -45,7 +45,6 @@ func init() {
 		defaultConfig           = ""
 		defaultDisableSound     = false
 		defaultHighlight        = "cb2821"
-		defaultAudioConvert     = false
 
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
@@ -64,7 +63,6 @@ func init() {
 		disableSoundUsage     = "disables initialization of the sound card (for server use)"
 		configUsage           = "specify a config file to use (overrides command line arguments)"
 		highlightUsage        = "hex code (ffffff) indicating the highlight color of the text user interface"
-		audioConvert          = "if a file cannot be decoded, convert the file to flac"
 	)
 
 	flag.BoolVar(&help, "help", defaultHelp, helpUsage)
@@ -84,7 +82,6 @@ func init() {
 	flag.StringVar(&globals.Config.Database.Password, "p", defaultDatabasePassword, databasePasswordUsage)
 	flag.StringVar(&globals.Config.Database.Database, "d", defaultDatabase, databaseUsage)
 	flag.BoolVar(&globals.Config.DisableSound, "ds", defaultDisableSound, disableSoundUsage)
-	flag.BoolVar(&globals.Config.AudioConvert, "ac", defaultAudioConvert, audioConvert)
 }
 
 // load the configuration from a json file
@@ -112,6 +109,8 @@ func main() {
 	}
 	log.SetOutput(f)
 
+	log.Print("start application")
+
 	// parse command line arguments
 	flag.Parse()
 
@@ -132,6 +131,7 @@ func main() {
 		log.Fatalln("could not get working directory", err)
 	}
 
+	log.Print("parse arguments")
 	arg := flag.Arg(0)
 
 	// check that a path has been given
@@ -169,20 +169,23 @@ func main() {
 
 	// index filesystem at specified path
 	if globals.Config.Mode == "index" {
+		log.Print("index mode")
 		db := database.Warmup()
 		defer db.Close()
 		database.Index()
 		return
 	}
 
-	// start the databse connection pool
+	// start the database connection pool
 	if globals.Config.Mode != "filesystem" {
+		log.Print("start database")
 		db := database.Warmup()
 		defer db.Close()
 	}
 
 	// initialize audio player
 	if !globals.Config.DisableSound {
+		log.Print("start audio engine")
 		go audioplayer.Initialize()
 	}
 
@@ -193,14 +196,17 @@ func main() {
 	// the webserver relies heavily on the search function which, while
 	// functional is increadibly slow outside of database mode
 	if globals.Config.Webserver.Enable && globals.Config.Mode == "database" {
+		log.Print("start webserver")
 		go plugins.Webserver()
 	}
 
 	if globals.Config.Webinterface.Enable {
+		log.Print("start web interface")
 		go plugins.Webinterface()
 	}
 
 	if globals.Config.Serial.Enable {
+		log.Print("start serial connection")
 		go plugins.Coinslot()
 	}
 
@@ -220,7 +226,7 @@ func main() {
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		<-sigs
 
-		audioplayer.Stop()
+		audioplayer.Close()
 	}
 
 }

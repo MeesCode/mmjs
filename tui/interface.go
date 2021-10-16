@@ -57,6 +57,8 @@ type tui struct {
 // down gracefully.
 func Start() {
 
+	log.Println("start interface")
+
 	colorFocus = tcell.GetColor("#" + globals.Config.Highlight)
 
 	// build interface
@@ -393,7 +395,7 @@ Esc: go back`)
 			nextsong()
 			return nil
 		case tcell.KeyCtrlC: // gracefull shutdown
-			audioplayer.Stop()
+			audioplayer.Close()
 			app.Stop()
 			return nil
 		case tcell.KeyEsc:
