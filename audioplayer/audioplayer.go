@@ -3,9 +3,9 @@ package audioplayer
 
 import (
 	"log"
-	"time"
 	"path"
 	"sync"
+	"time"
 
 	"github.com/MeesCode/mmjs/database"
 	"github.com/MeesCode/mmjs/globals"
@@ -14,76 +14,47 @@ import (
 )
 
 var (
-	player     *vlc.Player
-	manager    *vlc.EventManager
-	quit       chan struct{}
-	eventID    vlc.EventID
-	audioLock  = new(sync.Mutex)
+	player    *vlc.Player
+	manager   *vlc.EventManager
+	eventID   vlc.EventID
+	audioLock = new(sync.Mutex)
+	WillPlay  func() bool
+	IsPlaying func() bool
 )
 
-// play is always playing, this function only returns when the playlist is cleared
-// and only runs the first time it is called because only 
-// then it has something to play
-func play() {
-
-    err := player.Play()
-    if err != nil {
-        Playlist[Songindex].Error = true
-        log.Println(err)
-		Nextsong()
-    }
-
-    <-quit
-}
-
-// SetTrack changes the track that is playing
-func SetTrack(){
+// updateTrack changes the track that is playing
+func updateTrack() {
 
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
-	media, err := player.LoadMediaFromPath(path.Clean(path.Join(globals.Root, Playlist[Songindex].Path)))
+	media, err := player.LoadMediaFromPath(path.Join(globals.Root, Playlist[Songindex].Path))
 	if err != nil {
 		Playlist[Songindex].Error = true
-		log.Println(err)
+		log.Println("Error media file could not be opened", err)
 		defer Nextsong()
 		return
-	} else {
-		Playlist[Songindex].Error = false
 	}
+
 	defer media.Release()
 
-	if !player.IsPlaying(){
-		go play()
+	err = player.Play()
+	if err != nil {
+		Playlist[Songindex].Error = true
+		log.Println("Error media file could not be played", err)
+		defer Nextsong()
+		return
 	}
-}
 
-func IsLoaded() bool {
-	return player.WillPlay()
-}
-
-// Stop stops the playback of the currently playing track (if any).
-func Stop() {
-	player.Stop()
+	Playlist[Songindex].Error = false
 }
 
 // Close closes the audio engine
 func Close() {
-	close(quit)
 	manager.Detach(eventID)
 	player.Stop()
-    player.Release()
-}
-
-
-// Pause the currently playing track (if any).
-func Pause() {
-	player.SetPause(true)
-}
-
-// Resume the currently playing track (if any).
-func Resume() {
-	player.SetPause(false)
+	player.Release()
+	vlc.Release()
 }
 
 // GetPlaytime returns the play time, and the total time of the track.
@@ -96,29 +67,13 @@ func GetPlaytime() (time.Duration, time.Duration) {
 	return current, total
 }
 
-// GetPlaying returns track that is either loaded or being loaded.
-// in transition, new file will be returned
+// GetPlaying returns that is currently selected in the playlist
+// if there is no such track second returned value is false
 func GetPlaying() globals.Track {
 	if len(Playlist) == 0 {
 		return globals.Track{}
 	}
 	return Playlist[Songindex]
-}
-
-// IsPlaying returns true when a file is loaded and playing
-func IsPlaying() bool {
-	return player.IsPlaying()
-}
-
-// IsPaused returns true when a file is loaded and paused
-func IsPaused() bool {
-	return !player.IsPlaying()
-}
-
-// PlayPause is a shorthand, it will play if paused (and a song is loaded)
-// it will pause if playing (and a song is loaded)
-func PlayPause(){
-	player.TogglePause()
 }
 
 // wait for a signal that the track has finished playing.
@@ -137,20 +92,26 @@ func Initialize() {
 	var err error = nil
 
 	if err = vlc.Init("--no-video", "--quiet"); err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 
 	player, err = vlc.NewPlayer()
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// expose player functions directly
+	IsPlaying = player.IsPlaying
+	WillPlay = player.WillPlay
+	TogglePause = player.TogglePause
+	Stop = player.Stop
+	SetPause = player.SetPause
 
 	manager, err = player.EventManager()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	quit = make(chan struct{})
 	eventCallback := func(event vlc.Event, userData interface{}) {
 		finishTrack()
 	}

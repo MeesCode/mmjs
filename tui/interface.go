@@ -136,7 +136,7 @@ func Start() {
 	keybindstext := tview.NewTextView()
 	if globals.Config.Mode == "database" {
 		fmt.Fprintf(keybindstext,
-`[application]
+			`[application]
 F1:  show all
 F2:  clear
 F3:  search
@@ -173,8 +173,8 @@ Intert: add as next track
 [contextual]
 Esc: go back`)
 	} else {
-		fmt.Fprintf(keybindstext, 
-`[application]
+		fmt.Fprintf(keybindstext,
+			`[application]
 F1:  show all
 F2:  clear
 F3:  search
@@ -207,7 +207,7 @@ Intert: add as next track
 [contextual]
 Esc: go back`)
 	}
-	
+
 	keybindsbox := tview.NewFlex().
 		AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
@@ -381,10 +381,10 @@ Esc: go back`)
 		case tcell.KeyF8:
 			// if no song is loaded, play the first song
 			if len(audioplayer.Playlist) > 0 {
-				if !audioplayer.IsLoaded() {
+				if !audioplayer.WillPlay() {
 					audioplayer.PlaySong(audioplayer.Songindex)
 				} else {
-					audioplayer.PlayPause()
+					audioplayer.TogglePause()
 				}
 			}
 			return nil

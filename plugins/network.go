@@ -64,11 +64,11 @@ func addhandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "track not found in current search query")
 }
 
-func playpausehandler(w http.ResponseWriter, r *http.Request) {
-	if !audioplayer.IsLoaded() {
+func TogglePausehandler(w http.ResponseWriter, r *http.Request) {
+	if !audioplayer.WillPlay() {
 		audioplayer.PlaySong(audioplayer.Songindex)
 	} else {
-		audioplayer.Pause()
+		audioplayer.SetPause(true)
 	}
 	res, _ := json.Marshal(audioplayer.GetPlaying())
 	fmt.Fprintf(w, string(res))
@@ -118,7 +118,7 @@ func Webserver() {
 	http.HandleFunc("/add", addhandler)
 	http.HandleFunc("/skip", skiphandler)
 	http.HandleFunc("/queue", queuehandler)
-	http.HandleFunc("/playpause", playpausehandler)
+	http.HandleFunc("/TogglePause", TogglePausehandler)
 	http.HandleFunc("/random", randomhandler)
 	http.HandleFunc("/incplaycounter", incplaycounterhandler)
 	http.HandleFunc("/popular", popularhandler)

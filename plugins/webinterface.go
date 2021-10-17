@@ -1,22 +1,22 @@
 package plugins
 
 import (
-	"log"
-	"time"
-    "net/http"
 	"encoding/json"
+	"log"
+	"net/http"
 	"strconv"
+	"time"
 
-    "github.com/gorilla/websocket"
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/globals"
+	"github.com/gorilla/websocket"
 )
 
 type Stats struct {
-    Queue []globals.Track
-    Playing bool
-    Index int
-	Length time.Duration 
+	Queue    []globals.Track
+	Playing  bool
+	Index    int
+	Length   time.Duration
 	Progress time.Duration
 }
 
@@ -24,14 +24,14 @@ var statobject Stats
 var clients = make(map[*websocket.Conn]bool)
 
 var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024,
-    WriteBufferSize: 1024,
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		return true	
+		return true
 	},
 }
 
-func page(w http.ResponseWriter, r *http.Request){
+func page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "webinterface.html")
 }
 
@@ -49,33 +49,33 @@ func commands(w http.ResponseWriter, r *http.Request) {
 		// Read message from browser
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-            log.Println("No message recieved:", msg, err)
+			log.Println("No message recieved:", msg, err)
 			return
-        }
+		}
 
 		switch string(msg) {
-			case "play":
-				if !audioplayer.IsLoaded(){
-					audioplayer.PlaySong(audioplayer.Songindex)
-					break;
-				}
-				audioplayer.Resume()
-				break;
-			case "pause":
-				audioplayer.Pause()
-				break;
-			case "next":
-				audioplayer.Nextsong()
-				break;
-			case "previous":
-				audioplayer.Previoussong()
-				break;
-			case "shuffle":
-				audioplayer.Shuffle()
-				break;
-			case "clear":
-				audioplayer.Clear()
-				break;
+		case "play":
+			if !audioplayer.WillPlay() {
+				audioplayer.PlaySong(audioplayer.Songindex)
+				break
+			}
+			audioplayer.SetPause(false)
+			break
+		case "pause":
+			audioplayer.SetPause(true)
+			break
+		case "next":
+			audioplayer.Nextsong()
+			break
+		case "previous":
+			audioplayer.Previoussong()
+			break
+		case "shuffle":
+			audioplayer.Shuffle()
+			break
+		case "clear":
+			audioplayer.Clear()
+			break
 		}
 	}
 }
@@ -84,11 +84,11 @@ func commands(w http.ResponseWriter, r *http.Request) {
 func stats(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-			log.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// register client
-	clients[ws] = true	
+	clients[ws] = true
 }
 
 // send periodic stats
@@ -120,7 +120,7 @@ func broadcaster() {
 
 func Webinterface() {
 	http.HandleFunc("/", page)
-    http.HandleFunc("/stats", stats)
+	http.HandleFunc("/stats", stats)
 	http.HandleFunc("/commands", commands)
 
 	// start broadcaster routine

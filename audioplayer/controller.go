@@ -10,8 +10,11 @@ import (
 
 // global variables
 var (
-	Playlist  = make([]globals.Track, 0)
-	Songindex = 0 // the index of the currently playing track
+	Playlist    = make([]globals.Track, 0)
+	Songindex   = 0 // the index of the currently playing track
+	TogglePause func() error
+	Stop        func() error
+	SetPause    func(bool) error
 )
 
 // PlaySong plays the song at the index of the playlist
@@ -20,14 +23,14 @@ func PlaySong(index int) {
 		return
 	}
 	Songindex = index
-	go SetTrack()
+	go updateTrack()
 }
 
 // Nextsong plays the next song (if available)
 func Nextsong() {
 	if len(Playlist) > Songindex+1 {
 		Songindex++
-		go SetTrack()
+		go updateTrack()
 	}
 }
 
@@ -35,7 +38,7 @@ func Nextsong() {
 func Previoussong() {
 	if Songindex > 0 {
 		Songindex--
-		go SetTrack()
+		go updateTrack()
 	}
 }
 
@@ -71,7 +74,7 @@ func Deletesong(index int) {
 	// play the next song when the current song is deleted
 	// but there is a next song on the list
 	if index == Songindex {
-		go SetTrack()
+		go updateTrack()
 	}
 
 	// if we delete a song that is before the current one
@@ -91,12 +94,11 @@ func Insertsong(track globals.Track) {
 // Shuffle shuffles the playlist and places the currently playing track as the first
 // track in the playlist. It will not halt playback.
 func Shuffle() {
-	if len(Playlist) == 0 {
+	if len(Playlist) == 0 || Songindex > len(Playlist) {
 		return
 	}
 
 	// remove current song from list
-	var cursong = Playlist[Songindex]
 	Playlist = append(Playlist[:Songindex], Playlist[Songindex+1:]...)
 
 	// shuffle the list
@@ -106,7 +108,7 @@ func Shuffle() {
 	})
 
 	// prepend current song to the list
-	Playlist = append([]globals.Track{cursong}, Playlist...)
+	Playlist = append([]globals.Track{Playlist[Songindex]}, Playlist...)
 	Songindex = 0
 }
 

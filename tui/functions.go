@@ -57,7 +57,7 @@ func audioStateUpdater() {
 		<-time.After(time.Second)
 
 		// update track info box
-		if audioplayer.IsLoaded() {
+		if audioplayer.WillPlay() {
 			myTui.app.QueueUpdateDraw(func() {
 				updatePlayInfo()
 			})
@@ -136,7 +136,7 @@ func drawfilelist() {
 func drawfilelistWithPlays() {
 	myTui.filelist.Clear()
 	for _, track := range filelistFiles {
-		myTui.filelist.AddItem(tview.Escape("(" + strconv.Itoa(track.Plays) + ") " + trackToDisplayText(track)), "", 0, addsong)
+		myTui.filelist.AddItem(tview.Escape("("+strconv.Itoa(track.Plays)+") "+trackToDisplayText(track)), "", 0, addsong)
 	}
 }
 
@@ -228,7 +228,7 @@ func jump(r rune) {
 }
 
 // closeModals closes all the modals on the screen and moves the cursor
-func closeModals(){
+func closeModals() {
 	var modals = [3]string{"search", "playlist", "keybinds"}
 	for _, i := range modals {
 		if myTui.pages.HasPage(i) {
@@ -344,7 +344,7 @@ func insertsong() {
 	index := myTui.playlist.GetCurrentItem()
 	filelistIndex := myTui.filelist.GetCurrentItem()
 
-	// playlists don't support insertion 
+	// playlists don't support insertion
 	if filelistFiles[filelistIndex].Path == "not applicable" {
 		return
 	}

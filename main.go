@@ -32,7 +32,7 @@ func init() {
 		defaultHelp             = false
 		defaultQuiet            = false
 		defaultWebserver        = false
-		defaultSerial	        = false
+		defaultSerial           = false
 		defaultWebinterface     = false
 		defaultLogging          = false
 		defaultWebinterfacePort = 3307
@@ -49,7 +49,7 @@ func init() {
 		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
 		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
 		webinterfaceUsage     = "a boolean to specify whether to run the web interface"
-		serialUsage  		  = "a boolean to specify whether listen to serial input, if received skip track"
+		serialUsage           = "a boolean to specify whether listen to serial input, if received skip track"
 		quietUsage            = "quiet mode disables the text user interface"
 		loggingUsage          = "enable error logging in stdout, will interfere with tui"
 		helpUsage             = "print this help message"
@@ -103,13 +103,11 @@ func loadConfiguration(file string) globals.ConfigFile {
 func main() {
 
 	// write log to file
-	f, err := os.OpenFile("debug.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	f, err := os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("cannot open or create logfile")
 	}
 	log.SetOutput(f)
-
-	log.Print("start application")
 
 	// parse command line arguments
 	flag.Parse()
@@ -131,7 +129,6 @@ func main() {
 		log.Fatalln("could not get working directory", err)
 	}
 
-	log.Print("parse arguments")
 	arg := flag.Arg(0)
 
 	// check that a path has been given
@@ -169,7 +166,6 @@ func main() {
 
 	// index filesystem at specified path
 	if globals.Config.Mode == "index" {
-		log.Print("index mode")
 		db := database.Warmup()
 		defer db.Close()
 		database.Index()
@@ -178,14 +174,12 @@ func main() {
 
 	// start the database connection pool
 	if globals.Config.Mode != "filesystem" {
-		log.Print("start database")
 		db := database.Warmup()
 		defer db.Close()
 	}
 
 	// initialize audio player
 	if !globals.Config.DisableSound {
-		log.Print("start audio engine")
 		go audioplayer.Initialize()
 	}
 
@@ -196,17 +190,14 @@ func main() {
 	// the webserver relies heavily on the search function which, while
 	// functional is increadibly slow outside of database mode
 	if globals.Config.Webserver.Enable && globals.Config.Mode == "database" {
-		log.Print("start webserver")
 		go plugins.Webserver()
 	}
 
 	if globals.Config.Webinterface.Enable {
-		log.Print("start web interface")
 		go plugins.Webinterface()
 	}
 
 	if globals.Config.Serial.Enable {
-		log.Print("start serial connection")
 		go plugins.Coinslot()
 	}
 
