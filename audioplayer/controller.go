@@ -99,6 +99,7 @@ func Shuffle() {
 	}
 
 	// remove current song from list
+	var cursong = Playlist[Songindex]
 	Playlist = append(Playlist[:Songindex], Playlist[Songindex+1:]...)
 
 	// shuffle the list
@@ -108,7 +109,7 @@ func Shuffle() {
 	})
 
 	// prepend current song to the list
-	Playlist = append([]globals.Track{Playlist[Songindex]}, Playlist...)
+	Playlist = append([]globals.Track{cursong}, Playlist...)
 	Songindex = 0
 }
 
