@@ -208,6 +208,12 @@ func finishSearch() {
 	drawfilelist()
 }
 
+func clearplaylist() {
+	myTui.pages.AddPage("confirm", myTui.confirmbox, true, true)
+	focusWithColor(myTui.confirmcontent)
+	myTui.app.SetFocus(myTui.confirmfalse)
+}
+
 // openKeybinds opens a dialog with all key bindings
 func openKeybinds() {
 	if myTui.pages.HasPage("search") || myTui.pages.HasPage("playlist") || myTui.pages.HasPage("keybinds") {
@@ -229,7 +235,7 @@ func jump(r rune) {
 
 // closeModals closes all the modals on the screen and moves the cursor
 func closeModals() {
-	var modals = [3]string{"search", "playlist", "keybinds"}
+	var modals = [4]string{"search", "playlist", "keybinds", "confirm"}
 	for _, i := range modals {
 		if myTui.pages.HasPage(i) {
 			myTui.pages.RemovePage(i)
@@ -290,6 +296,7 @@ func focusWithColor(primitive tview.Primitive) {
 	myTui.playlist.SetBorderColor(colorUnfocus)
 	myTui.searchinput.SetBorderColor(colorUnfocus)
 	myTui.playlistinput.SetBorderColor(colorUnfocus)
+	myTui.confirmcontent.SetBorderColor(colorUnfocus)
 
 	list, ok := primitive.(*tview.List)
 	if ok {
@@ -304,6 +311,11 @@ func focusWithColor(primitive tview.Primitive) {
 	textview, ok := primitive.(*tview.TextView)
 	if ok {
 		textview.SetBorderColor(colorFocus)
+	}
+
+	flex, ok := primitive.(*tview.Flex)
+	if ok {
+		flex.SetBorderColor(colorFocus)
 	}
 
 	myTui.app.SetFocus(primitive)

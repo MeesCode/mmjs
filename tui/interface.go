@@ -32,24 +32,27 @@ var (
 // a big struct that hold all interface elements as to not occupy too much
 // from the global namespace.
 type tui struct {
-	app           *tview.Application
-	pages         *tview.Pages
-	directorylist *tview.List
-	filelist      *tview.List
-	playlist      *tview.List
-	infobox       *tview.Table
-	browseinfobox *tview.Table
-	progressbar   *tview.TextView
-	playtime      *tview.TextView
-	totaltime     *tview.TextView
-	keybinds      *tview.TextView
-	main          *tview.Flex
-	searchbox     *tview.Flex
-	searchinput   *tview.InputField
-	playlistinput *tview.InputField
-	playlistbox   *tview.Flex
-	keybindstext  *tview.TextView
-	keybindsbox   *tview.Flex
+	app            *tview.Application
+	pages          *tview.Pages
+	directorylist  *tview.List
+	filelist       *tview.List
+	playlist       *tview.List
+	infobox        *tview.Table
+	browseinfobox  *tview.Table
+	progressbar    *tview.TextView
+	playtime       *tview.TextView
+	totaltime      *tview.TextView
+	keybinds       *tview.TextView
+	main           *tview.Flex
+	searchbox      *tview.Flex
+	searchinput    *tview.InputField
+	confirmbox     *tview.Flex
+	confirmfalse   *tview.Button
+	confirmcontent *tview.Flex
+	playlistinput  *tview.InputField
+	playlistbox    *tview.Flex
+	keybindstext   *tview.TextView
+	keybindsbox    *tview.Flex
 }
 
 // Start builds the user interface, defines the keybinds and sets initial values.
@@ -131,6 +134,30 @@ func Start() {
 			AddItem(nil, 0, 1, false).
 			AddItem(searchinput, 3, 1, false).
 			AddItem(nil, 0, 1, false), 60, 1, false).
+		AddItem(nil, 0, 1, false)
+
+	confirmtrue  := tview.NewButton("confirm")
+	confirmfalse := tview.NewButton("cancel")
+
+	confirmtext := tview.NewTextView()
+	confirmtext.SetBackgroundColor(tcell.ColorDefault)
+	fmt.Fprintf(confirmtext, "Are you sure you want to \ndelete the playlist?")
+
+	confirmcontent := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(confirmtext, 3, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(confirmfalse, 15, 1, false).
+			AddItem(nil, 0, 1, false).
+			AddItem(confirmtrue, 15, 1, false), 1, 1, false)
+	confirmcontent.SetBackgroundColor(tcell.ColorDefault)
+	confirmcontent.SetBorder(true).SetTitle(" Confirm ")
+
+	confirmbox := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(confirmcontent, 6, 1, false).
+			AddItem(nil, 0, 1, false), 32, 1, false).
 		AddItem(nil, 0, 1, false)
 
 	keybindstext := tview.NewTextView()
@@ -277,24 +304,27 @@ Esc: go back`)
 
 	// save interface
 	myTui = tui{
-		app:           app,
-		pages:         pages,
-		directorylist: directorylist,
-		filelist:      filelist,
-		playlist:      playlist,
-		infobox:       infobox,
-		progressbar:   progressbar,
-		playtime:      playtime,
-		totaltime:     totaltime,
-		browseinfobox: browseinfobox,
-		keybinds:      keybinds,
-		main:          main,
-		searchbox:     searchbox,
-		searchinput:   searchinput,
-		playlistbox:   playlistbox,
-		playlistinput: playlistinput,
-		keybindsbox:   keybindsbox,
-		keybindstext:  keybindstext,
+		app:            app,
+		pages:          pages,
+		directorylist:  directorylist,
+		filelist:       filelist,
+		playlist:       playlist,
+		infobox:        infobox,
+		progressbar:    progressbar,
+		playtime:       playtime,
+		totaltime:      totaltime,
+		browseinfobox:  browseinfobox,
+		keybinds:       keybinds,
+		main:           main,
+		searchbox:      searchbox,
+		searchinput:    searchinput,
+		confirmbox:     confirmbox,
+		confirmfalse:   confirmfalse,
+		confirmcontent: confirmcontent,
+		playlistbox:    playlistbox,
+		playlistinput:  playlistinput,
+		keybindsbox:    keybindsbox,
+		keybindstext:   keybindstext,
 	}
 
 	// do some stuff depending on if we are in database or filesystem mode
@@ -364,8 +394,7 @@ Esc: go back`)
 			}
 			return nil
 		case tcell.KeyF2:
-			audioplayer.Clear()
-			drawplaylist()
+			clearplaylist()
 			return nil
 		case tcell.KeyF3:
 			if pages.HasPage("search") {
@@ -414,7 +443,7 @@ Esc: go back`)
 		case tcell.KeyRight, tcell.KeyTab:
 			focusWithColor(playlist)
 			return nil
-		case tcell.KeyLeft:
+		case tcell.KeyLeft, tcell.KeyBacktab:
 			focusWithColor(directorylist)
 			return nil
 		}
@@ -433,7 +462,7 @@ Esc: go back`)
 		case tcell.KeyRight:
 			focusWithColor(directorylist)
 			return nil
-		case tcell.KeyLeft:
+		case tcell.KeyLeft, tcell.KeyBacktab:
 			focusWithColor(filelist)
 			if myTui.filelist.GetItemCount() > 0 {
 				updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
@@ -472,11 +501,37 @@ Esc: go back`)
 				updateInfoBox(filelistFiles[myTui.filelist.GetCurrentItem()], browseinfobox)
 			}
 			return nil
-		case tcell.KeyLeft:
+		case tcell.KeyLeft, tcell.KeyBacktab:
 			focusWithColor(playlist)
 			return nil
 		case tcell.KeyBackspace, tcell.KeyBackspace2:
 			goback()
+			return nil
+		}
+		return event
+	})
+
+	// confirm buttons
+	confirmfalse.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyRight, tcell.KeyTab, tcell.KeyLeft, tcell.KeyBacktab:
+			myTui.app.SetFocus(confirmtrue)
+			return nil
+		case tcell.KeyEnter:
+			closeModals()
+			return nil
+		}
+		return event
+	})
+	confirmtrue.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyRight, tcell.KeyTab, tcell.KeyLeft, tcell.KeyBacktab:
+			myTui.app.SetFocus(confirmfalse)
+			return nil
+		case tcell.KeyEnter:
+			audioplayer.Clear()
+			closeModals()
+			drawplaylist()
 			return nil
 		}
 		return event
