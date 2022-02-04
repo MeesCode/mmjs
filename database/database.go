@@ -6,13 +6,19 @@ import (
 	"log"
 	"strconv"
 	"time"
+	"context"
+	"os"
+	"errors"
+	"path"
 
 	"github.com/MeesCode/mmjs/globals"
 )
 
 // this stuct holds all defined statements
-var stmts definedStatements
-var db *sql.DB
+var (
+	stmts definedStatements
+	db *sql.DB
+)
 
 // list of defined statements
 type definedStatements struct {
@@ -36,33 +42,6 @@ type definedStatements struct {
 
 // Warmup the mysql connection pool
 func Warmup() *sql.DB {
-	defineStatements()
-
-	dbc, err := sql.Open("mysql",
-		globals.Config.Database.User+":"+
-			globals.Config.Database.Password+"@("+
-			globals.Config.Database.Host+":"+
-			strconv.Itoa(globals.Config.Database.Port)+")/"+
-			globals.Config.Database.Database)
-
-	dbc.SetConnMaxLifetime(time.Minute * 5)
-
-	if err != nil {
-		log.Fatalln("connection with database could not be established", err)
-	}
-
-	err = dbc.Ping()
-	if err != nil {
-		log.Fatalln("connection with database could not be pinged", err)
-	}
-
-	db = dbc
-
-	return dbc
-}
-
-// define all statements ahead of time
-func defineStatements() {
 	stmts.insertFolder = "INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)"
 	stmts.insertTrack = `INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`
 	stmts.findSubFolders = `SELECT FolderId, Path, ParentId FROM 
@@ -90,6 +69,47 @@ func defineStatements() {
 	Genre, Year, Plays FROM Tracks ORDER BY Plays DESC LIMIT ?`
 	stmts.updatePath = `UPDATE Tracks SET Path = ? where TrackID = ?`
 	stmts.deleteTrack = `DELETE FROM Tracks where TrackID = ?`
+
+	dbc, err := sql.Open("mysql",
+		globals.Config.Database.User+":"+
+		globals.Config.Database.Password+"@("+
+		globals.Config.Database.Host+":"+
+		strconv.Itoa(globals.Config.Database.Port)+")/"+
+		globals.Config.Database.Database)
+
+	dbc.SetConnMaxLifetime(time.Minute * 5)
+
+	if err != nil {
+		log.Fatalln("connection with database could not be established", err)
+	}
+	
+	// check for database connection
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancel()
+
+	err = dbc.PingContext(ctx)
+	if err != nil {
+		displayError("Cannot connect to database\n\npress Ctrl-C to close the application")
+		log.Fatalln("database error")
+	}
+
+	// check if mounted path corresponds to loaded database
+	// by testing a random track from the database
+
+	var relpath string
+	err = dbc.QueryRow(`SELECT Path From Tracks ORDER BY RAND() LIMIT 1`).Scan(&relpath)
+
+	abspath := path.Join(globals.Root, relpath)
+
+	if _, err := os.Stat(abspath); errors.Is(err, os.ErrNotExist) {
+		displayError("Filesystem not mounted correctly\n\npress Ctrl-C to close the application")
+		log.Fatalln("filesystem error", abspath)
+	}
+
+	db = dbc
+
+	return dbc
 }
 
 // StringToSQLNullableString converts a string into a nullable string.

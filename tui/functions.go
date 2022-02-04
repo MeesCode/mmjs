@@ -52,23 +52,14 @@ func stringOrUnknown(s sql.NullString) string {
 // It will also start the next sond if the current song is finished.
 func audioStateUpdater() {
 	for {
-
-		// update the play timer every second
 		<-time.After(time.Second)
-
-		// update track info box
-		if audioplayer.WillPlay() {
-			myTui.app.QueueUpdateDraw(func() {
-				updatePlayInfo()
-			})
-		}
 
 		// update the progress bar every second
 		myTui.app.QueueUpdateDraw(func() {
 			playtime, totaltime := audioplayer.GetPlaytime()
 			drawprogressbar(playtime, totaltime)
+			updatePlayInfo()
 		})
-
 	}
 }
 
