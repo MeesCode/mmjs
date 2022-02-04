@@ -90,7 +90,7 @@ func Warmup() *sql.DB {
 
 	err = dbc.PingContext(ctx)
 	if err != nil {
-		displayError("Cannot connect to database\n\npress Ctrl-C to close the application")
+		displayError("Cannot connect to database\n\npress Ctrl+C to close the application")
 		log.Fatalln("database error")
 	}
 
@@ -103,7 +103,7 @@ func Warmup() *sql.DB {
 	abspath := path.Join(globals.Root, relpath)
 
 	if _, err := os.Stat(abspath); errors.Is(err, os.ErrNotExist) {
-		displayError("Filesystem not mounted correctly\n\npress Ctrl-C to close the application")
+		displayError("Filesystem not mounted correctly\n\npress Ctrl+C to close the application")
 		log.Fatalln("filesystem error", abspath)
 	}
 
