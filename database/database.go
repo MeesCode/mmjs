@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"time"
 	"context"
-	"os"
 	"errors"
-	"path"
 
 	"github.com/MeesCode/mmjs/globals"
 )
@@ -38,10 +36,11 @@ type definedStatements struct {
 	popularTracks        string
 	updatePath           string
 	deleteTrack          string
+	randomPath           string
 }
 
 // Warmup the mysql connection pool
-func Warmup() *sql.DB {
+func Warmup() (*sql.DB, error) {
 	stmts.insertFolder = "INSERT IGNORE INTO Folders(Path, ParentID) VALUES(?, ?)"
 	stmts.insertTrack = `INSERT IGNORE INTO Tracks(Path, FolderID, Title, Album, Artist, Genre, Year) VALUES(?, ?, ?, ?, ?, ?, ?)`
 	stmts.findSubFolders = `SELECT FolderId, Path, ParentId FROM 
@@ -69,6 +68,7 @@ func Warmup() *sql.DB {
 	Genre, Year, Plays FROM Tracks ORDER BY Plays DESC LIMIT ?`
 	stmts.updatePath = `UPDATE Tracks SET Path = ? where TrackID = ?`
 	stmts.deleteTrack = `DELETE FROM Tracks where TrackID = ?`
+	stmts.randomPath = `SELECT Path From Tracks ORDER BY RAND() LIMIT 1`
 
 	dbc, err := sql.Open("mysql",
 		globals.Config.Database.User+":"+
@@ -90,26 +90,13 @@ func Warmup() *sql.DB {
 
 	err = dbc.PingContext(ctx)
 	if err != nil {
-		displayError("Cannot connect to database\n\npress Ctrl+C to close the application")
+		return nil, errors.New("Cannot connect to database")
 		log.Fatalln("database error")
-	}
-
-	// check if mounted path corresponds to loaded database
-	// by testing a random track from the database
-
-	var relpath string
-	err = dbc.QueryRow(`SELECT Path From Tracks ORDER BY RAND() LIMIT 1`).Scan(&relpath)
-
-	abspath := path.Join(globals.Root, relpath)
-
-	if _, err := os.Stat(abspath); errors.Is(err, os.ErrNotExist) {
-		displayError("Filesystem not mounted correctly\n\npress Ctrl+C to close the application")
-		log.Fatalln("filesystem error", abspath)
 	}
 
 	db = dbc
 
-	return dbc
+	return dbc, nil
 }
 
 // StringToSQLNullableString converts a string into a nullable string.

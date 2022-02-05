@@ -12,6 +12,7 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"errors"
 
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/database"
@@ -100,6 +101,17 @@ func loadConfiguration(file string) globals.ConfigFile {
 	return config
 }
 
+// check if mounted path corresponds to loaded database
+// by testing a random track from the database
+func validatePath() error {
+	path := database.GetRandomPath()
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		return errors.New("Filesystem not mounted correctly")
+		log.Fatalln("filesystem error", path)
+	}
+	return nil
+}
+
 func main() {
 
 	// write log to file
@@ -166,7 +178,13 @@ func main() {
 
 	// index filesystem at specified path
 	if globals.Config.Mode == "index" {
-		db := database.Warmup()
+		db, err := database.Warmup()
+
+		if err != nil {
+			log.Fatalln("could not connect to the database")
+			return
+		}
+
 		defer db.Close()
 		database.Index()
 		return
@@ -174,7 +192,20 @@ func main() {
 
 	// start the database connection pool
 	if globals.Config.Mode != "filesystem" {
-		db := database.Warmup()
+		db, err := database.Warmup()
+
+		if err != nil {
+			tui.DisplayError(err)
+			return
+		}
+
+		err = validatePath()
+
+		if err != nil {
+			tui.DisplayError(err)
+			return
+		}
+
 		defer db.Close()
 	}
 
@@ -187,9 +218,7 @@ func main() {
 	//     Start plugins here     //
 	////////////////////////////////
 
-	// the webserver relies heavily on the search function which, while
-	// functional is increadibly slow outside of database mode
-	if globals.Config.Webserver.Enable && globals.Config.Mode == "database" {
+	if globals.Config.Webserver.Enable {
 		go plugins.Webserver()
 	}
 

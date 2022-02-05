@@ -4,6 +4,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"path"
 
 	"github.com/MeesCode/mmjs/globals"
 )
@@ -321,3 +322,9 @@ func UpdatePath(path string, track_id int) {
 	}
 }
 
+// GetRandomPath gets a random path from the database
+func GetRandomPath() string {
+	var relpath string
+	db.QueryRow(stmts.randomPath).Scan(&relpath)
+	return path.Join(globals.Root, relpath)
+}
