@@ -83,17 +83,15 @@
                     index: 0,
                     length: 0,
                     progress: 0,
-                    commandsocket: null,
-                    statsocket: null
+                    socket: null
                 }
             },
             mounted(){
-                this.commandsocket = new WebSocket(`ws://${window.location.host}/commands`);
-                this.statsocket = new WebSocket(`ws://${window.location.host}/stats`);
+                this.socket = new WebSocket(`ws://${window.location.host}/socket`);
 
-                this.statsocket.onmessage = (e) => {
+                this.socket.onmessage = (e) => {
                     let stats = JSON.parse(e.data)
-                    this.tracks = stats.Queue
+                    this.tracks = stats.Queue ? stats.Queue : this.tracks
                     this.index = stats.Index
                     this.playing = stats.Playing
                     this.length = stats.Length
@@ -105,7 +103,7 @@
             },
             methods: {
                 sendcommand(command){
-                    this.commandsocket.send(command)
+                    this.socket.send(command)
                 },
 
                 epoch2human(time) {

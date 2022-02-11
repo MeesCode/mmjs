@@ -20,8 +20,8 @@ type Stats struct {
 	Progress time.Duration
 }
 
-var statobject Stats
 var clients = make(map[*websocket.Conn]bool)
+var previousQueue []globals.Track
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -31,23 +31,51 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+func identicalPlaylists(i1 []globals.Track, i2 []globals.Track) bool {
+	if len(i1) != len(i2) { return false }
+	for i, _ := range i1 {
+		log.Println("compare " + strconv.Itoa(i1[i].ID) + " and " + strconv.Itoa(i2[i].ID))
+		if i1[i].ID != i2[i].ID { return false }
+	}
+	return true
+}
+
 func page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "webinterface.html")
 }
 
-func commands(w http.ResponseWriter, r *http.Request) {
-	// upgrade the connection to a websocket
-	conn, err := upgrader.Upgrade(w, r, nil)
+// register client 
+func stats(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatalln("Could upgrade the connection to a websocket", err)
+		log.Fatal(err)
 	}
 
-	defer conn.Close()
+	// register client
+	clients[ws] = true
+
+	// send initial stats
+	var statobject Stats
+	statobject.Queue = audioplayer.Playlist
+	statobject.Index = audioplayer.Songindex
+	statobject.Playing = audioplayer.IsPlaying()
+	statobject.Progress, statobject.Length = audioplayer.GetPlaytime()
+
+	queue, _ := json.Marshal(statobject)
+
+	err = ws.WriteMessage(websocket.TextMessage, []byte(queue))
+	if err != nil {
+		log.Printf("Websocket error: %s", err)
+		ws.Close()
+		delete(clients, ws)
+	}
+
+	defer ws.Close()
 
 	// for every mesage received execute command
 	for {
 		// Read message from browser
-		_, msg, err := conn.ReadMessage()
+		_, msg, err := ws.ReadMessage()
 		if err != nil {
 			log.Println("No message recieved:", msg, err)
 			return
@@ -55,11 +83,13 @@ func commands(w http.ResponseWriter, r *http.Request) {
 
 		switch string(msg) {
 		case "play":
-			if !audioplayer.WillPlay() {
-				audioplayer.PlaySong(audioplayer.Songindex)
-				break
+			if len(audioplayer.Playlist) > 0 {
+				if !audioplayer.WillPlay() {
+					audioplayer.PlaySong(audioplayer.Songindex)
+				} else {
+					audioplayer.SetPause(false)
+				}
 			}
-			audioplayer.SetPause(false)
 			break
 		case "pause":
 			audioplayer.SetPause(true)
@@ -80,17 +110,6 @@ func commands(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// register client for receiving periodic stats
-func stats(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// register client
-	clients[ws] = true
-}
-
 // send periodic stats
 func broadcaster() {
 	for {
@@ -98,10 +117,18 @@ func broadcaster() {
 		time.Sleep(1 * time.Second)
 
 		// create stat object
-		statobject.Queue = audioplayer.Playlist
+		var statobject Stats
 		statobject.Index = audioplayer.Songindex
 		statobject.Playing = audioplayer.IsPlaying()
 		statobject.Progress, statobject.Length = audioplayer.GetPlaytime()
+
+		// update queue only if necessary
+		if identicalPlaylists(previousQueue, audioplayer.Playlist) && previousQueue != nil {
+			statobject.Queue = nil
+		} else {
+			statobject.Queue = audioplayer.Playlist
+			previousQueue = append([]globals.Track(nil), audioplayer.Playlist...)
+		}
 
 		// get current stats in json format
 		queue, _ := json.Marshal(statobject)
@@ -120,8 +147,7 @@ func broadcaster() {
 
 func Webinterface() {
 	http.HandleFunc("/", page)
-	http.HandleFunc("/stats", stats)
-	http.HandleFunc("/commands", commands)
+	http.HandleFunc("/socket", stats)
 
 	// start broadcaster routine
 	go broadcaster()
