@@ -176,7 +176,7 @@ F9:  previous
 F10: random
 F12: next
 
-[window]
+[terminal]
 F11:    toggle fullscreen
 Crtl-:  zoom out
 Ctrl+:  zoom in
@@ -210,7 +210,7 @@ F8:  play/pause
 F9:  previous
 F12: next
 
-[window]
+[terminal]
 F11:    toggle fullscreen
 Crtl-:  zoom out
 Ctrl+:  zoom in
@@ -369,10 +369,10 @@ Esc: go back`)
 				showPlaylists()
 				return nil
 			case tcell.KeyF7:
-				if !myTui.main.HasFocus() { return nil }
 				if pages.HasPage("playlist") {
 					closeModals()
 				} else {
+					if !myTui.main.HasFocus() { return nil }
 					openPlaylistInput()
 				}
 				return nil
@@ -391,22 +391,26 @@ Esc: go back`)
 
 		switch event.Key() {
 		case tcell.KeyF1:
-			if !myTui.main.HasFocus() { return nil }
 			if pages.HasPage("keybinds") {
 				closeModals()
 			} else {
+				if !myTui.main.HasFocus() { return nil }
 				openKeybinds()
 			}
 			return nil
 		case tcell.KeyF2:
-			if !myTui.main.HasFocus() { return nil }
-			clearplaylist()
+			if pages.HasPage("confirm") {
+				closeModals()
+			} else {
+				if !myTui.main.HasFocus() { return nil }
+				clearplaylist()
+			}
 			return nil
 		case tcell.KeyF3:
-			if !myTui.main.HasFocus() { return nil }
 			if pages.HasPage("search") {
 				closeModals()
 			} else {
+				if !myTui.main.HasFocus() { return nil }
 				openSearch()
 			}
 			return nil

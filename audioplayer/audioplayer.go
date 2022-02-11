@@ -64,6 +64,10 @@ func GetPlaytime() (time.Duration, time.Duration) {
 	total := time.Duration(t) * time.Millisecond
 	c, _ := player.MediaTime()
 	current := time.Duration(c) * time.Millisecond
+
+	if current < 0 { current = 0 }
+	if total < 0   { total = 0   }
+
 	return current, total
 }
 

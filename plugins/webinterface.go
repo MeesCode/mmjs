@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"strings"
 
 	"github.com/MeesCode/mmjs/audioplayer"
 	"github.com/MeesCode/mmjs/globals"
@@ -81,7 +82,14 @@ func stats(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		switch string(msg) {
+		c := strings.Split(string(msg), ":")
+		command := c[0]
+		var args []string
+		if len(c) > 1 {
+			args = strings.Split(c[1], ",")
+		}
+
+		switch command {
 		case "play":
 			if len(audioplayer.Playlist) > 0 {
 				if !audioplayer.WillPlay() {
@@ -106,6 +114,9 @@ func stats(w http.ResponseWriter, r *http.Request) {
 		case "clear":
 			audioplayer.Clear()
 			break
+		case "playtrack":
+			index, err := strconv.Atoi(args[0])
+			if err == nil { audioplayer.PlaySong(index) }
 		}
 	}
 }
