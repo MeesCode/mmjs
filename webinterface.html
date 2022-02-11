@@ -20,7 +20,7 @@
     </body>
 
     <script>
-        var mySimpleApp = new Vue({
+        var vueApp = new Vue({
             el: '#app',
             template: `
             <div id="app-wrapper">
@@ -34,18 +34,20 @@
                     </thead>
                     <tbody>
                         <tr v-for="i, key of tracks" v-bind:class="{'playing': index === key}">
-                            <td v-if="i.Artist.Valid">{{i.Artist.String}}</td>
-                            <td v-else>unknown</td>
-                            <td v-if="i.Title.Valid">{{i.Title.String}}</td>
-                            <td v-else>unknown</td>
+                            <td v-if="!i.Artist.Valid || !i.Title.Valid" colspan="2">{{i.Path.split('/').pop()}}</td>
+                            <td v-if="i.Artist.Valid && i.Title.Valid">{{i.Artist.Valid ? i.Artist.String : 'unknown'}}</td>
+                            <td v-if="i.Artist.Valid && i.Title.Valid">{{i.Title.Valid ? i.Title.String : 'unknown'}}</td>
                         </tr>
                     </tbody>
                 </table>
 
                 <div ref="controls" class="controls columns is-mobile">
-                    <div class="controls-left column is-one-fifth">
-                        <span class="control-button" @click="sendcommand('shuffle')">
+                    <div class="controls-left column is-one-third">
+                        <!-- <span class="control-button" @click="sendcommand('shuffle')">
                             <i class="fas fa-random"></i>
+                        </span> -->
+                        <span class="timer">
+                            {{ epoch2human(progress) }}
                         </span>
                     </div>
                     <div class="controls-center column">
@@ -62,9 +64,12 @@
                             <i class="fas fa-step-forward"></i>
                         </span>
                     </div>
-                    <div class="controls-right column is-one-fifth">
-                        <span class="control-button" @click="sendcommand('clear')">
+                    <div class="controls-right column is-one-third">
+                        <!-- <span class="control-button" @click="sendcommand('clear')">
                             <i class="fas fa-ban"></i>
+                        </span> -->
+                        <span class="timer">
+                            {{ epoch2human(length) }}
                         </span>
                     </div>
                 </div>
@@ -91,6 +96,8 @@
                     this.tracks = stats.Queue
                     this.index = stats.Index
                     this.playing = stats.Playing
+                    this.length = stats.Length
+                    this.progress = stats.Progress
 
                     let percentage = Math.round(100 * (stats.Progress / stats.Length)) 
                     this.$refs.controls.style.background = `linear-gradient(90deg, rgba(128,9,12,1) ${percentage}%, rgba(203,40,33,1) ${percentage}%)`
@@ -99,6 +106,13 @@
             methods: {
                 sendcommand(command){
                     this.commandsocket.send(command)
+                },
+
+                epoch2human(time) {
+                    hours   = Math.floor((time/1000000000) / 3600)
+                    minutes = String(Math.floor((time/1000000000) / 60) % 60).padStart(2, '0')
+                    seconds = String(Math.round((time/1000000000) % 60)).padStart(2, '0')
+                    return hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`
                 }
             }
         })
@@ -137,6 +151,12 @@
             margin: 0 10px;
             cursor: pointer;
             width: 80px;
+        }
+
+        .timer{
+            font-size: 27px;
+            color: white;
+            margin: 0 15px;
         }
 
         .controls-center{
