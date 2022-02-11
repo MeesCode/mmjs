@@ -183,9 +183,6 @@ func drawprogressbar(playtime time.Duration, length time.Duration) {
 
 // openSearch removes the keybinds box and replaces it with the search box.
 func openSearch() {
-	if myTui.pages.HasPage("search") || myTui.pages.HasPage("playlist") || myTui.pages.HasPage("keybinds") {
-		return
-	}
 	myTui.pages.AddPage("search", myTui.searchbox, true, true)
 	myTui.searchinput.SetText("")
 	focusWithColor(myTui.searchinput)
@@ -207,9 +204,6 @@ func clearplaylist() {
 
 // openKeybinds opens a dialog with all key bindings
 func openKeybinds() {
-	if myTui.pages.HasPage("search") || myTui.pages.HasPage("playlist") || myTui.pages.HasPage("keybinds") {
-		return
-	}
 	myTui.pages.AddPage("keybinds", myTui.keybindsbox, true, true)
 	focusWithColor(myTui.keybindstext)
 }

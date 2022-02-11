@@ -365,9 +365,11 @@ Esc: go back`)
 		if globals.Config.Mode == "database" {
 			switch event.Key() {
 			case tcell.KeyF6:
+				if !myTui.main.HasFocus() { return nil }
 				showPlaylists()
 				return nil
 			case tcell.KeyF7:
+				if !myTui.main.HasFocus() { return nil }
 				if pages.HasPage("playlist") {
 					closeModals()
 				} else {
@@ -375,10 +377,12 @@ Esc: go back`)
 				}
 				return nil
 			case tcell.KeyF4:
+				if !myTui.main.HasFocus() { return nil }
 				getPopular()
 				focusWithColor(filelist)
 				return nil
 			case tcell.KeyF10:
+				if !myTui.main.HasFocus() { return nil }
 				getRandom()
 				focusWithColor(filelist)
 				return nil
@@ -387,6 +391,7 @@ Esc: go back`)
 
 		switch event.Key() {
 		case tcell.KeyF1:
+			if !myTui.main.HasFocus() { return nil }
 			if pages.HasPage("keybinds") {
 				closeModals()
 			} else {
@@ -394,9 +399,11 @@ Esc: go back`)
 			}
 			return nil
 		case tcell.KeyF2:
+			if !myTui.main.HasFocus() { return nil }
 			clearplaylist()
 			return nil
 		case tcell.KeyF3:
+			if !myTui.main.HasFocus() { return nil }
 			if pages.HasPage("search") {
 				closeModals()
 			} else {
@@ -404,6 +411,7 @@ Esc: go back`)
 			}
 			return nil
 		case tcell.KeyF5:
+			if !myTui.main.HasFocus() { return nil }
 			audioplayer.Shuffle()
 			drawplaylist()
 			return nil
