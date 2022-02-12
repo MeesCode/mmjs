@@ -4,14 +4,27 @@ Een mogelijke vervanging voor de huidige mp3 bak software (mjs). De grootste red
 
 ## installeren en starten
 
-### setup database
-Er is een database file meegeleverd, deze kan je gebruiken om een mysql scheme mee te initialiseren. Hierna moet je index modus gebruiken om de database te populaten. Tenzij je filesystem modus gebruikt zal je dit moeten doen. Als je database modus gebruikt is het aan te raden deze eens in de zoveel tijd te updaten doormiddel van index modus. (let op: deze haalt je database niet leeg, voegt alleen entries toe)
+Het programma kan in 3 modus draaien: filesystem, database en index. filesystem kan je gebruiken zonder enige voorbereiding, echter deze is niet snel genoeg voor gebruik op de Bolk aangezien de muziekbibliotheek te groot is. Database modus maakt gebruik van een mysql database, deze kan lokaal draaien maar ook op een externe server. De index modus scant het bestandssysteem en vult de gekoppelde database met tracks. Er is een database file meegeleverd, deze kan je gebruiken om een mysql scheme mee te initialiseren. 
+Het indexeren op de Bolk kan een paar uur duren, houd daar rekening mee.
 
-in ```./globals/config.go.example``` staat een voorbeeld van een ```config.go``` bestand waar je de database credentials kan invullen.
+```config.json.example``` is een voorbeeld van een config file die je kan gebruiken in plaats van commmand line arguments.
 
 ### compilen vanaf source
 ``` 
-$ go get .
-$ go build -o mmjs *.go
-$ ./mmjs
+$ go mod vendor
+$ go build
+```
+
+### programma starten
+normaal
+```
+$ ./mmjs <path>
+```
+met een config file
+```
+$ ./mmjs -c config.json /pub/mp3
+```
+alle opties
+```
+$ ./mmjs --help
 ```

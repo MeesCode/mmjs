@@ -34,6 +34,7 @@ func init() {
 		defaultQuiet            = false
 		defaultWebserver        = false
 		defaultSerial           = false
+		defaultSerialPort       = "/dev/ttyUSB0"
 		defaultWebinterface     = false
 		defaultLogging          = false
 		defaultWebinterfacePort = 3307
@@ -47,23 +48,24 @@ func init() {
 		defaultDisableSound     = false
 		defaultHighlight        = "cb2821"
 
-		modeUsage             = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
-		webserverUsage        = "a boolean to specify whether to run the webserver. (only in database mode)"
-		webinterfaceUsage     = "a boolean to specify whether to run the web interface"
-		serialUsage           = "a boolean to specify whether listen to serial input, if received skip track"
-		quietUsage            = "quiet mode disables the text user interface"
-		loggingUsage          = "enable error logging in stdout, will interfere with tui"
-		helpUsage             = "print this help message"
-		webserverPortUsage    = "set the port to be used by the webserver plugin"
-		webinterfacePortUsage = "set the port to be used by the webinterface plugin"
-		databasePortUsage     = "set the port to be used by the database"
-		databaseHostUsage     = "set the host for the database connection"
-		databaseUserUsage     = "set the database user"
-		databasePasswordUsage = "set the database password"
-		databaseUsage         = "The database to use"
-		disableSoundUsage     = "disables initialization of the sound card (for server use)"
-		configUsage           = "specify a config file to use (overrides command line arguments)"
-		highlightUsage        = "hex code (ffffff) indicating the highlight color of the text user interface"
+		modeUsage               = "specifies what mode to run. [" + strings.Join(modes, ", ") + "]"
+		webserverUsage          = "a boolean to specify whether to run the webserver. (only in database mode)"
+		webinterfaceUsage       = "a boolean to specify whether to run the web interface"
+		serialUsage             = "a boolean to specify whether listen to serial input, if received skip track"
+		serialPortUsage         = "the serial port to use"
+		quietUsage              = "quiet mode disables the text user interface"
+		loggingUsage            = "enable error logging in stdout, will interfere with tui"
+		helpUsage               = "print this help message"
+		webserverPortUsage      = "set the port to be used by the webserver plugin"
+		webinterfacePortUsage   = "set the port to be used by the webinterface plugin"
+		databasePortUsage       = "set the port to be used by the database"
+		databaseHostUsage       = "set the host for the database connection"
+		databaseUserUsage       = "set the database user"
+		databasePasswordUsage   = "set the database password"
+		databaseUsage           = "The database to use"
+		disableSoundUsage       = "disables initialization of the sound card (for server use)"
+		configUsage             = "specify a config file to use (overrides command line arguments)"
+		highlightUsage          = "hex code indicating the highlight color of the text user interface"
 	)
 
 	flag.BoolVar(&help, "help", defaultHelp, helpUsage)
@@ -74,6 +76,7 @@ func init() {
 	flag.BoolVar(&globals.Config.Logging, "x", defaultLogging, loggingUsage)
 	flag.BoolVar(&globals.Config.Webserver.Enable, "w", defaultWebserver, webserverUsage)
 	flag.BoolVar(&globals.Config.Serial.Enable, "s", defaultSerial, serialUsage)
+	flag.StringVar(&globals.Config.Serial.Port, "sp", defaultSerialPort, serialPortUsage)
 	flag.IntVar(&globals.Config.Webserver.Port, "wp", defaultWebserverPort, webserverPortUsage)
 	flag.BoolVar(&globals.Config.Webinterface.Enable, "i", defaultWebinterface, webinterfaceUsage)
 	flag.IntVar(&globals.Config.Webinterface.Port, "ip", defaultWebinterfacePort, webinterfacePortUsage)

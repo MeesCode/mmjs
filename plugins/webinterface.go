@@ -44,7 +44,7 @@ func identicalPlaylists(i1 []globals.Track, i2 []globals.Track) bool {
 
 // serve the client webapp
 func page(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "webinterface.html")
+	http.ServeFile(w, r, "plugins/webinterface.html")
 }
 
 // register client 
