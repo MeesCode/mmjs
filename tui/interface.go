@@ -421,12 +421,11 @@ Esc: go back`)
 			return nil
 		case tcell.KeyF8:
 			// if no song is loaded, play the first song
-			if len(audioplayer.Playlist) > 0 {
-				if !audioplayer.WillPlay() {
-					audioplayer.PlaySong(audioplayer.Songindex)
-				} else {
-					audioplayer.TogglePause()
-				}
+			if len(audioplayer.Playlist) == 0 { return nil }
+			if !audioplayer.WillPlay() {
+				audioplayer.PlaySong(audioplayer.Songindex)
+			} else {
+				audioplayer.TogglePause()
 			}
 			return nil
 		case tcell.KeyF9:

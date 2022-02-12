@@ -86,13 +86,13 @@
 
                 this.socket.onmessage = (e) => {
                     let stats = JSON.parse(e.data)
-                    this.tracks = stats.Queue ? stats.Queue : this.tracks
+                    this.tracks = stats.Queue ?? this.tracks
                     this.index = stats.Index
                     this.playing = stats.Playing
                     this.length = stats.Length
                     this.progress = stats.Progress
 
-                    let percentage = Math.round(100 * (stats.Progress / stats.Length)) 
+                    let percentage = 100 * (stats.Progress / stats.Length) 
                     this.$refs.controls.style.background = `linear-gradient(90deg, rgba(128,9,12,1) ${percentage}%, rgba(203,40,33,1) ${percentage}%)`
                 };
             },
@@ -137,7 +137,6 @@
 
         .controls{
             background-color: rgba(203,40,33,1);
-            transition: .2s ease all;
             position: fixed;
             width: 100%;
             height: 55px;

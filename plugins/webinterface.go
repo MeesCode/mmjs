@@ -32,6 +32,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// check if two playlists are the same
 func identicalPlaylists(i1 []globals.Track, i2 []globals.Track) bool {
 	if len(i1) != len(i2) { return false }
 	for i, _ := range i1 {
@@ -41,6 +42,7 @@ func identicalPlaylists(i1 []globals.Track, i2 []globals.Track) bool {
 	return true
 }
 
+// serve the client webapp
 func page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "webinterface.html")
 }
@@ -72,8 +74,11 @@ func stats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer ws.Close()
+	receiver(ws)
+}
 
-	// for every mesage received execute command
+// receive incoming command from a specific client
+func receiver(ws *websocket.Conn) {
 	for {
 		// Read message from browser
 		_, msg, err := ws.ReadMessage()
@@ -91,12 +96,11 @@ func stats(w http.ResponseWriter, r *http.Request) {
 
 		switch command {
 		case "play":
-			if len(audioplayer.Playlist) > 0 {
-				if !audioplayer.WillPlay() {
-					audioplayer.PlaySong(audioplayer.Songindex)
-				} else {
-					audioplayer.SetPause(false)
-				}
+			if len(audioplayer.Playlist) == 0 { break }
+			if !audioplayer.WillPlay() {
+				audioplayer.PlaySong(audioplayer.Songindex)
+			} else {
+				audioplayer.TogglePause()
 			}
 			break
 		case "pause":
@@ -121,7 +125,7 @@ func stats(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// send periodic stats
+// send periodic stats to all clients
 func broadcaster() {
 	for {
 		// wait for periodic timer
