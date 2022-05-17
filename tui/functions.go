@@ -382,3 +382,33 @@ func moveDown() {
 	drawplaylist()
 	myTui.playlist.SetCurrentItem(index + 1)
 }
+
+func seekforward() {
+	var mediaposition float32
+	var err error = nil
+	mediaposition, err = audioplayer.GetMediaPosition()
+	if err != nil {
+		// this can happen when the song is paused
+		return
+	}
+	if mediaposition > 0.9 {
+		nextsong()
+		return
+	}
+	audioplayer.SetMediaPosition(mediaposition + 0.1)
+}
+
+func seekbackward() {
+	var mediaposition float32
+	var err error = nil
+	mediaposition, err = audioplayer.GetMediaPosition()
+	if err != nil {
+		// this can happen when the song is paused
+		return
+	}
+	if mediaposition < 0.1 {
+		audioplayer.SetMediaPosition(0)
+		return
+	}
+	audioplayer.SetMediaPosition(mediaposition - 0.1)
+}
