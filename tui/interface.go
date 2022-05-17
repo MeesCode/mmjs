@@ -117,7 +117,7 @@ func Start() {
 	keybinds.SetBorder(true).SetTitle(" Keybinds ")
 	keybinds.SetBackgroundColor(tcell.ColorDefault)
 	keybinds.SetTextAlign(1)
-	fmt.Fprintf(keybinds, "F1: help | F3: search | F8: play/pause | F9: previous | F12: next ")
+	fmt.Fprintf(keybinds, "F1: help | F2: clear | F3: search | F8: play/pause | F9: previous | F12: next ")
 
 	searchinput := tview.NewInputField().
 		SetDoneFunc(func(key tcell.Key) {
