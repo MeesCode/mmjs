@@ -47,6 +47,12 @@ func stringOrUnknown(s sql.NullString) string {
 	return "unknown"
 }
 
+func updateAudioState() {
+	playtime, totaltime := audioplayer.GetPlaytime()
+	drawprogressbar(playtime, totaltime)
+	updatePlayInfo()
+}
+
 // audioStateUpdater is a function that should be ran as a goroutine.
 // It will ask the audioplayer for the playing time of the current track.
 // It will also start the next sond if the current song is finished.
@@ -56,9 +62,7 @@ func audioStateUpdater() {
 
 		// update the progress bar every second
 		myTui.app.QueueUpdateDraw(func() {
-			playtime, totaltime := audioplayer.GetPlaytime()
-			drawprogressbar(playtime, totaltime)
-			updatePlayInfo()
+			updateAudioState();
 		})
 	}
 }
@@ -396,6 +400,7 @@ func seekforward() {
 		return
 	}
 	audioplayer.SetMediaPosition(mediaposition + 0.1)
+	updateAudioState()
 }
 
 func seekbackward() {
@@ -411,4 +416,5 @@ func seekbackward() {
 		return
 	}
 	audioplayer.SetMediaPosition(mediaposition - 0.1)
+	updateAudioState()
 }
