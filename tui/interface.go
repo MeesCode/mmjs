@@ -441,6 +441,15 @@ Esc: go back`)
 		case tcell.KeyEsc:
 			closeModals()
 			return nil
+		case tcell.KeyRune:
+			if event.Rune() == '>' {
+				seekforward()
+				return nil
+			}
+			if event.Rune() == '<' {
+				seekbackward()
+				return nil
+			}
 		}
 		return event
 	})
