@@ -332,6 +332,9 @@ func nextsong() {
 }
 
 func deletesong() {
+	if myTui.playlist.GetItemCount() == 0{
+		return
+	}
 	index := myTui.playlist.GetCurrentItem()
 	audioplayer.Deletesong(index)
 	updatePlayInfo()

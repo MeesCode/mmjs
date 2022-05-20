@@ -28,6 +28,11 @@ func updateTrack() {
 	audioLock.Lock()
 	defer audioLock.Unlock()
 
+	// race condition after deleting songs to quickly
+	if Songindex < len(Playlist){
+		return
+	}
+
 	media, err := player.LoadMediaFromPath(path.Join(globals.Root, Playlist[Songindex].Path))
 	if err != nil {
 		Playlist[Songindex].Error = true
@@ -45,6 +50,8 @@ func updateTrack() {
 		defer Nextsong()
 		return
 	}
+
+	log.Println(Songindex)
 
 	Playlist[Songindex].Error = false
 }
