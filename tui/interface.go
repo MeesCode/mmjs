@@ -175,6 +175,8 @@ F8:  play/pause
 F9:  previous
 F10: random
 F12: next
+>:   seek forward
+<:   seek backward
 
 [terminal]
 F11:    toggle fullscreen
@@ -209,6 +211,8 @@ F5:  shuffle
 F8:  play/pause
 F9:  previous
 F12: next
+>:   seek forward
+<:   seek backward
 
 [terminal]
 F11:    toggle fullscreen
@@ -441,6 +445,15 @@ Esc: go back`)
 		case tcell.KeyEsc:
 			closeModals()
 			return nil
+		case tcell.KeyRune:
+			if event.Rune() == '>' {
+				seekforward()
+				return nil
+			}
+			if event.Rune() == '<' {
+				seekbackward()
+				return nil
+			}
 		}
 		return event
 	})

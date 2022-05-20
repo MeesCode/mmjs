@@ -125,3 +125,20 @@ func Initialize() {
 		log.Fatal(err)
 	}
 }
+
+// SetMediaPosition sets media position as percentage between 0.0 and 1.0.
+// Some formats and protocols do not support this.
+func SetMediaPosition(percentage float32) {
+	log.Println(player.IsSeekable());
+	if(!player.IsSeekable()) {
+		log.Println("Song is not seekable");
+		return;
+	}
+	player.SetMediaPosition(percentage);
+}
+
+// GetMediaPosition returns media position as a
+// float percentage between 0.0 and 1.0.
+func GetMediaPosition() (float32, error) {
+	return player.MediaPosition();
+}
